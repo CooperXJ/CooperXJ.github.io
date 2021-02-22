@@ -1131,6 +1131,125 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/1984/01/24/SpringBoot%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/1984/01/24/SpringBoot%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1/" class="post-title-link" itemprop="url">SpringBoot异步任务</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：1984-01-24 16:00:00" itemprop="dateCreated datePublished" datetime="1984-01-24T16:00:00+08:00">1984-01-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-13 08:45:51" itemprop="dateModified" datetime="2021-02-13T08:45:51+08:00">2021-02-13</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SpringBoot/" itemprop="url" rel="index"><span itemprop="name">SpringBoot</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/1984/01/24/SpringBoot%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/1984/01/24/SpringBoot%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="异步任务"><a href="#异步任务" class="headerlink" title="异步任务"></a>异步任务</h2><p>1、创建一个service包</p>
+<p>2、创建一个类AsyncService</p>
+<p>异步处理还是非常常用的，比如我们在网站上发送邮件，后台会去发送邮件，此时前台会造成响应不动，直到邮件发送完毕，响应才会成功，所以我们一般会采用多线程的方式去处理这些任务。</p>
+<p>编写方法，假装正在处理数据，使用线程设置一些延时，模拟同步等待的情况；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AsyncService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">hello</span><span class="params">()</span></span>&#123;</span><br><span class="line">       <span class="keyword">try</span> &#123;</span><br><span class="line">           Thread.sleep(<span class="number">3000</span>);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">           e.printStackTrace();</span><br><span class="line">      &#125;</span><br><span class="line">       System.out.println(<span class="string">&quot;业务进行中....&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>3、编写controller包</p>
+<p>4、编写AsyncController类</p>
+<p>我们去写一个Controller测试一下</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AsyncController</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Autowired</span></span><br><span class="line">   AsyncService asyncService;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@GetMapping(&quot;/hello&quot;)</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> String <span class="title">hello</span><span class="params">()</span></span>&#123;</span><br><span class="line">       asyncService.hello();</span><br><span class="line">       <span class="keyword">return</span> <span class="string">&quot;success&quot;</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>5、访问<a target="_blank" rel="noopener" href="http://localhost:8080/hello%E8%BF%9B%E8%A1%8C%E6%B5%8B%E8%AF%95%EF%BC%8C3%E7%A7%92%E5%90%8E%E5%87%BA%E7%8E%B0success%EF%BC%8C%E8%BF%99%E6%98%AF%E5%90%8C%E6%AD%A5%E7%AD%89%E5%BE%85%E7%9A%84%E6%83%85%E5%86%B5%E3%80%82">http://localhost:8080/hello进行测试，3秒后出现success，这是同步等待的情况。</a></p>
+<p>问题：我们如果想让用户直接得到消息，就在后台使用多线程的方式进行处理即可，但是每次都需要自己手动去编写多线程的实现的话，太麻烦了，我们只需要用一个简单的办法，在我们的方法上加一个简单的注解即可，如下：</p>
+<p>6、给hello方法添加@Async注解；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//告诉Spring这是一个异步方法</span></span><br><span class="line"><span class="meta">@Async</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">hello</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">       Thread.sleep(<span class="number">3000</span>);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">       e.printStackTrace();</span><br><span class="line">  &#125;</span><br><span class="line">   System.out.println(<span class="string">&quot;业务进行中....&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>SpringBoot就会自己开一个线程池，进行调用！但是要让这个注解生效，我们还需要在主程序上添加一个注解@EnableAsync ，开启异步注解功能；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@EnableAsync</span> <span class="comment">//开启异步注解功能</span></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpringbootTaskApplication</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">       SpringApplication.run(SpringbootTaskApplication.class, args);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>7、重启测试，网页瞬间响应，后台代码依旧执行！</p>
+
+      
+    </div>
+
+    
+    
+    
+      
+
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/1984/01/24/SpringBoot%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1236,125 +1355,6 @@
 <p><a target="_blank" rel="noopener" href="http://www.bejson.com/othertools/cron/">http://www.bejson.com/othertools/cron/</a></p>
 <p>4、常用的表达式</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">（1）0/2 * * * * ?   表示每2秒 执行任务</span><br><span class="line">（1）0 0/2 * * * ?   表示每2分钟 执行任务</span><br><span class="line">（1）0 0 2 1 * ?   表示在每月的1日的凌晨2点调整任务</span><br><span class="line">（2）0 15 10 ? * MON-FRI   表示周一到周五每天上午10:15执行作业</span><br><span class="line">（3）0 15 10 ? 6L 2002-2006   表示2002-2006年的每个月的最后一个星期五上午10:15执行作</span><br><span class="line">（4）0 0 10,14,16 * * ?   每天上午10点，下午2点，4点</span><br><span class="line">（5）0 0/30 9-17 * * ?   朝九晚五工作时间内每半小时</span><br><span class="line">（6）0 0 12 ? * WED   表示每个星期三中午12点</span><br><span class="line">（7）0 0 12 * * ?   每天中午12点触发</span><br><span class="line">（8）0 15 10 ? * *   每天上午10:15触发</span><br><span class="line">（9）0 15 10 * * ?     每天上午10:15触发</span><br><span class="line">（10）0 15 10 * * ?   每天上午10:15触发</span><br><span class="line">（11）0 15 10 * * ? 2005   2005年的每天上午10:15触发</span><br><span class="line">（12）0 * 14 * * ?     在每天下午2点到下午2:59期间的每1分钟触发</span><br><span class="line">（13）0 0/5 14 * * ?   在每天下午2点到下午2:55期间的每5分钟触发</span><br><span class="line">（14）0 0/5 14,18 * * ?     在每天下午2点到2:55期间和下午6点到6:55期间的每5分钟触发</span><br><span class="line">（15）0 0-5 14 * * ?   在每天下午2点到下午2:05期间的每1分钟触发</span><br><span class="line">（16）0 10,44 14 ? 3 WED   每年三月的星期三的下午2:10和2:44触发</span><br><span class="line">（17）0 15 10 ? * MON-FRI   周一至周五的上午10:15触发</span><br><span class="line">（18）0 15 10 15 * ?   每月15日上午10:15触发</span><br><span class="line">（19）0 15 10 L * ?   每月最后一日的上午10:15触发</span><br><span class="line">（20）0 15 10 ? * 6L   每月的最后一个星期五上午10:15触发</span><br><span class="line">（21）0 15 10 ? * 6L 2002-2005   2002年至2005年的每月的最后一个星期五上午10:15触发</span><br><span class="line">（22）0 15 10 ? * 6#3   每月的第三个星期五上午10:15触发</span><br></pre></td></tr></table></figure>
-
-      
-    </div>
-
-    
-    
-    
-      
-
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/1984/01/24/SpringBoot%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Cooper">
-      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Cooper Notes">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/1984/01/24/SpringBoot%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1/" class="post-title-link" itemprop="url">SpringBoot异步任务</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：1984-01-24 16:00:00" itemprop="dateCreated datePublished" datetime="1984-01-24T16:00:00+08:00">1984-01-24</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-02-13 08:45:51" itemprop="dateModified" datetime="2021-02-13T08:45:51+08:00">2021-02-13</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/SpringBoot/" itemprop="url" rel="index"><span itemprop="name">SpringBoot</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/1984/01/24/SpringBoot%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/1984/01/24/SpringBoot%E5%BC%82%E6%AD%A5%E4%BB%BB%E5%8A%A1/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>1.3k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="异步任务"><a href="#异步任务" class="headerlink" title="异步任务"></a>异步任务</h2><p>1、创建一个service包</p>
-<p>2、创建一个类AsyncService</p>
-<p>异步处理还是非常常用的，比如我们在网站上发送邮件，后台会去发送邮件，此时前台会造成响应不动，直到邮件发送完毕，响应才会成功，所以我们一般会采用多线程的方式去处理这些任务。</p>
-<p>编写方法，假装正在处理数据，使用线程设置一些延时，模拟同步等待的情况；</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AsyncService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">hello</span><span class="params">()</span></span>&#123;</span><br><span class="line">       <span class="keyword">try</span> &#123;</span><br><span class="line">           Thread.sleep(<span class="number">3000</span>);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">           e.printStackTrace();</span><br><span class="line">      &#125;</span><br><span class="line">       System.out.println(<span class="string">&quot;业务进行中....&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>3、编写controller包</p>
-<p>4、编写AsyncController类</p>
-<p>我们去写一个Controller测试一下</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AsyncController</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Autowired</span></span><br><span class="line">   AsyncService asyncService;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@GetMapping(&quot;/hello&quot;)</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> String <span class="title">hello</span><span class="params">()</span></span>&#123;</span><br><span class="line">       asyncService.hello();</span><br><span class="line">       <span class="keyword">return</span> <span class="string">&quot;success&quot;</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>5、访问<a target="_blank" rel="noopener" href="http://localhost:8080/hello%E8%BF%9B%E8%A1%8C%E6%B5%8B%E8%AF%95%EF%BC%8C3%E7%A7%92%E5%90%8E%E5%87%BA%E7%8E%B0success%EF%BC%8C%E8%BF%99%E6%98%AF%E5%90%8C%E6%AD%A5%E7%AD%89%E5%BE%85%E7%9A%84%E6%83%85%E5%86%B5%E3%80%82">http://localhost:8080/hello进行测试，3秒后出现success，这是同步等待的情况。</a></p>
-<p>问题：我们如果想让用户直接得到消息，就在后台使用多线程的方式进行处理即可，但是每次都需要自己手动去编写多线程的实现的话，太麻烦了，我们只需要用一个简单的办法，在我们的方法上加一个简单的注解即可，如下：</p>
-<p>6、给hello方法添加@Async注解；</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//告诉Spring这是一个异步方法</span></span><br><span class="line"><span class="meta">@Async</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">hello</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">       Thread.sleep(<span class="number">3000</span>);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">       e.printStackTrace();</span><br><span class="line">  &#125;</span><br><span class="line">   System.out.println(<span class="string">&quot;业务进行中....&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>SpringBoot就会自己开一个线程池，进行调用！但是要让这个注解生效，我们还需要在主程序上添加一个注解@EnableAsync ，开启异步注解功能；</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@EnableAsync</span> <span class="comment">//开启异步注解功能</span></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpringbootTaskApplication</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">       SpringApplication.run(SpringbootTaskApplication.class, args);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>7、重启测试，网页瞬间响应，后台代码依旧执行！</p>
 
       
     </div>
