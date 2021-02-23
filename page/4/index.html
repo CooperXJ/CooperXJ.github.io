@@ -897,7 +897,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-02-22 20:31:59" itemprop="dateModified" datetime="2021-02-22T20:31:59+08:00">2021-02-22</time>
+                <time title="修改时间：2021-02-23 14:49:13" itemprop="dateModified" datetime="2021-02-23T14:49:13+08:00">2021-02-23</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -929,7 +929,7 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>617</span>
+              <span>1.4k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -1007,6 +1007,64 @@
 
 </li>
 </ol>
+<h2 id="索引失效-（注意MySQL版本的不同可能导致以下情况发生变化）"><a href="#索引失效-（注意MySQL版本的不同可能导致以下情况发生变化）" class="headerlink" title="索引失效 （注意MySQL版本的不同可能导致以下情况发生变化）"></a>索引失效 （<font color=red>注意MySQL版本的不同可能导致以下情况发生变化</font>）</h2><p>索引所建立的顺序用不上了</p>
+<p>常见索引失效的原因如下：</p>
+<ul>
+<li><p>未遵守最左前缀法则  （where后面的条件）</p>
+<p>最左前缀法则：查询从索引的最左前列开始并且<font color=red>不跳过索引中的列</font>（<font color=red>一定要按照顺序</font>）</p>
+</li>
+<li><p>不能在索引列上做任何操作（计算、函数、（自动or手动）类型转换），会导致索引失效而转向全表扫描</p>
+</li>
+<li><p>存储引擎不能使用索引中范围条件右边的列</p>
+<img src="/Volumes/共享文件夹/Snipaste_2021-02-23_09-30-58.png" alt="Snipaste_2021-02-23_09-30-58" style="zoom:50%;" />
+
+<p>​    最下面的查询在索引列上使用了范围导致后面的pos索引失效了</p>
+</li>
+<li><p>尽量使用索引覆盖（只访问索引的查询（索引列和查询列一致）），减少select *</p>
+</li>
+<li><p>MySQL在使用不等于（！=或者&lt;&gt;）的时候无法使用索引会导致全表扫描</p>
+<p>MySQL 8.0用到了索引，type是range，之前的版本type是ALL</p>
+</li>
+<li><p>is null，is not null 也无法使用索引</p>
+</li>
+<li><p>like以通配符开头（’%abc’）mysql索引失效会变成全表扫描</p>
+<p>主要%在最左边，则出现全表扫描</p>
+<p>解决方法：</p>
+<p>查询的字段为遵循覆盖索引原则</p>
+</li>
+<li><p>字符串不加单引号会导致索引失效</p>
+<p>因为MySQL底层会帮我们进行转换，也就是变相在索引列上进行了操作，导致索引失效</p>
+</li>
+<li><p>少用or，用它来连接时索引会失效</p>
+</li>
+<li><p>group by基本上都需要进行排序，会有临时表产生</p>
+</li>
+</ul>
+<h3 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h3><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223100444.png" alt="Snipaste_2021-02-23_10-04-09" style="zoom:50%;" />
+
+
+
+<h2 id="索引优化"><a href="#索引优化" class="headerlink" title="索引优化"></a>索引优化</h2><ul>
+<li><p>left join</p>
+<p>右表建立索引</p>
+</li>
+<li><p>left join</p>
+<p>左表建立索引</p>
+</li>
+<li><p>对于单键索引，尽量选择针对当前query过滤性更好的索引</p>
+</li>
+<li><p>在选择组合索引的时候，当前query中过滤性最好的字段在索引字段顺序中，位置越靠前越好</p>
+</li>
+<li><p>在选择组合索引的时候，尽量选择可以包含当前query中的where子句中更多的索引字段</p>
+</li>
+<li><p>尽可能通过分析统计信息和调整query的写法来达到选择合适索引的目的</p>
+</li>
+<li><p>order by 字段需要按照建立索引的顺序</p>
+<p>例如索引为index_abc,则order by a ,b,c 最为合适</p>
+<p>如果order by a ,c,b 则可能会用到using filesort</p>
+<p>如果c为常量则不会产生影响</p>
+</li>
+</ul>
 
       
     </div>
@@ -1911,12 +1969,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">329k</span>
+    <span title="站点总字数">330k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">4:59</span>
+    <span title="站点阅读时长">5:01</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
   </div>
