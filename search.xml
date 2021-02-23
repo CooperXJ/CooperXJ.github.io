@@ -8604,4 +8604,162 @@ fmt.Printf(&quot;%d\n&quot;,t6)
         <tag>SpringCloud</tag>
       </tags>
   </entry>
+  <entry>
+    <title>查询截取分析</title>
+    <url>/2021/02/23/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<h2 id=""><a href="#" class="headerlink" title=""></a></h2><h2 id="分析过程"><a href="#分析过程" class="headerlink" title="分析过程"></a>分析过程</h2><ol>
+<li>观察，至少跑一天，查看生产 的慢SQL情况</li>
+<li>开启慢查询日志，设置阈值，比如超过5s的就是慢SQL，将其抓取出来</li>
+<li>explain+慢SQL分析</li>
+<li>show profile</li>
+<li>进行sql数据库服务器的参数调优</li>
+</ol>
+<h3 id="查询优化"><a href="#查询优化" class="headerlink" title="查询优化"></a>查询优化</h3><ul>
+<li><p>永远小表驱动大表</p>
+<ul>
+<li><p>exits</p>
+<p>将主查询的数据，放到子查询中做条件验证，根据验证结果（true或false）来决定主查询的数据结构是否得以保留</p>
+</li>
+</ul>
+</li>
+<li><p>order by关键字优化</p>
+<ul>
+<li><p>order by子句，尽量使用Index方式排序，避免使用filesort方式排序</p>
+<p>排序如果按照顺序一升一降排序，也会导致最终的使用filesort</p>
+</li>
+<li><p>尽可能在索引列上完成排序操作，遵照索引建立的最佳左前缀</p>
+</li>
+<li><p>如果不在索引列上，filesort有两种算法：MySQL会启动双路排序和单路排序</p>
+<ul>
+<li><p>双路排序</p>
+<p>MySQL4.1之前使用双路排序，字面意思是两次扫描磁盘，最终得到数据</p>
+</li>
+<li><p>单路排序</p>
+<p>MySQL4.1之后使用单路排序，从磁盘读取查询需要的列，按照order by列在buffer对他们进行排序，然后扫描排序后的列表进行输出，它的效率更快一些，避免了第二次读取数据，并且把随机io变成了顺序io，但是它会使用更多的 空间，因为它把每一行都保存在唉内存中了。</p>
+</li>
+<li><p>两者比较</p>
+<p>总体而言，单路排序好于双路排序，但是单路排序如果无法一次完成，则需要多次io，而双路排序是稳定的，始终都是两次io</p>
+<p>在sort_buffer中，单路排序比双路排序多占用很多空间，有可能取出的数据总大小超过了sort_buffer的容量，导致每次只能取sort_buffer容量大小的数据进行排序，排序完再取sort_buffer的容量大小，再排序…从而导致多次io</p>
+</li>
+</ul>
+</li>
+<li><p>优化策略</p>
+<ul>
+<li><p>增大sort_buffer_size参数设置</p>
+</li>
+<li><p>增大max_length_for_sort_data参数设置</p>
+</li>
+<li><p>尽一切可能在使用order by的时候不要使用select *</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223210831823.png" alt="image-20210223210831823" style="zoom:50%;" />
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>group by</p>
+<p>group by的实质是先排序后分组</p>
+<p>其他与order by一样，多了一条如下：</p>
+<p>where 高于having，能写在where限定的条件就不要去having限定</p>
+</li>
+</ul>
+<h3 id="慢查询日志"><a href="#慢查询日志" class="headerlink" title="慢查询日志"></a>慢查询日志</h3><p>默认情况下MySQL没有开启慢查询日志，需要我们手动设置该参数</p>
+<p>如果不是调优需要，则不要开启该功能</p>
+<ul>
+<li><p>开启慢查询日志</p>
+<ul>
+<li><p>查看</p>
+<p>show variables like ‘%slow_query_log%’;</p>
+</li>
+<li><p>开启</p>
+<p>set global slow_query_log=1;</p>
+<p>只会对当前数据库生效，重启MySQL就会失效</p>
+<p>如果想要永久生效</p>
+<p>则需要在my.cnf中的[mysqld]下增加或修改参数</p>
+<p>slow_query_log=1</p>
+<p>slow_query_log_file =  /var/lib/mysql/VM-12-5-centos-slow.log</p>
+<p>重启MySQL即可</p>
+</li>
+<li><p>查看对应的阈值</p>
+<p>show variables like ‘long_query_time%’</p>
+<p>假如运行时间正好等于long_query_time的情况则不会被记录下来</p>
+<p>如果想要其他阈值，可以直接修改 :set long_query_time = 3;(<font color=red>注意</font>：直接修改的话看不到long_query_time有变化，需要重新登录MySQL才会看到修改的值,也可以通过show global variables like ‘long_query_time%’查看)</p>
+<p>也可以通过my.cnf进行修改</p>
+</li>
+<li><p>查看</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223213433512.png" alt="image-20210223213433512" style="zoom:50%;" />
+</li>
+<li><p>查看有多少慢SQL</p>
+<p>show global status like ‘%Slow_queries’;</p>
+</li>
+<li><p>配置</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223213655.png" alt="image-20210223213650510" style="zoom:50%;" />
+</li>
+</ul>
+</li>
+<li><p>日志分析工具</p>
+<p>mysqldumpslow  –help 可以查看其用法</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223214027917.png" alt="image-20210223214027917" style="zoom:50%;" />
+
+
+
+</li>
+</ul>
+<h3 id="show-profile"><a href="#show-profile" class="headerlink" title="show profile"></a>show profile</h3><p>MySQL提供可以用来分析当前会话中语句执行的资源消耗情况</p>
+<ul>
+<li><p>默认情况下show profile是处于关闭状态的，只保存最近15次 的运行结果</p>
+<ul>
+<li><p>是否支持</p>
+<p>show variables like ‘profiling’;</p>
+</li>
+<li><p>开启功能</p>
+<p>set profiling = on; (也只是暂时生效，重启就会失效)</p>
+</li>
+<li><p>运行SQL</p>
+</li>
+<li><p>查看结果 show profiles</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223220853.png" alt="image-20210223220847797" style="zoom:50%;" />
+</li>
+<li><p>诊断SQL，show profile cpu,block io for query 上一步前面的问题SQL数字号码</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223220953798.png" alt="image-20210223220953798" style="zoom:50%;" />
+
+<p>当然除了cpu、io也可以查看其它的，如下</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223221057082.png" alt="image-20210223221057082" style="zoom:50%;" />
+</li>
+<li><p>日常开发需要注意的结论</p>
+<p>出现了一下字眼则说明该SQL比较危险</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223221307.png" alt="image-20210223221302953" style="zoom:50%;" />
+
+
+
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="全局查询日志"><a href="#全局查询日志" class="headerlink" title="全局查询日志"></a>全局查询日志</h3><p>主要是用于测试环境，将所有的SQL抓取出来查看</p>
+<ul>
+<li><p>配置启用</p>
+<p>在my.cnf中设置如下：</p>
+<p>general_log = 1</p>
+<p>General_log_file = {path}</p>
+<p>Log_output =FILE</p>
+</li>
+<li><p>命令启用</p>
+<p>set global general_log = 1;</p>
+<p>set global log_output = ‘TABLE’</p>
+<p>这样开启之后我们所有的SQL语句都会被记录到mysql库中 的general_log表中，查看如下</p>
+<p>select * from mysql.general_log;</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223222510.png" alt="image-20210223222503338" style="zoom:50%;" />
+
+
+
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
 </search>

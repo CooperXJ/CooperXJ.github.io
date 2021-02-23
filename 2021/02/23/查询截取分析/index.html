@@ -20,20 +20,30 @@
     var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="数据是如何分配的，数据容灾的级别是怎样的  查看curshMap tree ceph osd crush tree ceph osd crush dump  curshMap修改  获取crushMap ceph osd getcrushmap -o crushmap.bin  因为得到的文件类型时2进制文件，所以需要编译一下 crushtool -d crushmap.bin -o crush">
+  <meta name="description" content="分析过程 观察，至少跑一天，查看生产 的慢SQL情况 开启慢查询日志，设置阈值，比如超过5s的就是慢SQL，将其抓取出来 explain+慢SQL分析 show profile 进行sql数据库服务器的参数调优  查询优化 永远小表驱动大表  exits 将主查询的数据，放到子查询中做条件验证，根据验证结果（true或false）来决定主查询的数据结构是否得以保留    order by关键字优化">
 <meta property="og:type" content="article">
-<meta property="og:title" content="CrushMap">
-<meta property="og:url" content="http://cooperxj.github.io/2020/10/04/CrushMap/index.html">
+<meta property="og:title" content="查询截取分析">
+<meta property="og:url" content="http://cooperxj.github.io/2021/02/23/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/index.html">
 <meta property="og:site_name" content="Cooper Notes">
-<meta property="og:description" content="数据是如何分配的，数据容灾的级别是怎样的  查看curshMap tree ceph osd crush tree ceph osd crush dump  curshMap修改  获取crushMap ceph osd getcrushmap -o crushmap.bin  因为得到的文件类型时2进制文件，所以需要编译一下 crushtool -d crushmap.bin -o crush">
+<meta property="og:description" content="分析过程 观察，至少跑一天，查看生产 的慢SQL情况 开启慢查询日志，设置阈值，比如超过5s的就是慢SQL，将其抓取出来 explain+慢SQL分析 show profile 进行sql数据库服务器的参数调优  查询优化 永远小表驱动大表  exits 将主查询的数据，放到子查询中做条件验证，根据验证结果（true或false）来决定主查询的数据结构是否得以保留    order by关键字优化">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2020-10-04T00:31:16.381Z">
-<meta property="article:modified_time" content="2021-02-12T15:31:41.009Z">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210223210831823.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210223213433512.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223213655.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210223214027917.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223220853.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210223220953798.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210223221057082.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223221307.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223222510.png">
+<meta property="article:published_time" content="2021-02-23T06:51:20.819Z">
+<meta property="article:modified_time" content="2021-02-23T14:25:51.954Z">
 <meta property="article:author" content="Cooper">
-<meta property="article:tag" content="ceph">
+<meta property="article:tag" content="MySQL">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210223210831823.png">
 
-<link rel="canonical" href="http://cooperxj.github.io/2020/10/04/CrushMap/">
+<link rel="canonical" href="http://cooperxj.github.io/2021/02/23/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/">
 
 
 <script id="page-configurations">
@@ -46,7 +56,7 @@
   };
 </script>
 
-  <title>CrushMap | Cooper Notes</title>
+  <title>查询截取分析 | Cooper Notes</title>
   
 
 
@@ -195,7 +205,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2020/10/04/CrushMap/">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2021/02/23/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -208,7 +218,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          CrushMap
+          查询截取分析
         </h1>
 
         <div class="post-meta">
@@ -217,23 +227,17 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2020-10-04 08:31:16" itemprop="dateCreated datePublished" datetime="2020-10-04T08:31:16+08:00">2020-10-04</time>
+              <time title="创建时间：2021-02-23 14:51:20 / 修改时间：22:25:51" itemprop="dateCreated datePublished" datetime="2021-02-23T14:51:20+08:00">2021-02-23</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-02-12 23:31:41" itemprop="dateModified" datetime="2021-02-12T23:31:41+08:00">2021-02-12</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ceph/" itemprop="url" rel="index"><span itemprop="name">ceph</span></a>
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
                 </span>
             </span>
 
@@ -246,8 +250,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2020/10/04/CrushMap/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/10/04/CrushMap/" itemprop="commentCount"></span>
+    <a title="valine" href="/2021/02/23/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/02/23/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -257,14 +261,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>487</span>
+              <span>1.9k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
+              <span>2 分钟</span>
             </span>
 
         </div>
@@ -276,38 +280,153 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <ol>
-<li><p>数据是如何分配的，数据容灾的级别是怎样的</p>
-</li>
-<li><p>查看curshMap tree</p>
-<p><code>ceph osd crush tree</code></p>
-<p><code>ceph osd crush dump</code></p>
-</li>
-<li><p>curshMap修改</p>
+        <h2 id=""><a href="#" class="headerlink" title=""></a></h2><h2 id="分析过程"><a href="#分析过程" class="headerlink" title="分析过程"></a>分析过程</h2><ol>
+<li>观察，至少跑一天，查看生产 的慢SQL情况</li>
+<li>开启慢查询日志，设置阈值，比如超过5s的就是慢SQL，将其抓取出来</li>
+<li>explain+慢SQL分析</li>
+<li>show profile</li>
+<li>进行sql数据库服务器的参数调优</li>
+</ol>
+<h3 id="查询优化"><a href="#查询优化" class="headerlink" title="查询优化"></a>查询优化</h3><ul>
+<li><p>永远小表驱动大表</p>
 <ul>
-<li><p>获取crushMap</p>
-<p><code>ceph osd getcrushmap -o crushmap.bin</code></p>
-</li>
-<li><p>因为得到的文件类型时2进制文件，所以需要编译一下</p>
-<p><code>crushtool -d crushmap.bin -o crushmap.txt</code></p>
-</li>
-<li><p>查看cursh rule</p>
-<p><code>ceph osd crush rule ls</code></p>
-</li>
-<li><p>编写完crushmap之后重新编译成二进制文件</p>
-<p><code>crushtool -c crushmap.txt -o crushmap-new.bin</code></p>
-</li>
-<li><p>应用生成的规则二进制文件</p>
-<p><code>ceph osd setcrushmap -i crushmap.bin </code></p>
-</li>
-<li><p>如果修改了map文件，我们还需要在ceph.conf中添加一个内容</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[osd]</span><br><span class="line">osd crush update on start = <span class="literal">false</span></span><br></pre></td></tr></table></figure>
-<p>如果不添加该内容的话，重启osd之后就会自动迁移到其最初的默认位置，因此如果想让他回到修改map后位置，必须添加该内容</p>
-<p>添加了该内容之后，如果想要在集群中添加osd，需要自己进行手动调整，系统不会再自动进行调整</p>
+<li><p>exits</p>
+<p>将主查询的数据，放到子查询中做条件验证，根据验证结果（true或false）来决定主查询的数据结构是否得以保留</p>
 </li>
 </ul>
 </li>
-</ol>
+<li><p>order by关键字优化</p>
+<ul>
+<li><p>order by子句，尽量使用Index方式排序，避免使用filesort方式排序</p>
+<p>排序如果按照顺序一升一降排序，也会导致最终的使用filesort</p>
+</li>
+<li><p>尽可能在索引列上完成排序操作，遵照索引建立的最佳左前缀</p>
+</li>
+<li><p>如果不在索引列上，filesort有两种算法：MySQL会启动双路排序和单路排序</p>
+<ul>
+<li><p>双路排序</p>
+<p>MySQL4.1之前使用双路排序，字面意思是两次扫描磁盘，最终得到数据</p>
+</li>
+<li><p>单路排序</p>
+<p>MySQL4.1之后使用单路排序，从磁盘读取查询需要的列，按照order by列在buffer对他们进行排序，然后扫描排序后的列表进行输出，它的效率更快一些，避免了第二次读取数据，并且把随机io变成了顺序io，但是它会使用更多的 空间，因为它把每一行都保存在唉内存中了。</p>
+</li>
+<li><p>两者比较</p>
+<p>总体而言，单路排序好于双路排序，但是单路排序如果无法一次完成，则需要多次io，而双路排序是稳定的，始终都是两次io</p>
+<p>在sort_buffer中，单路排序比双路排序多占用很多空间，有可能取出的数据总大小超过了sort_buffer的容量，导致每次只能取sort_buffer容量大小的数据进行排序，排序完再取sort_buffer的容量大小，再排序…从而导致多次io</p>
+</li>
+</ul>
+</li>
+<li><p>优化策略</p>
+<ul>
+<li><p>增大sort_buffer_size参数设置</p>
+</li>
+<li><p>增大max_length_for_sort_data参数设置</p>
+</li>
+<li><p>尽一切可能在使用order by的时候不要使用select *</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223210831823.png" alt="image-20210223210831823" style="zoom:50%;" />
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>group by</p>
+<p>group by的实质是先排序后分组</p>
+<p>其他与order by一样，多了一条如下：</p>
+<p>where 高于having，能写在where限定的条件就不要去having限定</p>
+</li>
+</ul>
+<h3 id="慢查询日志"><a href="#慢查询日志" class="headerlink" title="慢查询日志"></a>慢查询日志</h3><p>默认情况下MySQL没有开启慢查询日志，需要我们手动设置该参数</p>
+<p>如果不是调优需要，则不要开启该功能</p>
+<ul>
+<li><p>开启慢查询日志</p>
+<ul>
+<li><p>查看</p>
+<p>show variables like ‘%slow_query_log%’;</p>
+</li>
+<li><p>开启</p>
+<p>set global slow_query_log=1;</p>
+<p>只会对当前数据库生效，重启MySQL就会失效</p>
+<p>如果想要永久生效</p>
+<p>则需要在my.cnf中的[mysqld]下增加或修改参数</p>
+<p>slow_query_log=1</p>
+<p>slow_query_log_file =  /var/lib/mysql/VM-12-5-centos-slow.log</p>
+<p>重启MySQL即可</p>
+</li>
+<li><p>查看对应的阈值</p>
+<p>show variables like ‘long_query_time%’</p>
+<p>假如运行时间正好等于long_query_time的情况则不会被记录下来</p>
+<p>如果想要其他阈值，可以直接修改 :set long_query_time = 3;(<font color=red>注意</font>：直接修改的话看不到long_query_time有变化，需要重新登录MySQL才会看到修改的值,也可以通过show global variables like ‘long_query_time%’查看)</p>
+<p>也可以通过my.cnf进行修改</p>
+</li>
+<li><p>查看</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223213433512.png" alt="image-20210223213433512" style="zoom:50%;" />
+</li>
+<li><p>查看有多少慢SQL</p>
+<p>show global status like ‘%Slow_queries’;</p>
+</li>
+<li><p>配置</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223213655.png" alt="image-20210223213650510" style="zoom:50%;" />
+</li>
+</ul>
+</li>
+<li><p>日志分析工具</p>
+<p>mysqldumpslow  –help 可以查看其用法</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223214027917.png" alt="image-20210223214027917" style="zoom:50%;" />
+
+
+
+</li>
+</ul>
+<h3 id="show-profile"><a href="#show-profile" class="headerlink" title="show profile"></a>show profile</h3><p>MySQL提供可以用来分析当前会话中语句执行的资源消耗情况</p>
+<ul>
+<li><p>默认情况下show profile是处于关闭状态的，只保存最近15次 的运行结果</p>
+<ul>
+<li><p>是否支持</p>
+<p>show variables like ‘profiling’;</p>
+</li>
+<li><p>开启功能</p>
+<p>set profiling = on; (也只是暂时生效，重启就会失效)</p>
+</li>
+<li><p>运行SQL</p>
+</li>
+<li><p>查看结果 show profiles</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223220853.png" alt="image-20210223220847797" style="zoom:50%;" />
+</li>
+<li><p>诊断SQL，show profile cpu,block io for query 上一步前面的问题SQL数字号码</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223220953798.png" alt="image-20210223220953798" style="zoom:50%;" />
+
+<p>当然除了cpu、io也可以查看其它的，如下</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223221057082.png" alt="image-20210223221057082" style="zoom:50%;" />
+</li>
+<li><p>日常开发需要注意的结论</p>
+<p>出现了一下字眼则说明该SQL比较危险</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223221307.png" alt="image-20210223221302953" style="zoom:50%;" />
+
+
+
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="全局查询日志"><a href="#全局查询日志" class="headerlink" title="全局查询日志"></a>全局查询日志</h3><p>主要是用于测试环境，将所有的SQL抓取出来查看</p>
+<ul>
+<li><p>配置启用</p>
+<p>在my.cnf中设置如下：</p>
+<p>general_log = 1</p>
+<p>General_log_file = {path}</p>
+<p>Log_output =FILE</p>
+</li>
+<li><p>命令启用</p>
+<p>set global general_log = 1;</p>
+<p>set global log_output = ‘TABLE’</p>
+<p>这样开启之后我们所有的SQL语句都会被记录到mysql库中 的general_log表中，查看如下</p>
+<p>select * from mysql.general_log;</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223222510.png" alt="image-20210223222503338" style="zoom:50%;" />
+
+
+
+</li>
+</ul>
 
     </div>
 
@@ -318,19 +437,19 @@
   <div class="popular-posts-header">相关文章</div>
   <ul class="popular-posts">
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/2020/10/02/Ceph安装教程/" rel="bookmark">ceph安装教程</a></div>
+      <div class="popular-posts-title"><a href="/2021/02/17/MySQL安装/" rel="bookmark">MySQL安装</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/2020/10/23/Ceph安装第三方Ceph exporter/" rel="bookmark">Ceph安装第三方Ceph exporter</a></div>
+      <div class="popular-posts-title"><a href="/2021/02/17/MySQL逻辑架构/" rel="bookmark">MySQL逻辑架构</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/2021/01/25/Ceph运维笔记/" rel="bookmark">ceph运维笔记</a></div>
+      <div class="popular-posts-title"><a href="/2021/02/17/MySQL配置文件/" rel="bookmark">MySQL主要配置文件</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/2020/10/03/Ceph调优/" rel="bookmark">ceph调优</a></div>
+      <div class="popular-posts-title"><a href="/2020/12/29/基础知识/" rel="bookmark">基础知识</a></div>
     </li>
     <li class="popular-posts-item">
-      <div class="popular-posts-title"><a href="/2020/10/07/Ceph集成prometheus、grafana/" rel="bookmark">ceph集成Prometheus、grafana</a></div>
+      <div class="popular-posts-title"><a href="/2021/01/05/并发控制/" rel="bookmark">并发控制</a></div>
     </li>
   </ul>
 
@@ -358,7 +477,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://cooperxj.github.io/2020/10/04/CrushMap/" title="CrushMap">http://cooperxj.github.io/2020/10/04/CrushMap/</a>
+    <a href="http://cooperxj.github.io/2021/02/23/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/" title="查询截取分析">http://cooperxj.github.io/2021/02/23/查询截取分析/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -369,7 +488,7 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/ceph/" rel="tag"># ceph</a>
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
           </div>
 
         
@@ -378,13 +497,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2020/10/03/Ceph%E8%B0%83%E4%BC%98/" rel="prev" title="ceph调优">
-      <i class="fa fa-chevron-left"></i> ceph调优
+    <a href="/2021/02/20/%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/" rel="prev" title="MySQL性能分析">
+      <i class="fa fa-chevron-left"></i> MySQL性能分析
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2020/10/04/%E6%90%AD%E5%BB%BA%E9%AB%98%E5%8F%AF%E7%94%A8%E7%9A%84rgw%E9%9B%86%E7%BE%A4/" rel="next" title="搭建高可用的rgw集群">
-      搭建高可用的rgw集群 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -444,6 +560,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text"></span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">分析过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96"><span class="nav-number">2.1.</span> <span class="nav-text">查询优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%85%A2%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97"><span class="nav-number">2.2.</span> <span class="nav-text">慢查询日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#show-profile"><span class="nav-number">2.3.</span> <span class="nav-text">show profile</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97"><span class="nav-number">2.4.</span> <span class="nav-text">全局查询日志</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 

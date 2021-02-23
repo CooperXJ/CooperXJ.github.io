@@ -191,6 +191,151 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2020/10/07/Ceph%E9%9B%86%E6%88%90prometheus%E3%80%81grafana/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/10/07/Ceph%E9%9B%86%E6%88%90prometheus%E3%80%81grafana/" class="post-title-link" itemprop="url">ceph集成Prometheus、grafana</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-07 19:50:54" itemprop="dateCreated datePublished" datetime="2020-10-07T19:50:54+08:00">2020-10-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-12 23:31:03" itemprop="dateModified" datetime="2021-02-12T23:31:03+08:00">2021-02-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ceph/" itemprop="url" rel="index"><span itemprop="name">ceph</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/10/07/Ceph%E9%9B%86%E6%88%90prometheus%E3%80%81grafana/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/10/07/Ceph%E9%9B%86%E6%88%90prometheus%E3%80%81grafana/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>570</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <ol>
+<li><p>加载模块</p>
+<p><code>ceph mgr module enable prometheus</code></p>
+<p>Ceph Luminous 12.2.1的mgr中<font color=red>自带</font>了Prometheus插件，内置了 Prometheus ceph exporter，可以使用Ceph mgr内置的exporter作为Prometheus的target。</p>
+</li>
+<li><p>默认暴露的端口是9283</p>
+<p>地址：ip:9283</p>
+<p>里面有非常多的指标</p>
+<p>当然端口也是可以修改的</p>
+</li>
+<li><p>安装Prometheus</p>
+<p>编写yum源</p>
+<p>安装</p>
+<p><code>yum install prometheus -y</code></p>
+</li>
+<li><p>修改Prometheus的配置文件并启动</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201007201106.png" alt="image-20201007200927996" style="zoom:50%;" />
+</li>
+<li><p>打开宿主机的网址以及端口号</p>
+<p>{ip}:9090</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201007201045.png" alt="image-20201007201040079" style="zoom:50%;" />
+</li>
+<li><p>安装grafana并启动</p>
+<p><code>yum install https://mirrors.cloud.tencent.com/grafana/yum/el7/grafana-5.4.2-1.x86_64.rpm </code></p>
+<p><code>service grafana-server start</code></p>
+</li>
+<li><p>查看grafana端口(默认是3000端口)</p>
+<p><code>netstat -antupl |grep grafana</code></p>
+</li>
+<li><p>登录的默认账户和密码都是admin</p>
+</li>
+<li><p>配置datasource</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201007202503.png" alt="image-20201007202456062" style="zoom:50%;" />
+</li>
+<li><p>因为下载的时候grafana就已经提供了一些页面脚本共选择</p>
+<p>在 /etc/grafana/dashboards/下有较多的json文件</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201007213637.png" alt="image-20201007203436859" style="zoom:50%;" />
+
+<p>可以直接导入到grafana中</p>
+<p>或者直接输入UID（也就是官方提供的一些模板）</p>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      
+
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2020/10/07/%E5%AE%89%E8%A3%85dashboard/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1604,252 +1749,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2020/10/02/Ceph%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Cooper">
-      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Cooper Notes">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/10/02/Ceph%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/" class="post-title-link" itemprop="url">ceph安装教程</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-10-02 22:16:59" itemprop="dateCreated datePublished" datetime="2020-10-02T22:16:59+08:00">2020-10-02</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-02-12 23:30:26" itemprop="dateModified" datetime="2021-02-12T23:30:26+08:00">2021-02-12</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ceph/" itemprop="url" rel="index"><span itemprop="name">ceph</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/10/02/Ceph%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/10/02/Ceph%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>2.2k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>2 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <ol>
-<li><p>设置三台linux主机并配置不同的ip地址以及内网地址</p>
-<p>我设置的ip网址为：192.168.236.121 192.168.236.122 192.168.236.123</p>
-<p>内网地址为：192.168.100.101 192.168.100.102  192.168.100.103</p>
-</li>
-<li><p>设置三条主机名分别为node1、node2、node3</p>
-<p><code>hostnamectl set-hostname node1</code></p>
-<p><code>bash #使得命名生效</code></p>
-</li>
-<li><p>编写hosts文件并传递到另外两个主机上</p>
-</li>
-<li><p>免密钥登录</p>
-<ol>
-<li><p>ssh-keygen 生成公钥和私钥</p>
-</li>
-<li><p>将公钥派发到三个节点上</p>
-<p><code>ssh-copy-id -i 公钥存放地址</code></p>
-</li>
-</ol>
-</li>
-<li><p>关闭防火墙</p>
-<ul>
-<li><p>关闭selinux</p>
-<p>SELinux 主要作用就是<strong>最大限度地减小系统中服务进程可访问的资源</strong>（最小权限原则）</p>
-<ul>
-<li>将/etc/selinux下的config文件中的selinux修改为disabled</li>
-</ul>
-<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003101658.png" alt="image-20201003085849002" style="zoom:50%;" />
-
-<ul>
-<li><p>设置setenforce为0  （临时关闭selinux）</p>
-<p><code>setenforce 0 </code></p>
-<p>查看当前selinux状态</p>
-<p> <code>getenforce</code></p>
-<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003101652.png" alt="image-20201003090415905" style="zoom:50%;" />
-</li>
-</ul>
-</li>
-<li><p>关闭防火墙</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">systemctl <span class="built_in">disable</span> firewalld</span><br><span class="line">systemctl stop firewalld</span><br></pre></td></tr></table></figure></li>
-</ul>
-</li>
-<li><p>设置ntp同步</p>
-<ul>
-<li><p>安装ntp</p>
-<p> yum install ntp -y</p>
-</li>
-<li><p>如果需要将ntp的时间以内网为准的话需要设置ntp的文件，也就是设置以下部分</p>
-<p>这里默认是指向外网的，一般都需要指向公司的ntp服务器</p>
-<p>文件位于 /etc/ntp.conf</p>
-<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003101645.png" alt="image-20201003091341145" style="zoom:50%;" />
-</li>
-<li><p>重启ntp服务</p>
-<p>systemctl restart ntpd</p>
-<p>systemctl enable ntpd</p>
-</li>
-<li><p>查看是否启动</p>
-<p> ntpq -pn</p>
-</li>
-<li><p>将另外两台服务器的ntp指向第一台服务器的ntp，并重新启动ntp服务</p>
-<p>在其对用的ntp.conf文件中将原来的server注释掉，然后添加对应的服务器</p>
-<p>sever  ip iburst</p>
-<p>如果出现*则说明同步完成</p>
-<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003101635.png" alt="image-20201003092656801" style="zoom:50%;" />
-</li>
-</ul>
-</li>
-<li><p>配置yum源</p>
-<ul>
-<li><p>配置centos的<a target="_blank" rel="noopener" href="https://developer.aliyun.com/mirror/centos?spm=a2c6h.13651102.0.0.3e221b11MsogJv">yum源</a></p>
-<ul>
-<li><p>删除原来自带的yum源</p>
-<p>rm -f * 删除掉 /etc/yum.repos.d/下的yum源</p>
-</li>
-<li><p>在阿里云镜像上找到与自己版本匹配的yum源</p>
-</li>
-</ul>
-</li>
-<li><p>配置epl的yum源</p>
-</li>
-<li><p>配置ceph的yum源</p>
-<p>自己编写ceph.repo文件</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[norch]</span><br><span class="line">name=norch</span><br><span class="line">baseurl=https://mirrors.aliyun.com/ceph/rpm-nautilus/el7/noarch/</span><br><span class="line">enabled=1</span><br><span class="line">gpgcheck=0</span><br><span class="line"></span><br><span class="line">[x86_64]</span><br><span class="line">name=x86 64</span><br><span class="line">baseurl=https://mirrors.aliyun.com/ceph/rpm-nautilus/el7/x86_64/</span><br><span class="line">enabled=1</span><br><span class="line">gpgcheck=0</span><br></pre></td></tr></table></figure>
-
-<p>创建缓存 yum makecache</p>
-</li>
-</ul>
-</li>
-<li><p>安装ceph-deploy</p>
-<p>yum install python-setuptools ceph-deploy</p>
-<p>需要确保版本是2.0.1或者是2.0.0</p>
-</li>
-<li><p>创建monitor</p>
-<p>先创建ceph-deploy文件夹，进入之后执行创建monitor命令，创建ceph-deloy文件夹是想将让生成的文件放到包里面</p>
-<p>ceph-deploy new –public-network 192.168.236.0/24(这个必须有) –cluster-network 192.168.100.0/24 node1</p>
-<p>public-network用于对外，cluster-network用于对内</p>
-</li>
-<li><p>安装依赖的包  （每个节点都需要安装）</p>
-<p>yum install ceph ceph-mon ceph-mgr ceph-radosgw ceph-mds -y</p>
-</li>
-<li><p>初始化monitor (必须等待步骤10全部完成)</p>
-<p>ceph-deploy mon create-initial</p>
-</li>
-<li><p>将admin的密钥推送到所有的节点上</p>
-<p>ceph-deploy admin node1 node2 node3</p>
-</li>
-<li><p>部署监控节点</p>
-<p> ceph-deploy mgr create node1</p>
-</li>
-<li><p>添加osd</p>
-<p>可以将主机中的磁盘作为osd添加到ceph集群中</p>
-<p>ceph-deploy osd create node1 –data /dev/sdb</p>
-<p>ceph-deploy osd create node2 –data /dev/sdb</p>
-<p>ceph-deploy osd create node3 –data /dev/sdb</p>
-</li>
-<li><p>为了确保高可用的集群，需要部署多个monitor，ceph采用的是Paxos算法，因此需要部署奇数个mon</p>
-<p>ceph-deploy  mon add node2 –address 192.168.100.102</p>
-<p>ceph-deploy  mon add node2 –address 192.168.100.103</p>
-<p>也可以查看仲裁选举的情况</p>
-<p>ceph-deploy quorum_status –format json-pretty</p>
-</li>
-<li><p>部署多个mgr节点，也是为了高可用，但是此处的mgr节点只有一个是active的状态，其余的都是standby状态</p>
-<p>ceph-deploy mgr create node2 node3</p>
-</li>
-</ol>
-<p>到此我们已经部署一个有3个mon，3个mgr和3个osd的高可用ceph集群！</p>
-<h3 id="附加"><a href="#附加" class="headerlink" title="附加"></a>附加</h3><ol>
-<li><p>如果安装过程中遇到问题</p>
-<ul>
-<li><p>删除安装包 </p>
-<p>ceph-deploy purge admin-node node1 node2 node3</p>
-</li>
-<li><p>清除配置 </p>
-<p>ceph-deploy purgedata admin-node node1 node2 node3</p>
-</li>
-</ul>
-<p>​       ceph-deploy forgetkeys</p>
-</li>
-<li><p>如果osd安装不了 查看磁盘是否清理干净</p>
-<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/c88ddc104a4a">https://www.jianshu.com/p/c88ddc104a4a</a></p>
-<p>vgscan 查看</p>
-</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      
-
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1919,7 +1818,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">131</span>
+          <span class="site-state-item-count">132</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1979,12 +1878,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">330k</span>
+    <span title="站点总字数">332k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">5:01</span>
+    <span title="站点阅读时长">5:02</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
   </div>

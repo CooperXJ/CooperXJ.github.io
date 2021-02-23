@@ -191,6 +191,252 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2020/10/02/Ceph%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/10/02/Ceph%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/" class="post-title-link" itemprop="url">ceph安装教程</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-02 22:16:59" itemprop="dateCreated datePublished" datetime="2020-10-02T22:16:59+08:00">2020-10-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-12 23:30:26" itemprop="dateModified" datetime="2021-02-12T23:30:26+08:00">2021-02-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ceph/" itemprop="url" rel="index"><span itemprop="name">ceph</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/10/02/Ceph%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/10/02/Ceph%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <ol>
+<li><p>设置三台linux主机并配置不同的ip地址以及内网地址</p>
+<p>我设置的ip网址为：192.168.236.121 192.168.236.122 192.168.236.123</p>
+<p>内网地址为：192.168.100.101 192.168.100.102  192.168.100.103</p>
+</li>
+<li><p>设置三条主机名分别为node1、node2、node3</p>
+<p><code>hostnamectl set-hostname node1</code></p>
+<p><code>bash #使得命名生效</code></p>
+</li>
+<li><p>编写hosts文件并传递到另外两个主机上</p>
+</li>
+<li><p>免密钥登录</p>
+<ol>
+<li><p>ssh-keygen 生成公钥和私钥</p>
+</li>
+<li><p>将公钥派发到三个节点上</p>
+<p><code>ssh-copy-id -i 公钥存放地址</code></p>
+</li>
+</ol>
+</li>
+<li><p>关闭防火墙</p>
+<ul>
+<li><p>关闭selinux</p>
+<p>SELinux 主要作用就是<strong>最大限度地减小系统中服务进程可访问的资源</strong>（最小权限原则）</p>
+<ul>
+<li>将/etc/selinux下的config文件中的selinux修改为disabled</li>
+</ul>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003101658.png" alt="image-20201003085849002" style="zoom:50%;" />
+
+<ul>
+<li><p>设置setenforce为0  （临时关闭selinux）</p>
+<p><code>setenforce 0 </code></p>
+<p>查看当前selinux状态</p>
+<p> <code>getenforce</code></p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003101652.png" alt="image-20201003090415905" style="zoom:50%;" />
+</li>
+</ul>
+</li>
+<li><p>关闭防火墙</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">systemctl <span class="built_in">disable</span> firewalld</span><br><span class="line">systemctl stop firewalld</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>设置ntp同步</p>
+<ul>
+<li><p>安装ntp</p>
+<p> yum install ntp -y</p>
+</li>
+<li><p>如果需要将ntp的时间以内网为准的话需要设置ntp的文件，也就是设置以下部分</p>
+<p>这里默认是指向外网的，一般都需要指向公司的ntp服务器</p>
+<p>文件位于 /etc/ntp.conf</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003101645.png" alt="image-20201003091341145" style="zoom:50%;" />
+</li>
+<li><p>重启ntp服务</p>
+<p>systemctl restart ntpd</p>
+<p>systemctl enable ntpd</p>
+</li>
+<li><p>查看是否启动</p>
+<p> ntpq -pn</p>
+</li>
+<li><p>将另外两台服务器的ntp指向第一台服务器的ntp，并重新启动ntp服务</p>
+<p>在其对用的ntp.conf文件中将原来的server注释掉，然后添加对应的服务器</p>
+<p>sever  ip iburst</p>
+<p>如果出现*则说明同步完成</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003101635.png" alt="image-20201003092656801" style="zoom:50%;" />
+</li>
+</ul>
+</li>
+<li><p>配置yum源</p>
+<ul>
+<li><p>配置centos的<a target="_blank" rel="noopener" href="https://developer.aliyun.com/mirror/centos?spm=a2c6h.13651102.0.0.3e221b11MsogJv">yum源</a></p>
+<ul>
+<li><p>删除原来自带的yum源</p>
+<p>rm -f * 删除掉 /etc/yum.repos.d/下的yum源</p>
+</li>
+<li><p>在阿里云镜像上找到与自己版本匹配的yum源</p>
+</li>
+</ul>
+</li>
+<li><p>配置epl的yum源</p>
+</li>
+<li><p>配置ceph的yum源</p>
+<p>自己编写ceph.repo文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[norch]</span><br><span class="line">name=norch</span><br><span class="line">baseurl=https://mirrors.aliyun.com/ceph/rpm-nautilus/el7/noarch/</span><br><span class="line">enabled=1</span><br><span class="line">gpgcheck=0</span><br><span class="line"></span><br><span class="line">[x86_64]</span><br><span class="line">name=x86 64</span><br><span class="line">baseurl=https://mirrors.aliyun.com/ceph/rpm-nautilus/el7/x86_64/</span><br><span class="line">enabled=1</span><br><span class="line">gpgcheck=0</span><br></pre></td></tr></table></figure>
+
+<p>创建缓存 yum makecache</p>
+</li>
+</ul>
+</li>
+<li><p>安装ceph-deploy</p>
+<p>yum install python-setuptools ceph-deploy</p>
+<p>需要确保版本是2.0.1或者是2.0.0</p>
+</li>
+<li><p>创建monitor</p>
+<p>先创建ceph-deploy文件夹，进入之后执行创建monitor命令，创建ceph-deloy文件夹是想将让生成的文件放到包里面</p>
+<p>ceph-deploy new –public-network 192.168.236.0/24(这个必须有) –cluster-network 192.168.100.0/24 node1</p>
+<p>public-network用于对外，cluster-network用于对内</p>
+</li>
+<li><p>安装依赖的包  （每个节点都需要安装）</p>
+<p>yum install ceph ceph-mon ceph-mgr ceph-radosgw ceph-mds -y</p>
+</li>
+<li><p>初始化monitor (必须等待步骤10全部完成)</p>
+<p>ceph-deploy mon create-initial</p>
+</li>
+<li><p>将admin的密钥推送到所有的节点上</p>
+<p>ceph-deploy admin node1 node2 node3</p>
+</li>
+<li><p>部署监控节点</p>
+<p> ceph-deploy mgr create node1</p>
+</li>
+<li><p>添加osd</p>
+<p>可以将主机中的磁盘作为osd添加到ceph集群中</p>
+<p>ceph-deploy osd create node1 –data /dev/sdb</p>
+<p>ceph-deploy osd create node2 –data /dev/sdb</p>
+<p>ceph-deploy osd create node3 –data /dev/sdb</p>
+</li>
+<li><p>为了确保高可用的集群，需要部署多个monitor，ceph采用的是Paxos算法，因此需要部署奇数个mon</p>
+<p>ceph-deploy  mon add node2 –address 192.168.100.102</p>
+<p>ceph-deploy  mon add node2 –address 192.168.100.103</p>
+<p>也可以查看仲裁选举的情况</p>
+<p>ceph-deploy quorum_status –format json-pretty</p>
+</li>
+<li><p>部署多个mgr节点，也是为了高可用，但是此处的mgr节点只有一个是active的状态，其余的都是standby状态</p>
+<p>ceph-deploy mgr create node2 node3</p>
+</li>
+</ol>
+<p>到此我们已经部署一个有3个mon，3个mgr和3个osd的高可用ceph集群！</p>
+<h3 id="附加"><a href="#附加" class="headerlink" title="附加"></a>附加</h3><ol>
+<li><p>如果安装过程中遇到问题</p>
+<ul>
+<li><p>删除安装包 </p>
+<p>ceph-deploy purge admin-node node1 node2 node3</p>
+</li>
+<li><p>清除配置 </p>
+<p>ceph-deploy purgedata admin-node node1 node2 node3</p>
+</li>
+</ul>
+<p>​       ceph-deploy forgetkeys</p>
+</li>
+<li><p>如果osd安装不了 查看磁盘是否清理干净</p>
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/c88ddc104a4a">https://www.jianshu.com/p/c88ddc104a4a</a></p>
+<p>vgscan 查看</p>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      
+
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2020/09/28/%E8%AF%AD%E6%B3%95/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1740,208 +1986,6 @@ fmt.Printf(&quot;%d\n&quot;,t6)
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2020/09/04/rabbitmq%E6%A8%A1%E5%9E%8B/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Cooper">
-      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Cooper Notes">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/09/04/rabbitmq%E6%A8%A1%E5%9E%8B/" class="post-title-link" itemprop="url">RabbitMQ模型</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-09-04 08:35:34" itemprop="dateCreated datePublished" datetime="2020-09-04T08:35:34+08:00">2020-09-04</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-02-13 08:41:27" itemprop="dateModified" datetime="2021-02-13T08:41:27+08:00">2021-02-13</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/RabbitMQ/" itemprop="url" rel="index"><span itemprop="name">RabbitMQ</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/09/04/rabbitmq%E6%A8%A1%E5%9E%8B/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/09/04/rabbitmq%E6%A8%A1%E5%9E%8B/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>9.1k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>8 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h4 id="直连模型"><a href="#直连模型" class="headerlink" title="直连模型"></a>直连模型</h4><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20200904110719.png" alt="image-20200904110714767" style="zoom:50%;" />
-
-<p>在上图的模型中，有以下概念：</p>
-<ul>
-<li>P:生产者，也就是需要发送消息的程序</li>
-<li>C:消费者，消息的接收者</li>
-<li>queue：消息队列，可以缓存消息，生产者往其中投递消息，消费者从其中取出消息</li>
-</ul>
-<p>🌰</p>
-<p>Provider</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">ConnectionFactory factory = <span class="keyword">new</span> ConnectionFactory();</span><br><span class="line"><span class="comment">//设置连接主机</span></span><br><span class="line">factory.setHost(<span class="string">&quot;127.0.0.1&quot;</span>);</span><br><span class="line"><span class="comment">//设置连接端口</span></span><br><span class="line">factory.setPort(<span class="number">5672</span>);</span><br><span class="line"><span class="comment">//设置连接虚拟主机</span></span><br><span class="line">factory.setVirtualHost(<span class="string">&quot;/ems&quot;</span>);</span><br><span class="line"><span class="comment">//设置账户密码</span></span><br><span class="line">factory.setUsername(<span class="string">&quot;ems&quot;</span>);</span><br><span class="line">factory.setPassword(<span class="string">&quot;123&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//获取连接对象</span></span><br><span class="line">Connection connection = factory.newConnection();</span><br><span class="line"></span><br><span class="line"><span class="comment">//获取连接通道</span></span><br><span class="line">Channel channel = connection.createChannel();</span><br><span class="line"></span><br><span class="line"><span class="comment">//绑定对应的消息队列</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 参数s 队列名称  不存在则自动创建</span></span><br><span class="line"><span class="comment"> * 参数b 队列是否需要持久化  （不包括消息持久化）</span></span><br><span class="line"><span class="comment"> * 参数b1 是否需要独占队列(当前队列只运行当前连接可用？)</span></span><br><span class="line"><span class="comment"> * 参数b2 是否在消费完成后自动删除队列</span></span><br><span class="line"><span class="comment"> * 参数 map  额外的附加参数</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">channel.queueDeclare(<span class="string">&quot;hello&quot;</span>,<span class="keyword">false</span>,<span class="keyword">false</span>,<span class="keyword">false</span>,<span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 参数s 交换机名称</span></span><br><span class="line"><span class="comment"> * 参数s1 路由规则</span></span><br><span class="line"><span class="comment"> * 参数3 传递消息额外设置  (例如消息持久化 MessageProperties.PERSISTENT_TEXT_PLAIN)</span></span><br><span class="line"><span class="comment"> * 参数4  消息的具体内容</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">channel.basicPublish(<span class="string">&quot;&quot;</span>,<span class="string">&quot;hello&quot;</span>,<span class="keyword">null</span>,<span class="string">&quot;hello rabbotmq&quot;</span>.getBytes());</span><br><span class="line"></span><br><span class="line">channel.close();</span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
-<p>Consumer</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"> ConnectionFactory factory = <span class="keyword">new</span> ConnectionFactory();</span><br><span class="line"> <span class="comment">//设置连接主机</span></span><br><span class="line"> factory.setHost(<span class="string">&quot;127.0.0.1&quot;</span>);</span><br><span class="line"> <span class="comment">//设置连接端口</span></span><br><span class="line"> factory.setPort(<span class="number">5672</span>);</span><br><span class="line"> <span class="comment">//设置连接虚拟主机</span></span><br><span class="line"> factory.setVirtualHost(<span class="string">&quot;/ems&quot;</span>);</span><br><span class="line"> <span class="comment">//设置账户密码</span></span><br><span class="line"> factory.setUsername(<span class="string">&quot;ems&quot;</span>);</span><br><span class="line"> factory.setPassword(<span class="string">&quot;123&quot;</span>);</span><br><span class="line"></span><br><span class="line"> <span class="comment">//获取连接对象</span></span><br><span class="line"> Connection connection = factory.newConnection();</span><br><span class="line"></span><br><span class="line"> <span class="comment">//获取连接通道</span></span><br><span class="line"> Channel channel = connection.createChannel();</span><br><span class="line"></span><br><span class="line"> <span class="comment">//绑定对应的消息队列  要保证生产者和消费者各项参数严格对应上 ，比如说生产者持久化了，那么消费者也需要持久化</span></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 参数s 队列名称  不存在则自动创建</span></span><br><span class="line"><span class="comment">  * 参数b 队列是否需要持久化</span></span><br><span class="line"><span class="comment">  * 参数b1 是否需要独占队列(当前队列只运行当前连接可用？)</span></span><br><span class="line"><span class="comment">  * 参数b2 是否在消费完成后自动删除队列  （消费者断开连接之后队列才会被删除掉）</span></span><br><span class="line"><span class="comment">  * 参数 map  额外的附加参数</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> channel.queueDeclare(<span class="string">&quot;hello&quot;</span>,<span class="keyword">false</span>,<span class="keyword">false</span>,<span class="keyword">false</span>,<span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line"> <span class="comment">//接受是一个多线程，持续监听队列中的消息 最好不要关闭连接  在测试的时候不能再@Test注释的方法中写，因为@Test修饰的方法不支持多线程</span></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 参数1 队列 名称</span></span><br><span class="line"><span class="comment">  * 参数2 开始消息的自动确认</span></span><br><span class="line"><span class="comment">  * 参数3 消费时的回调接口</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">channel.basicConsume(<span class="string">&quot;hello&quot;</span>,<span class="keyword">true</span>,<span class="keyword">new</span> DefaultConsumer(channel)&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleDelivery</span><span class="params">(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, <span class="keyword">byte</span>[] body)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">new</span> String(body));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-
-
-<h4 id="任务模型"><a href="#任务模型" class="headerlink" title="任务模型"></a>任务模型</h4><p>​    当消息处理比较耗时时，生成消息的速度会远远大于消息的消费速度，长此以往，消息就会堆积越来越多，无法及时处理。此时可以使用任务模型（work模型）：<strong>让多个消费者绑定到一个队列，共同消费队列中的信息</strong>。队列中的消息一旦消费就会消失，因此任务不会被重复执行。</p>
-<p>​    任务队列默认在分发任务的时候是平均分配任务的，比如有两个消费者，那么每个消费者接收到任务是总任务的一般（默认情况下即使两个消费者的工作效率不相同也会平均任务）</p>
-<ul>
-<li>P: 生产者 任务的发布者</li>
-<li>C1: 消费者-1 领取任务并且完成任务，假设完成速度较慢</li>
-<li>C2: 消费者-2 领取任务并且完成任务，假设完成速度较快</li>
-</ul>
-<h5 id="基础班（平均主义）"><a href="#基础班（平均主义）" class="headerlink" title="基础班（平均主义）"></a>基础班（平均主义）</h5><p>🌰</p>
-<p>Provider</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"> Channel channel = utils.getChannel();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//绑定对应的消息队列</span></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 参数s 队列名称  不存在则自动创建</span></span><br><span class="line"><span class="comment">     * 参数b 队列是否需要持久化  （不包括消息持久化）</span></span><br><span class="line"><span class="comment">     * 参数b1 是否需要独占队列(当前队列只运行当前连接可用？)</span></span><br><span class="line"><span class="comment">     * 参数b2 是否在消费完成后自动删除队列</span></span><br><span class="line"><span class="comment">     * 参数 map  额外的附加参数</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    channel.queueDeclare(<span class="string">&quot;hello&quot;</span>,<span class="keyword">false</span>,<span class="keyword">false</span>,<span class="keyword">false</span>,<span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i =<span class="number">0</span>;i&lt;<span class="number">20</span>;i++)</span><br><span class="line">    &#123;</span><br><span class="line">        channel.basicPublish(<span class="string">&quot;&quot;</span>,<span class="string">&quot;hello&quot;</span>,<span class="keyword">null</span>,(i+<span class="string">&quot;   hello rabbotmq&quot;</span>).getBytes());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Consumer1，2代码都相同</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">RabbitMQUtils utils = <span class="keyword">new</span> RabbitMQUtils();</span><br><span class="line">Channel channel = utils.getChannel();</span><br><span class="line"></span><br><span class="line">channel.queueDeclare(<span class="string">&quot;hello&quot;</span>,<span class="keyword">false</span>,<span class="keyword">false</span>,<span class="keyword">false</span>,<span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//接受是一个多线程，持续监听队列中的消息 最好不要关闭连接  在测试的时候不能再@Test注释的方法中写，因为@Test修饰的方法不支持多线程</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 参数1 队列 名称</span></span><br><span class="line"><span class="comment"> * 参数2 开始消息的自动确认</span></span><br><span class="line"><span class="comment"> * 参数3 消费时的回调接口</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">channel.basicConsume(<span class="string">&quot;hello&quot;</span>,<span class="keyword">true</span>,<span class="keyword">new</span> DefaultConsumer(channel)&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleDelivery</span><span class="params">(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, <span class="keyword">byte</span>[] body)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">new</span> String(body));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-
-
-<p><strong>缺陷：</strong></p>
-<p>​        如果两个消费者有一个消费者突然宕机，但是它才处理了自己消息总量的一半，那么剩下的消息就会丢失掉。</p>
-<h5 id="进阶版（能者多劳）"><a href="#进阶版（能者多劳）" class="headerlink" title="进阶版（能者多劳）"></a>进阶版（能者多劳）</h5><p><code>channel.basicConsume(&quot;hello&quot;,true,new DefaultConsumer(channel))</code></p>
-<p><strong>此处的的第二个参数是autoAck，如果为true则自动帮消费者确认收到消息（也就是不管你消费者有没有执行完都一股脑全部都把消息给你，不管你有没有有消化完），否则不自动确认必须手动确认才会接受下一个消息。</strong></p>
-<p>Provdeir和上面一样</p>
-<p>Consumer1</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException, TimeoutException </span>&#123;</span><br><span class="line">    RabbitMQUtils utils = <span class="keyword">new</span> RabbitMQUtils();</span><br><span class="line">    Channel channel = utils.getChannel();</span><br><span class="line"></span><br><span class="line">    channel.queueDeclare(<span class="string">&quot;hello&quot;</span>,<span class="keyword">false</span>,<span class="keyword">false</span>,<span class="keyword">false</span>,<span class="keyword">null</span>);</span><br><span class="line">    channel.basicQos(<span class="number">1</span>);<span class="comment">//每次只能消费一个，不一股脑全部接受</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//接受是一个多线程，持续监听队列中的消息 最好不要关闭连接  在测试的时候不能再@Test注释的方法中写，因为@Test修饰的方法不支持多线程</span></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 参数1 队列 名称</span></span><br><span class="line"><span class="comment">     * 参数2 开始消息的自动确认</span></span><br><span class="line"><span class="comment">     * 参数3 消费时的回调接口</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    channel.basicConsume(<span class="string">&quot;hello&quot;</span>,<span class="keyword">false</span>,<span class="keyword">new</span> DefaultConsumer(channel)&#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleDelivery</span><span class="params">(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, <span class="keyword">byte</span>[] body)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Thread.sleep(<span class="number">2000</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            System.out.println(<span class="keyword">new</span> String(body));</span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">             * 手动确认</span></span><br><span class="line"><span class="comment">             * 参数1 确认队列中的哪个具体消息的标志</span></span><br><span class="line"><span class="comment">           	 * 参数2 false 是否开启多个消息同时确认</span></span><br><span class="line"><span class="comment">             */</span></span><br><span class="line">            channel.basicAck(envelope.getDeliveryTag(),<span class="keyword">false</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Consumer2</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException, TimeoutException </span>&#123;</span><br><span class="line">    RabbitMQUtils utils = <span class="keyword">new</span> RabbitMQUtils();</span><br><span class="line">    Channel channel = utils.getChannel();</span><br><span class="line"></span><br><span class="line">    channel.queueDeclare(<span class="string">&quot;hello&quot;</span>,<span class="keyword">false</span>,<span class="keyword">false</span>,<span class="keyword">false</span>,<span class="keyword">null</span>);</span><br><span class="line">    channel.basicQos(<span class="number">1</span>);<span class="comment">//每次只能消费一个，不一股脑全部接受</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//接受是一个多线程，持续监听队列中的消息 最好不要关闭连接  在测试的时候不能再@Test注释的方法中写，因为@Test修饰的方法不支持多线程</span></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 参数1 队列 名称</span></span><br><span class="line"><span class="comment">     * 参数2 开始消息的自动确认</span></span><br><span class="line"><span class="comment">     * 参数3 消费时的回调接口</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    channel.basicConsume(<span class="string">&quot;hello&quot;</span>,<span class="keyword">false</span>,<span class="keyword">new</span> DefaultConsumer(channel)&#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleDelivery</span><span class="params">(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, <span class="keyword">byte</span>[] body)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            System.out.println(<span class="keyword">new</span> String(body));</span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">             * 手动确认</span></span><br><span class="line"><span class="comment">             * 参数1 确认队列中的哪个具体消息的标志</span></span><br><span class="line"><span class="comment">           	 * 参数2 false 是否开启多个消息同时确认</span></span><br><span class="line"><span class="comment">             */</span></span><br><span class="line">            channel.basicAck(envelope.getDeliveryTag(),<span class="keyword">false</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-<h4 id="广播模型"><a href="#广播模型" class="headerlink" title="广播模型"></a>广播模型</h4><p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20200904094730.png" alt="image-20200904094726571"></p>
-<p>​    在广播模式下，消息发送流程如下：</p>
-<pre><code>- 可以有多个消费者
-- **每个消费者有自己的queue**
-- **每个队列都要绑定到exchange**
-- **生产者发送的消息只能发送到交换机**，交换机决定要发送给哪个队列，生产者无法决定
-- 交换机把消息发送给绑定过的所有队列
-- 队列的消费者都能拿到消息，实现一条消息被多个消费者消费
-</code></pre>
-<p>​    </p>
-<p>🌰</p>
-<p>Provider</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Channel channel = utils.getChannel();</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 通道绑定交换机</span></span><br><span class="line"><span class="comment"> * 参数1 交换机名称</span></span><br><span class="line"><span class="comment"> * 参数2 交换机类型</span></span><br><span class="line"><span class="comment"> * 如果指定交换机不存在会进行自动创建</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">channel.exchangeDeclare(<span class="string">&quot;logs&quot;</span>,<span class="string">&quot;fanout&quot;</span>);</span><br><span class="line"></span><br><span class="line">channel.basicPublish(<span class="string">&quot;logs&quot;</span>,<span class="string">&quot;&quot;</span>,<span class="keyword">null</span>,<span class="string">&quot;fanout hello&quot;</span>.getBytes());</span><br><span class="line">utils.closeChannelAndConnection();</span><br></pre></td></tr></table></figure>
-<p>ConsumerX</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">RabbitMQUtils utils = <span class="keyword">new</span> RabbitMQUtils();</span><br><span class="line">Channel channel = utils.getChannel();</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 通道绑定交换机</span></span><br><span class="line"><span class="comment"> * 参数1 交换机名称</span></span><br><span class="line"><span class="comment"> * 参数2 交换机类型</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">channel.exchangeDeclare(<span class="string">&quot;logs&quot;</span>,<span class="string">&quot;fanout&quot;</span>);</span><br><span class="line"><span class="comment">//获取临时队列</span></span><br><span class="line">String queue = channel.queueDeclare().getQueue();</span><br><span class="line"><span class="comment">//绑定交换机和队列</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 参数1 队列名称</span></span><br><span class="line"><span class="comment"> * 参数2 交换机名称</span></span><br><span class="line"><span class="comment"> * 参数3 路由规则  此处是扇形模型，因此不需要添加路由规则</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">channel.queueBind(queue,<span class="string">&quot;logs&quot;</span>,<span class="string">&quot;&quot;</span>);</span><br><span class="line"></span><br><span class="line">channel.basicConsume(queue,<span class="keyword">true</span>,<span class="keyword">new</span> DefaultConsumer(channel)&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleDelivery</span><span class="params">(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, <span class="keyword">byte</span>[] body)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;消费者1&quot;</span>+<span class="keyword">new</span> String(body));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-
-
-<h4 id="路由模型"><a href="#路由模型" class="headerlink" title="路由模型"></a>路由模型</h4><h5 id="Direct"><a href="#Direct" class="headerlink" title="Direct"></a>Direct</h5><p>​        定义：在某些场景中我们希望不同的消息被不同的队列消费</p>
-<p>​        在Direct模型下：</p>
-<ul>
-<li><p>队列与交换机的绑定不能是任意的绑定，而是需要指定一个RoutingKey（路由key）</p>
-</li>
-<li><p>消息的发送方在向exchange发送消息时，也必须指定消息的RoutingKey</p>
-</li>
-<li><p>Exchange不再把消息交给每一个绑定的队列，而是根据消息的RoutingKey进行判断，只有队列的RoutingKey与消息的RoutingKey完全一致才会接收到下消息</p>
-<p>流程如下：</p>
-<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20200904094812.png" alt="image-20200904094810078"></p>
-</li>
-</ul>
-<p>​        图解</p>
-<pre><code>    - P:生产者，向exchange发送消息，发送消息时，会指定一个RoutingKey
-    - X:交换机，接收生产者的消息，然后把消息传递给与RoutingKey完全匹配的队列
-    - C1:消费者，其所在队列指定了需要RoutingKey为error的消息
-    - C2：消费者，其所在队列指定了需要RoutingKey为info、error、warning的消息
-</code></pre>
-<p>​        </p>
-<p>🌰</p>
-<p>Provider</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Channel channel = utils.getChannel();</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 通道绑定交换机</span></span><br><span class="line"><span class="comment"> * 参数1 交换机名称</span></span><br><span class="line"><span class="comment"> * 参数2 交换机类型</span></span><br><span class="line"><span class="comment"> * 如果指定交换机不存在会进行自动创建</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">channel.exchangeDeclare(<span class="string">&quot;logs_direct&quot;</span>,<span class="string">&quot;direct&quot;</span>);</span><br><span class="line"></span><br><span class="line">String routingKey = <span class="string">&quot;info&quot;</span>;</span><br><span class="line">channel.basicPublish(<span class="string">&quot;logs_direct&quot;</span>,routingKey,<span class="keyword">null</span>,(<span class="string">&quot;hello&quot;</span>+routingKey).getBytes());</span><br><span class="line">utils.closeChannelAndConnection();</span><br></pre></td></tr></table></figure>
-<p>Consumer</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">RabbitMQUtils utils = <span class="keyword">new</span> RabbitMQUtils();</span><br><span class="line">Channel channel = utils.getChannel();</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 通道绑定交换机</span></span><br><span class="line"><span class="comment"> * 参数1 交换机名称</span></span><br><span class="line"><span class="comment"> * 参数2 交换机类型</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">channel.exchangeDeclare(<span class="string">&quot;logs_direct&quot;</span>,<span class="string">&quot;direct&quot;</span>);</span><br><span class="line"><span class="comment">//获取临时队列</span></span><br><span class="line">String queue = channel.queueDeclare().getQueue();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//绑定交换机和队列</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 参数1 队列名称</span></span><br><span class="line"><span class="comment"> * 参数2 交换机名称</span></span><br><span class="line"><span class="comment"> * 参数3 路由规则</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">channel.queueBind(queue,<span class="string">&quot;logs_direct&quot;</span>,<span class="string">&quot;info&quot;</span>);</span><br><span class="line">channel.queueBind(queue,<span class="string">&quot;logs_direct&quot;</span>,<span class="string">&quot;error&quot;</span>);</span><br><span class="line">channel.queueBind(queue,<span class="string">&quot;logs_direct&quot;</span>,<span class="string">&quot;track&quot;</span>);</span><br><span class="line"></span><br><span class="line">channel.basicConsume(queue,<span class="keyword">true</span>,<span class="keyword">new</span> DefaultConsumer(channel)&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleDelivery</span><span class="params">(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, <span class="keyword">byte</span>[] body)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;消费者&quot;</span>+<span class="keyword">new</span> String(body));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-<p>​    </p>
-<h5 id="Topic"><a href="#Topic" class="headerlink" title="Topic"></a>Topic</h5><p>​        Topic类型与Exchange与Direct相比，都是可以根据RoutingKey把消息路由到不同的队列。只不过Topic类型的Exchange可以让队列在绑定RoutingKey的时候使用通配符。这种模型RoutingKey一般都是由一个或多个单词组成，多个单词之间以 “.”分割。</p>
-<p>​        <img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20200904110731.png" alt="image-20200904105708765" style="zoom:50%;" /></p>
-<p>​    通配符类型</p>
-<ul>
-<li><p>*</p>
-<p>匹配不多不少恰好一个单词</p>
-<p>如audit.*  只能匹配audit.irs 也就是audit后面只跟一个单词</p>
-</li>
-<li><h1 id=""><a href="#" class="headerlink" title=""></a></h1><p>匹配一个或多个词</p>
-<p>如audit.# 匹配audit.irs.corporation或者audit.irs等</p>
-</li>
-</ul>
-<p>🌰</p>
-<p>Provider</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Channel channel = utils.getChannel();</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 通道绑定交换机</span></span><br><span class="line"><span class="comment"> * 参数1 交换机名称</span></span><br><span class="line"><span class="comment"> * 参数2 交换机类型</span></span><br><span class="line"><span class="comment"> * 如果指定交换机不存在会进行自动创建</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">channel.exchangeDeclare(<span class="string">&quot;logs_topic&quot;</span>,<span class="string">&quot;topic&quot;</span>);</span><br><span class="line"></span><br><span class="line">String routingKey = <span class="string">&quot;user.save&quot;</span>;</span><br><span class="line">channel.basicPublish(<span class="string">&quot;logs_topic&quot;</span>,routingKey,<span class="keyword">null</span>,(<span class="string">&quot;hello&quot;</span>+routingKey).getBytes());</span><br><span class="line">utils.closeChannelAndConnection();</span><br></pre></td></tr></table></figure>
-<p>Consumer</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">RabbitMQUtils utils = <span class="keyword">new</span> RabbitMQUtils();</span><br><span class="line">Channel channel = utils.getChannel();</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 通道绑定交换机</span></span><br><span class="line"><span class="comment"> * 参数1 交换机名称</span></span><br><span class="line"><span class="comment"> * 参数2 交换机类型</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">channel.exchangeDeclare(<span class="string">&quot;logs_topic&quot;</span>,<span class="string">&quot;topic&quot;</span>);</span><br><span class="line"><span class="comment">//获取临时队列</span></span><br><span class="line">String queue = channel.queueDeclare().getQueue();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//绑定交换机和队列</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 参数1 队列名称</span></span><br><span class="line"><span class="comment"> * 参数2 交换机名称</span></span><br><span class="line"><span class="comment"> * 参数3 路由规则</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">channel.queueBind(queue,<span class="string">&quot;logs_topic&quot;</span>,<span class="string">&quot;user.*&quot;</span>);</span><br><span class="line"></span><br><span class="line">channel.basicConsume(queue,<span class="keyword">true</span>,<span class="keyword">new</span> DefaultConsumer(channel)&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleDelivery</span><span class="params">(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, <span class="keyword">byte</span>[] body)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;消费者&quot;</span>+<span class="keyword">new</span> String(body));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-
-      
-    </div>
-
-    
-    
-    
-      
-
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -2011,7 +2055,7 @@ fmt.Printf(&quot;%d\n&quot;,t6)
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">131</span>
+          <span class="site-state-item-count">132</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -2071,12 +2115,12 @@ fmt.Printf(&quot;%d\n&quot;,t6)
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">330k</span>
+    <span title="站点总字数">332k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">5:01</span>
+    <span title="站点阅读时长">5:02</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
   </div>
