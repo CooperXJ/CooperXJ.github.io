@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="备份几个概念 热备 在数据库运行中直接备份，对数据库没有任何影响  冷备 在数据库停止的情况下进行备份  温备 在数据库运行中直接备份，对数据库有一定的影响  逻辑备份 内容一般由sql语句组成或者由表内实际数据组成  裸文件备份 复制数据库的物理文件   逻辑备份mysqldump  mysqldump 无法导出视图 mysqldump -uroot -p &amp;#123;参数&amp;#125; &amp;#12">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL备份与恢复">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/MySQL/MySQL%E5%A4%87%E4%BB%BD%E4%B8%8E%E6%81%A2%E5%A4%8D/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="备份几个概念 热备 在数据库运行中直接备份，对数据库没有任何影响  冷备 在数据库停止的情况下进行备份  温备 在数据库运行中直接备份，对数据库有一定的影响  逻辑备份 内容一般由sql语句组成或者由表内实际数据组成  裸文件备份 复制数据库的物理文件   逻辑备份mysqldump  mysqldump 无法导出视图 mysqldump -uroot -p &amp;#123;参数&amp;#125; &amp;#12">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-01-07T00:43:29.590Z">
+<meta property="article:modified_time" content="2021-08-31T07:42:30.000Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="InnoDB技术探究">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/MySQL/MySQL%E5%A4%87%E4%BB%BD%E4%B8%8E%E6%81%A2%E5%A4%8D/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL备份与恢复 | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/MySQL/MySQL%E5%A4%87%E4%BB%BD%E4%B8%8E%E6%81%A2%E5%A4%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL备份与恢复
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:29" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:29+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-31 15:42:30" itemprop="dateModified" datetime="2021-08-31T15:42:30+08:00">2021-08-31</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/MySQL/MySQL%E5%A4%87%E4%BB%BD%E4%B8%8E%E6%81%A2%E5%A4%8D/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/MySQL/MySQL%E5%A4%87%E4%BB%BD%E4%B8%8E%E6%81%A2%E5%A4%8D/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="备份"><a href="#备份" class="headerlink" title="备份"></a>备份</h3><h4 id="几个概念"><a href="#几个概念" class="headerlink" title="几个概念"></a>几个概念</h4><ul>
+<li><p>热备</p>
+<p>在数据库运行中直接备份，对数据库没有任何影响</p>
+</li>
+<li><p>冷备</p>
+<p>在数据库停止的情况下进行备份</p>
+</li>
+<li><p>温备</p>
+<p>在数据库运行中直接备份，对数据库有一定的影响</p>
+</li>
+<li><p>逻辑备份</p>
+<p>内容一般由sql语句组成或者由表内实际数据组成</p>
+</li>
+<li><p>裸文件备份</p>
+<p>复制数据库的物理文件</p>
+</li>
+</ul>
+<h3 id="逻辑备份"><a href="#逻辑备份" class="headerlink" title="逻辑备份"></a>逻辑备份</h3><h4 id="mysqldump"><a href="#mysqldump" class="headerlink" title="mysqldump"></a>mysqldump</h4><p>  <font color=red>mysqldump 无法导出视图</font></p>
+<p><code>mysqldump -uroot -p &#123;参数&#125; &#123;database 名&#125; &#123;表名&#125; &gt; &#123;sql文件&#125;</code></p>
+<ul>
+<li><p>只生成创建表结构的语句 (-d)</p>
+<p><code>mysqldump -uroot -p -d lmis md_goods_type &gt; goods_d.sql</code></p>
+</li>
+<li><p>只生成插入数据的语句 (-t)</p>
+<p><code>mysqldump -uroot -p123456 -t lmis md_goods_type &gt; goods_t.sql </code></p>
+</li>
+<li><p>自动生成两个文件：一个.sql文件，创建表结构的语句；一个.txt文件，数据文件，相当于select into outfile (-t)</p>
+<p><code>mysqldump -uroot -p123456 -T /tmp lmis md_goods_type </code></p>
+</li>
+<li><p>完整生成sql (包含表结构语句和插入数据的语句)</p>
+<p><code>mysqldump -u root -p lmis &gt; goods.sql</code></p>
+</li>
+</ul>
+<h4 id="select-…-into-outfile"><a href="#select-…-into-outfile" class="headerlink" title="select … into outfile"></a>select … into outfile</h4><p>主要作用是导出一张表中的数据，只有数据</p>
+<p><code>select * into outfile &#39;/root/a.txt&#39; from a</code></p>
+<p>这里需要注意一下，有可能提示The MySQL server is running with the –secure-file-priv option so it cannot execute this statement </p>
+<p>一些版本的mysql对通过文件导入导出作了限制，默认不允许，</p>
+<p>查看配置，执行mysql命令</p>
+<p>SHOW VARIABLES LIKE “secure_file_priv”;</p>
+<p>如果value值为null，则为禁止，如果有文件夹目录，则只允许改目录下文件（测试子目录也不行），如果为空，则不限制目录；</p>
+<p>修改配置可修改mysql配置文件，查看是否有</p>
+<p>secure_file_priv = </p>
+<p>这样一行内容，如果没有，则手动添加，</p>
+<p>secure_file_priv = /home </p>
+<p>表示限制为/home文件夹</p>
+<p>secure_file_priv = </p>
+<p>表示不限制目录，等号一定要有，否则mysql无法启动</p>
+<p>修改完配置文件后，重启mysql生效</p>
+<h3 id="逻辑恢复"><a href="#逻辑恢复" class="headerlink" title="逻辑恢复"></a>逻辑恢复</h3><ul>
+<li><p><code>mysql -u root -p &lt;xxx.sql </code>（mysql下）</p>
+</li>
+<li><p><code>source /home/mysql/test.sql</code>  （mysql下）</p>
+</li>
+<li><p><code>load data infile &#39;/var/lib/mysql-files/tt1.txt&#39; into table tt</code> （mysql下）</p>
+<p>数据文件必须是<code>select ... into outfile</code> 导出的格式，同时存放的路径也必须是<code>secure_file_priv</code> 下</p>
+<p>导入希望忽略对外键的检查</p>
+<p><code>set @@foreign_key_checks=0</code></p>
+</li>
+<li><p><code>mysqlimport --use-thread=&#123;number&#125; db_name textfile1[textfile2...]</code> （shell下）</p>
+<p>此处的–use-thread指的是导入时使用的线程数，并发指的是多张表同时导入，不是指一张表的并发导入</p>
+</li>
+<li><p>binlog的恢复</p>
+<p><code>mysqlbinlog binlog.[0-10]* |mysql -u root -p</code></p>
+<p>也可以将其导出成sql文件</p>
+<p><code>mysqlbinlog binlog.xxx &gt; /tmp/xxx.sql</code></p>
+<p>当然也可以选择指定二进制的偏移量或者日期来进行导入</p>
+<ul>
+<li><p>偏移量</p>
+<p><code>mysqlbinlog --start-position=xxxx binlog.xxxx |mysql -u root -p</code></p>
+</li>
+<li><p>日期</p>
+<p><code>mysqlbinlog --start-datetime=xxxx binlog.xxx |mysql -u root -p</code></p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="复制"><a href="#复制" class="headerlink" title="复制"></a>复制</h3><h4 id="复制的原理"><a href="#复制的原理" class="headerlink" title="复制的原理"></a>复制的原理</h4><ul>
+<li>主服务器把数据更改记录到二进制日志中</li>
+<li>从服务器把主服务器的二进制日志复制到自己的中继日志中</li>
+<li>从服务器重做中继日志中的日志，把更改应用到自己的数据库上，已到达数据的最终一致性</li>
+</ul>
+<h4 id="从服务器的线程"><a href="#从服务器的线程" class="headerlink" title="从服务器的线程"></a>从服务器的线程</h4><ul>
+<li><p>I/O线程</p>
+<p>负责读取主服务器的二进制日志，并将其保存为中继日志</p>
+</li>
+<li><p>SQL线程</p>
+<p>复制执行中继日志</p>
+</li>
+</ul>
+<p><font color=red>注意：复制并非是完全实时同步的，而是异步实时的</font></p>
+<h4 id="查看主从延迟程度"><a href="#查看主从延迟程度" class="headerlink" title="查看主从延迟程度"></a>查看主从延迟程度</h4><p><code>show slave status\G</code>得到<code>Read_Master_Log_Pos</code></p>
+<p><code>show master status\G</code>得到<code>Position</code></p>
+<p>后者减去前者得到的就是延迟</p>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\BLGC\" rel="bookmark">BLGC</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\CheckPoint\" rel="bookmark">CheckPoint</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB\" rel="bookmark">InnoDB</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB存储引擎文件\" rel="bookmark">InnoDB存储引擎文件</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB数据页结构\" rel="bookmark">InnoDB数据页结构</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/MySQL/MySQL%E5%A4%87%E4%BB%BD%E4%B8%8E%E6%81%A2%E5%A4%8D/" title="MySQL备份与恢复">http://cooperxj.github.io/2022/01/07/MySQL/MySQL备份与恢复/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+              <a href="/tags/InnoDB%E6%8A%80%E6%9C%AF%E6%8E%A2%E7%A9%B6/" rel="tag"># InnoDB技术探究</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/InnoDB%E6%95%B0%E6%8D%AE%E9%A1%B5%E7%BB%93%E6%9E%84/" rel="prev" title="InnoDB数据页结构">
+      <i class="fa fa-chevron-left"></i> InnoDB数据页结构
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/" rel="next" title="MySQL性能分析">
+      MySQL性能分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%87%E4%BB%BD"><span class="nav-number">1.</span> <span class="nav-text">备份</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%87%A0%E4%B8%AA%E6%A6%82%E5%BF%B5"><span class="nav-number">1.1.</span> <span class="nav-text">几个概念</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%BB%E8%BE%91%E5%A4%87%E4%BB%BD"><span class="nav-number">2.</span> <span class="nav-text">逻辑备份</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#mysqldump"><span class="nav-number">2.1.</span> <span class="nav-text">mysqldump</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#select-%E2%80%A6-into-outfile"><span class="nav-number">2.2.</span> <span class="nav-text">select … into outfile</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%BB%E8%BE%91%E6%81%A2%E5%A4%8D"><span class="nav-number">3.</span> <span class="nav-text">逻辑恢复</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%8D%E5%88%B6"><span class="nav-number">4.</span> <span class="nav-text">复制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%8D%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86"><span class="nav-number">4.1.</span> <span class="nav-text">复制的原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%8E%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E7%BA%BF%E7%A8%8B"><span class="nav-number">4.2.</span> <span class="nav-text">从服务器的线程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E4%B8%BB%E4%BB%8E%E5%BB%B6%E8%BF%9F%E7%A8%8B%E5%BA%A6"><span class="nav-number">4.3.</span> <span class="nav-text">查看主从延迟程度</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

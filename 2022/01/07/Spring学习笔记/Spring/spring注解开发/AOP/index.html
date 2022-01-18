@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="AOP步骤 导入aop模块  定义一个业务逻辑类  定义一个日志切面类 通知方法： 前置通知（@Before）：在目标方法运行之前运行 后置通知（@After）：在目标方法运行结束之后运行，无论方法是否正常结束 返回通知（@AfterReturning）：在目标方法正常返回之后运行（在后置通知之前运行） 异常通知（@AfterThrowing）：在目标方法出现异常之后运行（在后置通知之前运行） 环">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AOP">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/AOP/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="AOP步骤 导入aop模块  定义一个业务逻辑类  定义一个日志切面类 通知方法： 前置通知（@Before）：在目标方法运行之前运行 后置通知（@After）：在目标方法运行结束之后运行，无论方法是否正常结束 返回通知（@AfterReturning）：在目标方法正常返回之后运行（在后置通知之前运行） 异常通知（@AfterThrowing）：在目标方法出现异常之后运行（在后置通知之前运行） 环">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210326094305845.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326094401.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210326094442401.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326094721.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326095010.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210326095625322.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210326114738850.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210326113931654.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326170027.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326171051.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210326174717520.png">
+<meta property="article:published_time" content="2022-01-07T00:43:47.112Z">
+<meta property="article:modified_time" content="2022-01-17T10:14:44.527Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="Spring">
+<meta property="article:tag" content="Spring源码">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210326094305845.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/AOP/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>AOP | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/AOP/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          AOP
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:47" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:47+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-01-17 18:14:44" itemprop="dateModified" datetime="2022-01-17T18:14:44+08:00">2022-01-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/AOP/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/AOP/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="AOP"><a href="#AOP" class="headerlink" title="AOP"></a>AOP</h1><h3 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h3><ol>
+<li><p>导入aop模块</p>
+</li>
+<li><p>定义一个业务逻辑类</p>
+</li>
+<li><p>定义一个日志切面类</p>
+<p>通知方法：</p>
+<p>前置通知（@Before）：在目标方法运行之前运行</p>
+<p>后置通知（@After）：在目标方法运行结束之后运行，无论方法是否正常结束</p>
+<p>返回通知（@AfterReturning）：在目标方法正常返回之后运行（在后置通知之前运行）</p>
+<p>异常通知（@AfterThrowing）：在目标方法出现异常之后运行（在后置通知之前运行）</p>
+<p>环绕通知（@Around）：动态代理，手动推进目标方法运行（jointPoint.procced() ）</p>
+</li>
+<li><p>给切面类的目标方法标志何时何地运行</p>
+</li>
+<li><p>将切面类和业务逻辑类都加入到容器中</p>
+</li>
+<li><p>必须告诉Spring哪个类是切面类（给切面类加上一个注解：@Aspect）</p>
+</li>
+<li><p>给配置类加上@EnableAspectJAutoProxy（开启基于注解的aop模型）</p>
+</li>
+</ol>
+<p>例子：</p>
+<p>AOP类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LogAspect</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 抽取公共切入点的表达式</span></span><br><span class="line"><span class="comment">     * 1. 本地引用</span></span><br><span class="line"><span class="comment">     * 2.其他切面类引用</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Pointcut(&quot;execution (public int func.MathCalculator.*(..))&quot; )</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">pointCut</span><span class="params">()</span></span>&#123;&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Before(&quot;pointCut()&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">logStart</span><span class="params">(JoinPoint joinPoint)</span></span>&#123;</span><br><span class="line">        Object[] args = joinPoint.getArgs();</span><br><span class="line">        System.out.println(<span class="string">&quot;除法运行 。。。。@Before &quot;</span>+ Arrays.toString(args));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//其他切面类引用</span></span><br><span class="line">    <span class="meta">@After(&quot;DIY.LogAspect.pointCut()&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">logEnd</span><span class="params">(JoinPoint joinPoint)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;除法运行 。。。。@After &quot;</span>+joinPoint.getSignature().getName());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//joint必须出现在第一位</span></span><br><span class="line">    <span class="meta">@AfterReturning(value = &quot;pointCut()&quot;,returning = &quot;result&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">logReturning</span><span class="params">(JoinPoint joinPoint,Object result)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;除法运行 。。。。@AfterReturning &quot;</span>+result);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@AfterThrowing(value = &quot;pointCut()&quot;,throwing = &quot;exception&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">logException</span><span class="params">(Exception exception)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;除法运行 。。。。@AfterThrowing &quot;</span>+exception);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>业务类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MathCalculator</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">div</span><span class="params">(<span class="keyword">int</span> i,<span class="keyword">int</span> j)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;div --- func&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> i/j;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>配置类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@EnableAspectJAutoProxy</span> <span class="comment">//必须要加上这个，否则就不会自动开启aop</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">mainConfig</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> LogAspect <span class="title">aspect</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> LogAspect();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> MathCalculator <span class="title">mathCalculator</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> MathCalculator();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationStart</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testAop</span><span class="params">()</span></span>&#123;</span><br><span class="line">        AnnotationConfigApplicationContext configApplicationContext = <span class="keyword">new</span> AnnotationConfigApplicationContext(mainConfig.class);</span><br><span class="line">        MathCalculator bean = configApplicationContext.getBean(MathCalculator.class); <span class="comment">//必须从容器中获取，直接new的类无法启动AOP</span></span><br><span class="line">        bean.div(<span class="number">1</span>,<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="原理（看给容器中注册了什么组件，这个组件何时工作以及功能是什么）"><a href="#原理（看给容器中注册了什么组件，这个组件何时工作以及功能是什么）" class="headerlink" title="原理（看给容器中注册了什么组件，这个组件何时工作以及功能是什么）"></a>原理（看给容器中注册了什么组件，这个组件何时工作以及功能是什么）</h3><blockquote>
+<p>注册了什么组件</p>
+</blockquote>
+<p>@EnableAspectJAutoProxy （开启aop注解功能）</p>
+<ol>
+<li><p>@Import(AspectJAutoProxyRegister.class):给容器中导入AspectJAutoProxyRegister.class</p>
+<p>利用AspectJAutoProxyRegister自定义发给容器中注册bean，主要是BeanDefinition信息</p>
+<p>internalAutoPorxyCreator=AnnotationAwareAspectJAutoProxyCreator</p>
+<p>给容器中注册一个AnnotationAwareAspectJAutoProxyCreator</p>
+</li>
+<li><p>AnnotationAwareAspectJAutoProxyCreator</p>
+<p>AnnotationAwareAspectJAutoProxyCreator</p>
+<p>​    -&gt; AspectJAwareAdvisorAutoProxyCreator</p>
+<p>​        -&gt;AbstractAdvisorAutoProxyCreator</p>
+<p>​            -&gt;AbstractAutoProxyCreator</p>
+<p>​                implements SmartInstantiationAwareBeanPostProcessor、BeanFactoryAware </p>
+<p>​            关注后置处理器（在bean初始化前后做事情）、自动装配BeanFactory </p>
+</li>
+</ol>
+<blockquote>
+<p>做了哪些事情</p>
+</blockquote>
+<h5 id="在AbstractAutoProxyCreator中"><a href="#在AbstractAutoProxyCreator中" class="headerlink" title="在AbstractAutoProxyCreator中"></a>在AbstractAutoProxyCreator中</h5><ol>
+<li><p>重写BeanFactoryAware中的方法</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210326094305845.png" alt="image-20210326094305845" style="zoom:50%;" /></li>
+<li><p>重写SmartInstantiationAwareBeanPostProcessor中的方法</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326094401.png" alt="image-20210326094356719" style="zoom:50%;" /></li>
+</ol>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210326094442401.png" alt="image-20210326094442401" style="zoom:50%;" />
+
+
+
+<h5 id="在AbstractAdvisorAutoProxyCreator中"><a href="#在AbstractAdvisorAutoProxyCreator中" class="headerlink" title="在AbstractAdvisorAutoProxyCreator中"></a>在AbstractAdvisorAutoProxyCreator中</h5><ol>
+<li><p>重写setBeanFactory方法，在该方法中会调用initBeanFactory方法</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326094721.png" alt="image-20210326094715926" style="zoom:50%;" /></li>
+</ol>
+<h5 id="在AspectJAwareAdvisorAutoProxyCreator中"><a href="#在AspectJAwareAdvisorAutoProxyCreator中" class="headerlink" title="在AspectJAwareAdvisorAutoProxyCreator中"></a>在AspectJAwareAdvisorAutoProxyCreator中</h5><p>没有与setFactory和BeanPostProcessor相关的方法</p>
+<h5 id="在AnnotationAwareAspectJAutoProxyCreator中"><a href="#在AnnotationAwareAspectJAutoProxyCreator中" class="headerlink" title="在AnnotationAwareAspectJAutoProxyCreator中"></a>在AnnotationAwareAspectJAutoProxyCreator中</h5><ol>
+<li><p>重写了AbstractAdvisorAutoProxyCreator中setBeanFactory中的initBeanFactory</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326095010.png" alt="image-20210326095004545" style="zoom:50%;" /></li>
+</ol>
+<blockquote>
+<p>创建和注册AnnotationAwareAspectJAutoProxyCreator流程</p>
+</blockquote>
+<ol>
+<li><p>传入配置类，创建ioc容器</p>
+</li>
+<li><p>注册配置类，调用refresh() 刷新容器</p>
+</li>
+<li><p>registerBeanPostProcessors(beanFactory);注册bean的后置处理器来方便拦截bean的创建</p>
+<ol>
+<li><p>先获取ioc容器已经定义了的需要创建对象的所有BeanPostProcessor （解析配置类时需要注册的BeanPostProcessor，例如此处的@EnableAspectJAutoProxy），如下图所示</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210326095625322.png" alt="image-20210326095625322" style="zoom:50%;" /></li>
+<li><p>给容器中加别的BeanPostProcessor</p>
+</li>
+<li><p>优先注册实现了PriorityOrdered接口的BeanPostProcessor</p>
+</li>
+<li><p>再给容器中注册实现了Ordered接口的BeanPostProcessor：<strong>我们的AnnotationAwareAspectJAutoProxyCreator父类实现了Ordered接口</strong></p>
+</li>
+<li><p>最后注册没有实现优先级接口的BeanPostProcessor </p>
+</li>
+<li><p>注册BeanPostProcessor，实际上就是创建BeanPostProcessor对象保存在容器中</p>
+<p>创建internalAutoProxyCreator的BeanPostProcessor【AnnotationAwareAspectJAutoProxyCreator】</p>
+<ol>
+<li>创建Bean的实例也就是AnnotationAwareAspectJAutoProxyCreator的实例</li>
+<li>populateBean：给bean的各种属性赋值</li>
+<li>initializeBean：初始化bean<ol>
+<li>invokeAwareMethods():处理Aware接口的方法回调 <strong>我们的AnnotationAwareAspectJAutoProxyCreator的父类实现了BeanFactoryAware的接口</strong></li>
+<li>applyBeanPostProcessorBeforeInitialization()：应用后置处理器的postPorcessorBeforeInitialization（）</li>
+<li>invokeInitMethods(): 执行自定义的初始化方法</li>
+<li>applyBeanPostProcessorAfterInitialization(): 执行后置处理器的postProcessorAfterInitialization（）</li>
+</ol>
+</li>
+<li>BeanPostProcessor(AnnotationAwareAspectJAutoProxyCreator)创建成功：aspectJAdvisorBuilder</li>
+</ol>
+</li>
+<li><p>把BeanPostProcessor注册到BeanFactory中，调用BeanFactory.addBeanPostProcessor(postProcessor)</p>
+</li>
+</ol>
+</li>
+<li><p>finishBeanFactoryInitialization（beanFactory);完成BeanFactory初始化工作，创建剩下的单实例Bean</p>
+<ol>
+<li><p>遍历获取容器中所有的Bean，依次创建对象getBean(beanName)</p>
+<p>getBean-&gt;doGetBean()-&gt;getSingleton()-&gt;</p>
+</li>
+<li><p>创建Bean：<strong>AnnotationAwareAspectJAutoProxyCreator在所有bean创建之前会有一个拦截，InstantiationAwareBeanPostProcessor，会调用PostProcessBeforeInstantiation（）</strong></p>
+<ol>
+<li><p>先从缓存中获取当前bean，如果能获取到，说明bean是之前被创建过的，直接使用，否则再创建</p>
+<p>只要缓存好的Bean都会被缓存起来</p>
+</li>
+<li><p>createBean() 创建bean:     <strong>AnnotationAwareAspectJAutoProxyCreator会在任何bean创建之前先尝试返回bean的实例</strong></p>
+<p>如下图所示：</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210326114738850.png" alt="image-20210326114738850" style="zoom:50%;" />
+
+<p><font color=red>【BeanPostProcessor是在Bean对象创建完成初始化前后调用的】</font></p>
+<p><font color=red>【InstantiationAwareBeanPostProcessor是在创建Bean之前先尝试使用后置处理器返回对象的】</font></p>
+<ol>
+<li><p>resolveBeforeInstantiation(beanName,mbdToUser);解析BeforeInstantiation</p>
+<p>希望后置处理器在此能返回一个代理对象，如果能返回代理对象就使用，如果不能就继续</p>
+<ol>
+<li><p>后置处理器先尝试返回对象</p>
+<p>bean = applyBeanPostProcessorBeforeInstantiation(xxx);</p>
+<p>拿到所有后置处理器，如果是InstantiationAwareBeanPostProcessor就执行postProcessBeforeinstantiation</p>
+</li>
+</ol>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210326113931654.png" alt="image-20210326113931654" style="zoom:50%;" /></li>
+<li><p>doCreateBean(beanName,mbdToUse,args);真正去创建一个bean，和3.6的流程是一样的</p>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<p>​    </p>
+<blockquote>
+<p>创建AOP</p>
+</blockquote>
+<p>如上面所说</p>
+<ol>
+<li><p>每一个bean创建之前，调用postProcessBeforeInstantiation();</p>
+<p>我们只关心要代理的类（MathCaculator）和切面类（LogAspect）</p>
+<ol>
+<li><p>判断当前bean是否在advisedBeans中（该集合保存了所有需要增强的bean）</p>
+</li>
+<li><p>判断当前bean是否是基础类型的Advice、Pointcut、Advisor、AOPInfrastructureBean，或者是否是切面（@Aspect）</p>
+</li>
+<li><p>是否需要跳过</p>
+<ol>
+<li><p>获取候选的增强器（切面里面的通知方法）【List&lt; Advisor &gt; candidateAdvisors】</p>
+<p>每一个封装的通知方法的增强器是InstantiationModelAwarePointcutAdvisor；</p>
+<p>然后判断每一个增强器是否是AspectJointcutAdvisor类型的；如果是返回true</p>
+</li>
+<li><p>永远返回false，因为此处在我们的案例中增强器的类型是InstantiationModelAwarePointcutAdvisor，不是AspectJointcutAdvisor类型</p>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>创建对象，使用PostProcessAfterinitialization</p>
+<p>​                return wrapInfNecessary(bean,beanName,cacheKey);//包装如果需要的情况下</p>
+<ol>
+<li><p>获取当前bean的所有增强器（通知方法） specificInterceptors</p>
+<ol>
+<li><p>找到候选的的所有增强器（找哪些通知方法是需要切入当前bean方法的（根据）@Pointcut、@Before等注解的表达式判断）</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326170027.png" alt="image-20210326170025265"></p>
+</li>
+<li><p>获取到能在bean使用的增强器</p>
+</li>
+<li><p>给增强器排序</p>
+</li>
+</ol>
+</li>
+<li><p>保存当前bean在advisedBeans中</p>
+</li>
+<li><p>如果当前bean需要增强，创建当前bean的代理对象</p>
+<ol>
+<li><p>获取所有增强器（通知方法）</p>
+</li>
+<li><p>保存到proxyFactory</p>
+</li>
+<li><p>创建代理对象：Spring自动决定</p>
+<p>JdkDynamicAopProxy（config）；jdk动态代理</p>
+<p>ObjenesisCglibAopProxy（config）：cglib动态代理</p>
+</li>
+</ol>
+</li>
+<li><p>给容器中返回当前组件使用cglib增强的代理对象</p>
+</li>
+<li><p><strong>以后容器中获取到的就是这个组件的代理对象，执行目标方法的时候，代理对象就会执行通知方法的流程</strong></p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326171051.png" alt="image-20210326171045255" style="zoom:50%;" /></li>
+</ol>
+</li>
+<li><p>目标方法执行</p>
+<p>容器中保存了组件的代理对象（cglib增强的对象），这个对象里面保存了详细的信息（比如增强器，目标对象，xxx）</p>
+<ol>
+<li><p>CglibAopProxy.intercept()；拦截目标方法的执行</p>
+</li>
+<li><p>根据ProxyFactory对象获取将要执行的目标方法拦截器链</p>
+<p>List&lt; Object &gt; chain = this.advised.getInterceptorAndDynamicInterceptionAdvice</p>
+<ol>
+<li><p>List&lt; Object &gt; interceptorList保存所有拦截器  默认是5个—–Before、After、AfterThrowing、AfterReturning以及自带的ExposeInvocationInterceptor</p>
+</li>
+<li><p>遍历所有的增强器，将其转为Interceptor</p>
+<p>registry.getInterceptors(advisor)</p>
+</li>
+<li><p>将增强器转为List&lt; MethodInteceptor &gt;</p>
+<p>如果是MethodInteceptor，直接加入到集合中</p>
+<p>如果不是，使用AdvisorAdapter将增强器转为MethodInterceptor （针对不同的对象有不同的AdvisorAdapter进行转化）</p>
+<p>转换完成后返回MethodInterceptor数组</p>
+</li>
+</ol>
+</li>
+<li><p>如果没有拦截器链，则直接执行目标方法</p>
+<p>拦截器链（每一个通知方法又被包装为方法拦截器，利用MethodInterceptor机制）</p>
+</li>
+<li><p>如果有拦截器链，把需要执行的目标对象，目标方法，拦截器链等信息传入创建一个CglibMethodInvocation对象并调用Object retVal = mi.proceed();</p>
+</li>
+<li><p>拦截器链的触发过程</p>
+<ol>
+<li><p>如果没有拦截器执行目标方法，或者拦截器的索引和拦截器数组-1大小一样（指定了最后一个拦截器），则执行目标方法</p>
+</li>
+<li><p>链式获取每一个拦截器，拦截器执行invoke方法，每一个拦截器等待下一个拦截器执行完成以后再来执行</p>
+<p>拦截器链的机制，保证通知方法与目标方法的执行顺序</p>
+</li>
+</ol>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210326174717520.png" alt="image-20210326174717520" style="zoom:50%;" /></li>
+</ol>
+<p>​            <font color=red>注意：spring5在@After标注的方法执行顺序变为了最后一个</font></p>
+</li>
+</ol>
+<blockquote>
+<p>总结</p>
+</blockquote>
+<ol>
+<li><p>@EnableAspectJAutoProxy 开启AOP功能</p>
+</li>
+<li><p>@EnableAspectJAutoProxy会给容器注册一个组件：AnnotationAwareAspectJAutoProxyCreator</p>
+</li>
+<li><p>AnnotationAwareAspectJAutoProxyCreator是一个后置处理器</p>
+</li>
+<li><p>容器创建流程</p>
+<ol>
+<li><p>registerBeanPostProcessors（）注册后置处理器，创建AnnotationAwareAspectJAutoProxyCreator</p>
+</li>
+<li><p>finishBeanFactoryInitialization（）初始化生效的单实例bean</p>
+<ol>
+<li><p>创建业务逻辑组件和切面组件</p>
+</li>
+<li><p>AnnotationAwareAspectJAutoProxyCreator拦截组件的创建过程</p>
+</li>
+<li><p>组件创建完之后，判断组件是否需要增强</p>
+<ul>
+<li><p>是</p>
+<p>切面的通知方法，包装成增强器（Advisor）给业务逻辑组件创建一个代理对象（Cglib代理对象）</p>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>执行目标方法</p>
+<ol>
+<li><p>代理对象执行目标方法</p>
+</li>
+<li><p>CglibAopProxy.intercept()</p>
+<ol>
+<li><p>得到目标方法的拦截器链（增强器包装成拦截器MethodInterceptor）</p>
+</li>
+<li><p>利用拦截器的链式机制，一次进入每一个拦截器进行执行</p>
+</li>
+<li><p>效果</p>
+<p>正常执行：前置通知-&gt;目标方法-&gt;返回通知-&gt;后置通知</p>
+<p>异常执行：前置通知-&gt;目标方法-&gt;异常通知-&gt;后置通知</p>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Spring学习笔记\Spring\spring注解开发\ApplicationListener\" rel="bookmark">ApplicationListener</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Spring学习笔记\Spring\spring注解开发\BeanFactoryPostProcessor\" rel="bookmark">BeanFactoryPostProcessor</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Spring学习笔记\Spring\spring注解开发\IOC\" rel="bookmark">IOC</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Spring学习笔记\Spring\spring注解开发\Transactional\" rel="bookmark">Transactional</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Spring学习笔记\Spring\spring注解开发\spring容器的生命周期\" rel="bookmark">Spring容器的生命周期</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/AOP/" title="AOP">http://cooperxj.github.io/2022/01/07/Spring学习笔记/Spring/spring注解开发/AOP/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+              <a href="/tags/Spring%E6%BA%90%E7%A0%81/" rel="tag"># Spring源码</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/Spring%20Bean/" rel="prev" title="Spring Bean">
+      <i class="fa fa-chevron-left"></i> Spring Bean
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/ApplicationListener/" rel="next" title="ApplicationListener">
+      ApplicationListener <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#AOP"><span class="nav-number">1.</span> <span class="nav-text">AOP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4"><span class="nav-number">1.0.1.</span> <span class="nav-text">步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86%EF%BC%88%E7%9C%8B%E7%BB%99%E5%AE%B9%E5%99%A8%E4%B8%AD%E6%B3%A8%E5%86%8C%E4%BA%86%E4%BB%80%E4%B9%88%E7%BB%84%E4%BB%B6%EF%BC%8C%E8%BF%99%E4%B8%AA%E7%BB%84%E4%BB%B6%E4%BD%95%E6%97%B6%E5%B7%A5%E4%BD%9C%E4%BB%A5%E5%8F%8A%E5%8A%9F%E8%83%BD%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%89"><span class="nav-number">1.0.2.</span> <span class="nav-text">原理（看给容器中注册了什么组件，这个组件何时工作以及功能是什么）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%9C%A8AbstractAutoProxyCreator%E4%B8%AD"><span class="nav-number">1.0.2.0.1.</span> <span class="nav-text">在AbstractAutoProxyCreator中</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%9C%A8AbstractAdvisorAutoProxyCreator%E4%B8%AD"><span class="nav-number">1.0.2.0.2.</span> <span class="nav-text">在AbstractAdvisorAutoProxyCreator中</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%9C%A8AspectJAwareAdvisorAutoProxyCreator%E4%B8%AD"><span class="nav-number">1.0.2.0.3.</span> <span class="nav-text">在AspectJAwareAdvisorAutoProxyCreator中</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%9C%A8AnnotationAwareAspectJAutoProxyCreator%E4%B8%AD"><span class="nav-number">1.0.2.0.4.</span> <span class="nav-text">在AnnotationAwareAspectJAutoProxyCreator中</span></a></li></ol></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

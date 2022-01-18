@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="几个重要知识点  平凡函数依赖与非平凡函数依赖  X→Y，但Y⊈X则称X→Y是非平凡的函数依赖。 X→Y，但Y⊆X 则称X→Y是平凡的函数依赖。   完全函数依赖与部分函数依赖 在R(U)中，  如果X→Y，并且对于X的任何一个真子集X’, 都有 X’ ↛ Y, 则称Y对X完全函数依赖，记作X → Y。 若X→Y，但Y不完全函数依赖于X，则称Y对X部分函数依赖，记作X → Y   候选码 设K为">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据库范式">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/MySQL/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%8C%83%E5%BC%8F/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="几个重要知识点  平凡函数依赖与非平凡函数依赖  X→Y，但Y⊈X则称X→Y是非平凡的函数依赖。 X→Y，但Y⊆X 则称X→Y是平凡的函数依赖。   完全函数依赖与部分函数依赖 在R(U)中，  如果X→Y，并且对于X的任何一个真子集X’, 都有 X’ ↛ Y, 则称Y对X完全函数依赖，记作X → Y。 若X→Y，但Y不完全函数依赖于X，则称Y对X部分函数依赖，记作X → Y   候选码 设K为">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210103115115.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210103115439.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210103151010.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210103152046863.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210103154219.png">
+<meta property="article:published_time" content="2022-01-07T00:43:29.597Z">
+<meta property="article:modified_time" content="2021-02-13T00:27:06.000Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="MySQL">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210103115115.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/MySQL/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%8C%83%E5%BC%8F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>数据库范式 | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/MySQL/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%8C%83%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          数据库范式
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:29" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:29+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-13 08:27:06" itemprop="dateModified" datetime="2021-02-13T08:27:06+08:00">2021-02-13</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/MySQL/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%8C%83%E5%BC%8F/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/MySQL/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%8C%83%E5%BC%8F/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <ol>
+<li><p>几个重要知识点</p>
+<ul>
+<li><p>平凡函数依赖与非平凡函数依赖</p>
+<ul>
+<li>X→Y，但Y⊈X则称X→Y是非平凡的函数依赖。</li>
+<li>X→Y，但Y⊆X 则称X→Y是平凡的函数依赖。</li>
+</ul>
+</li>
+<li><p>完全函数依赖与部分函数依赖</p>
+<p>在R(U)中，</p>
+<ul>
+<li>如果X→Y，并且对于X的任何一个真子集X’, 都有 X’ ↛ Y, 则称Y对X完全函数依赖，记作X → Y。</li>
+<li>若X→Y，但Y不完全函数依赖于X，则称Y对X部分函数依赖，记作X → Y</li>
+</ul>
+</li>
+<li><p><font color=red>候选码</font></p>
+<p>设K为R&lt;U,F&gt;中的属性或属性组合。若K → U，则K称为R的一个候选码(Candidate Key)。</p>
+<p><font color=red>千万需要记住的是候选码与超码之间的区别</font></p>
+</li>
+<li><p><font color=red>超码</font></p>
+<p>如果U部分函数依赖于K，即K → U,则K称为超码(Surpkey)。</p>
+<p><strong>候选码是最小的超码</strong>，即K的任意一个真子集都不是候选码。</p>
+</li>
+<li><p><font color=red>主码</font></p>
+<p>主码是候选码中的任意一个</p>
+</li>
+<li><p>主属性与非主属性</p>
+<ul>
+<li>包含在任何一个候选码中的属性 ，称为主属性（Prime attribute） </li>
+<li>不包含在任何码中的属性称为非主属性（Nonprime attribute）或非码属性（Non-key attribute） </li>
+</ul>
+</li>
+<li><p>全码</p>
+<p>整个属性组是码，称为全码（All-key） </p>
+</li>
+</ul>
+</li>
+<li><p>范式</p>
+<ul>
+<li><p>第一范式</p>
+<p>每个属性不可分割</p>
+</li>
+<li><p>第二范式</p>
+<p>若关系模式R∈1NF，并且每一个<strong>非主属性</strong>都<strong>完全函数依赖</strong>于任何一个候选码，则R∈2NF</p>
+</li>
+<li><p>第三范式</p>
+<p>消除非主属性对于码的传递依赖<br>若R中不存在这样的码X、属性组Y及非主属性Z（Z ⊇ Y）, 使得X→Y，Y→Z成立，<font color=red>Y ↛ X不成立</font>，则称R&lt;U,F&gt; ∈ 3NF。</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/sumaliqinghua/article/details/86246762">三范式分解</a></p>
+</li>
+<li><p>BC范式</p>
+<p>消除主属性对码的部分和传递函数依赖</p>
+<p>判断：在关系模式R&lt;U,F&gt;中，如果每一个决定属性集都<strong>包含候选码</strong>，则R∈BCNF。</p>
+</li>
+</ul>
+<ol start="3">
+<li><p>无损连接与保持函数依赖性</p>
+<ul>
+<li>无损连接</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210103115115.png" alt="image-20210103115106959"></p>
+<p>​    <a target="_blank" rel="noopener" href="https://blog.csdn.net/nailuoch/article/details/94214673">无损连接判断</a></p>
+<ul>
+<li><p>保持函数依赖性</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210103115439.png" alt="image-20210103115438081"></p>
+<p>分解后带到的各个集合推导出的函数依赖看是否能够推导出原来的函数依赖</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>​        <font color=red>一个无损连接的分解不一定具有依赖保持性，反之亦然 !</font></p>
+<ol start="4">
+<li><p>三范式分解(<font color=red>范式分解最终的答案并非是唯一的，和分解的顺序有关！</font>)</p>
+<ul>
+<li><p>三范式分解为保持函数依赖的分解</p>
+<p>步骤如下：</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210103151010.png" alt="image-20210103151008580"></p>
+<p>例题：</p>
+<p>设R&lt;U, F&gt;，其中：</p>
+<pre><code>      U=&#123;C, T, H, R, S, G, X, Y, Z&#125;, 
+      F=&#123;C→T, CS→G, HR→C，HS→ R, TH→ R, C→X&#125;，  
+</code></pre>
+<p>​          将R 分解为3NF，且保持函数依赖。 </p>
+<p>解：</p>
+<ol>
+<li><p>求F的最小函数依赖集</p>
+<p> 该函数依赖集已经是最小化的</p>
+</li>
+</ol>
+<pre><code>2. 查看是否有一个函数依赖X-&gt;A，且XA=R。
+
+可以很清楚的看到，并没有这种函数依赖。
+
+3. 查看R中的某些属性是否并不在F中出现过
+
+可以很清楚的看到有YZ
+
+4. 将最小函数依赖集中的每一个依赖左右两边放到一起
+
+则分解为ρ =&#123;YZ, CTX, CSG, HRC, HSR, THR&#125;  
+
+注：这里的CTX放到一起时因为C$\rightarrow$T，C$\rightarrow$X
+</code></pre>
+</li>
+<li><p>三范式分解既具有无损连接性又能保持函数依赖的分解 </p>
+<p><strong>非常简单！在原来的基础上加上候选码中的任意一个即可。</strong></p>
+<p>例如此题中的候选码为HS</p>
+<p>那么在原来的ρ中添加HS即可，但是此处需要<font color=red>注意</font></p>
+<p>∵ HS⊆ HSR<br>∴ τ= ρ ={CTX, CSG, HRC, HSR, THR, YZ}为满足要求的分解</p>
+</li>
+</ul>
+</li>
+<li><p>BCNF分解(<font color=red>范式分解最终的答案并非是唯一的，和分解的顺序有关！</font>)</p>
+<ul>
+<li><p>如何判定BCNF范式呢？</p>
+<p>很简单！就是看<font color=red>每个</font>函数依赖的左边是否包含候选码，如果其中有一个不含候选码，则不为BCNF范式。</p>
+</li>
+<li><p>将关系模式转换为BCNF 的无损连接的分解</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210103152046863.png" alt="image-20210103152046863" style="zoom:50%;" />
+
+<p>​    递归下去，直到出现$\Phi$或者出现最终的一个依赖符合BCNF约束则停止分解</p>
+<p>​    例子1：</p>
+<p>​    已知 R (A, B, C), AB为码, 且B-&gt;C存在<br>​    可知：R不满足BCNF<br>​    设 $\alpha$ = B, $\beta$ = C<br>​    则 R 可分解为：<br>​    ($\alpha$$\bigcup$ $\beta$) = (B, C)<br>​    (R – ($\beta$ $-$$\alpha$)) = (A, B)</p>
+<p>​    例子2：</p>
+<p>​    <img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210103154219.png" alt="image-20210103154210971" style="zoom:50%;" />    </p>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\BLGC\" rel="bookmark">BLGC</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\CheckPoint\" rel="bookmark">CheckPoint</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB\" rel="bookmark">InnoDB</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB存储引擎文件\" rel="bookmark">InnoDB存储引擎文件</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB数据页结构\" rel="bookmark">InnoDB数据页结构</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/MySQL/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%8C%83%E5%BC%8F/" title="数据库范式">http://cooperxj.github.io/2022/01/07/MySQL/数据库范式/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/MySQL%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/" rel="prev" title="MySQL存储引擎">
+      <i class="fa fa-chevron-left"></i> MySQL存储引擎
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/MySQL%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6/" rel="next" title="MySQL主要配置文件">
+      MySQL主要配置文件 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

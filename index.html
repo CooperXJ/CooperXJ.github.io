@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="记录一些学习笔记、小说、随笔">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cooper Notes">
+<meta property="og:url" content="http://cooperxj.github.io/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="记录一些学习笔记、小说、随笔">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="Cooper">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://cooperxj.github.io/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : true,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content index posts-expand">
+            
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/39-%E8%87%AA%E5%A2%9E%E4%B8%BB%E9%94%AE%E4%B8%8D%E8%BF%9E%E7%BB%AD%E7%9A%84%E5%8E%9F%E5%9B%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/39-%E8%87%AA%E5%A2%9E%E4%B8%BB%E9%94%AE%E4%B8%8D%E8%BF%9E%E7%BB%AD%E7%9A%84%E5%8E%9F%E5%9B%A0/" class="post-title-link" itemprop="url">自增主键不连续的原因</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-01-07 15:08:55 / 修改时间：17:14:04" itemprop="dateCreated datePublished" datetime="2022-01-07T15:08:55+08:00">2022-01-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/39-%E8%87%AA%E5%A2%9E%E4%B8%BB%E9%94%AE%E4%B8%8D%E8%BF%9E%E7%BB%AD%E7%9A%84%E5%8E%9F%E5%9B%A0/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/39-%E8%87%AA%E5%A2%9E%E4%B8%BB%E9%94%AE%E4%B8%8D%E8%BF%9E%E7%BB%AD%E7%9A%84%E5%8E%9F%E5%9B%A0/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="自增主键值"><a href="#自增主键值" class="headerlink" title="自增主键值"></a>自增主键值</h2><h3 id="查看当前表自增主键到哪里"><a href="#查看当前表自增主键到哪里" class="headerlink" title="查看当前表自增主键到哪里"></a>查看当前表自增主键到哪里</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show create table t\G;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20220107171231.png" alt="image-20220107171230215"></p>
+<h3 id="自增主键值保存的位置"><a href="#自增主键值保存的位置" class="headerlink" title="自增主键值保存的位置"></a>自增主键值保存的位置</h3><ul>
+<li><p>MySQL 5.7 以及之前</p>
+<p>自增值保存在内存中，没有进行持久化</p>
+<p>每次重启之后打开表会查看当前自增值的最大值，依次+1作为当前自增值</p>
+</li>
+<li><p>MySQL 8.0</p>
+<p>将自增值记录在redo log中，重启之后依据redo log的记录</p>
+</li>
+</ul>
+<h2 id="自增值修改机制"><a href="#自增值修改机制" class="headerlink" title="自增值修改机制"></a>自增值修改机制</h2><ul>
+<li><p>如果自增值所在的字段值为0、null或者未指定值则使用当前表系统给定的自增值</p>
+</li>
+<li><p>如果给定了值X，当前自增值为Y，直接使用语句里给定的值。但是自增值会发生如下变化：</p>
+<ul>
+<li><p>X&lt;Y</p>
+<p>当前自增值不变</p>
+</li>
+<li><p>X≥Y</p>
+<p>当前自增值修改为新的自增值</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="自增值不连续的场景"><a href="#自增值不连续的场景" class="headerlink" title="自增值不连续的场景"></a>自增值不连续的场景</h2><h3 id="唯一键冲突导致自增值不连续"><a href="#唯一键冲突导致自增值不连续" class="headerlink" title="唯一键冲突导致自增值不连续"></a>唯一键冲突导致自增值不连续</h3><p>当前插入的记录与原有的记录有冲突，但是自增值会在遇到冲突之间+1，并且不会回退，那么在冲突之后自增值已经+1了（实际上有了冲突并未插入成功），下一次插入的自增值就是最开始的自增值+2</p>
+<h3 id="事务回滚导致自增值不连续"><a href="#事务回滚导致自增值不连续" class="headerlink" title="事务回滚导致自增值不连续"></a>事务回滚导致自增值不连续</h3><p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20220107171251.png" alt="image-20220107171250394"></p>
+<h3 id="自增锁优化导致自增值不连续"><a href="#自增锁优化导致自增值不连续" class="headerlink" title="自增锁优化导致自增值不连续"></a>自增锁优化导致自增值不连续</h3><p>对于批量插入的语句，MySQL自身有批量申请自增id的策略：</p>
+<ol>
+<li>第一次申请自增id，分配1个</li>
+<li>第二次申请分配2个</li>
+<li>第三次申请分配4个</li>
+<li>依次类推，每次申请的数量是上次的2倍</li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20220107171307.png" alt="image-20220107171306277"></p>
+<p>过程如下：</p>
+<ol>
+<li>申请id=1</li>
+<li>申请id=2-3</li>
+<li>申请id=4-7 （此次只有id=4被用到，其余都浪费了）</li>
+<li>申请id = 8</li>
+</ol>
+<h2 id="自增值不回退的原因"><a href="#自增值不回退的原因" class="headerlink" title="自增值不回退的原因"></a>自增值不回退的原因</h2><p>自增值不回退是为了提升性能</p>
+<p>考虑如下场景：</p>
+<p>两个事务并发执行，事务A插入id=2，事务B插入id=3，假设事务B插入成功，但是事务A出现了唯一键冲突，此时运行自增进行回退，那么下次事务申请到id=2没问题，但是又会申请到id=3从而冲突。</p>
+<h2 id="自增锁的优化"><a href="#自增锁的优化" class="headerlink" title="自增锁的优化"></a>自增锁的优化</h2><ul>
+<li><p>在MySQL 5.1之前自增锁的范围是语句级别，只有当前语句执行完才会释放自增锁</p>
+</li>
+<li><p>MySQL 5.1.22引入参数<code>innodb_autoinc_lock_mod</code>,默认值为1</p>
+<p>0：采用MySQL 5.1 之前的策略</p>
+<p>1：普通insert语句，自增锁在申请之后就立刻释放，但是批量插入语句需要等到语句结束后才会释放</p>
+<p>​      批量插入需要的等到语句结束后才释放的原因：</p>
+<p>​       <img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20220107152339.png" alt="image-20220107152336635"></p>
+<p>如果session B在每次申请完自增id时就释放自增锁，那么有可能在这条语句执行期间session A的最后一条语句执行，从而将session B的插入顺序打乱，</p>
+<p>例如</p>
+<p>session B插入两条记录 （1,1,1）（2,2,2）</p>
+<p>session A 插入 （3,5,5）</p>
+<p>session B插入两条记录 （4,3,3）（5,4,4）</p>
+<p>但是如果此时binlog是statement格式（记录的都是原始的插入SQL语句），那么会导致该binlog在用到从库上执行时会发生id都是连续一致的情况,例如</p>
+<p>binlog记录的是</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">insert into t2(c,d) select c,d from t;</span><br><span class="line">insert into t2 values(null,5,5)</span><br></pre></td></tr></table></figure>
+
+<p>  那么在从库上进行重发的时候记录的就是</p>
+<p>  （1,1,1）（2,2,2）（3,3,3）（4,4,4）（5,5,5）</p>
+<p>  从而与主库的不一致</p>
+</li>
+</ul>
+<p>​        <font color=red>  因此在生产上面对批量插入的场景，可以将<code>innodb_autoinc_lock_mod</code>设置为2，<code>binlog_format</code> 设置为row提高并发性，因为row格式下可以很好的记录下每一条记录的变化位置以及相应的值</font></p>
+<p>​    2：所有申请自增主键的动作在申请后就释放自增锁</p>
+<ul>
+<li><p>批量插入自增主键优化</p>
+<p>对于批量插入的语句，MySQL自身有批量申请自增id的策略：</p>
+<ol>
+<li>第一次申请自增id，分配1个</li>
+<li>第二次申请分配2个</li>
+<li>第三次申请分配4个</li>
+<li>依次类推，每次申请的数量是上次的2倍</li>
+</ol>
+</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      
+
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/38-MySQL%20Memory%E5%BC%95%E6%93%8E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/38-MySQL%20Memory%E5%BC%95%E6%93%8E/" class="post-title-link" itemprop="url">Memory引擎</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-01-07 15:06:49 / 修改时间：15:08:39" itemprop="dateCreated datePublished" datetime="2022-01-07T15:06:49+08:00">2022-01-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/38-MySQL%20Memory%E5%BC%95%E6%93%8E/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/38-MySQL%20Memory%E5%BC%95%E6%93%8E/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>829</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="Memory引擎和InnoDB引擎数据组织方式"><a href="#Memory引擎和InnoDB引擎数据组织方式" class="headerlink" title="Memory引擎和InnoDB引擎数据组织方式"></a>Memory引擎和InnoDB引擎数据组织方式</h2><h3 id="Memory引擎-（索引组织表）"><a href="#Memory引擎-（索引组织表）" class="headerlink" title="Memory引擎 （索引组织表）"></a>Memory引擎 （索引组织表）</h3><p>内存表的数据部分以数组的方式单独存放（数据和主键索引是分开存放的），主键id索引里存放的是每个数据的位置。</p>
+<p>主键id是hash索引，因此主键id并非是有序的。</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20220107150733.png" alt="image-20220107150731284"></p>
+<h3 id="InnoDB引擎-（堆组织表）"><a href="#InnoDB引擎-（堆组织表）" class="headerlink" title="InnoDB引擎 （堆组织表）"></a>InnoDB引擎 （堆组织表）</h3><p>数据存放在主键索引上（数据和主键索引是放在一起的），其他索引上保存的是主键id</p>
+<h2 id="Memory与InnoDB比较"><a href="#Memory与InnoDB比较" class="headerlink" title="Memory与InnoDB比较"></a>Memory与InnoDB比较</h2><ol>
+<li>InnoDB数据是有序存放的，memory的数据是按照写入顺序存放的</li>
+<li>InnoDB因为顺序存放的原因，在插入数据的时候只能在固定的地方进行插入（这也是数据空洞存在的原因），而memory只要有空位就可以插入</li>
+<li>数据位置发生变化的时候InnoDB只需要修改主键索引，memory需要修改所有索引（因为索引记录了每个数据的位置，因此可能修改一个数据的位置影响到其他数据的位置，比如说最第一次插入的元素被删除了，那么后面元素位置的都会需要-1）</li>
+<li>InnoDB使用主键查询时只需要走一次索引，使用普通索引查询时需要走两次索引。memory索引都是一样的</li>
+<li>InnoDB支持变长数据，但是memory不支持Blob和Text字段，并且每个字段的长度都是固定的，即使存储的内容长度不一致</li>
+</ol>
+<h2 id="Memory的两种索引组织方式"><a href="#Memory的两种索引组织方式" class="headerlink" title="Memory的两种索引组织方式"></a>Memory的两种索引组织方式</h2><h3 id="hash索引"><a href="#hash索引" class="headerlink" title="hash索引"></a>hash索引</h3><p>本身使用的就是hash索引，在等值查询时非常快</p>
+<h3 id="B-Tree索引"><a href="#B-Tree索引" class="headerlink" title="B-Tree索引"></a>B-Tree索引</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter table t1 add index a_btree_index using btree (id)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20220107150758.png" alt="image-20220107150757289"></p>
+<h2 id="Memory引擎的缺陷"><a href="#Memory引擎的缺陷" class="headerlink" title="Memory引擎的缺陷"></a>Memory引擎的缺陷</h2><ol>
+<li>锁的粒度太大（使用的是表锁）</li>
+<li>在高可用场景下<ul>
+<li>备库重启，数据清空，这时候客户端发送update语句就会导致找不到更新的行</li>
+<li>在双主架构下，数据库B重启之后会往binlog中写入一行delete from xxx的记录，这时候B会将该记录发送给A，A就会清空该xxx表</li>
+</ul>
+</li>
+</ol>
+<h2 id="使用memory的场景"><a href="#使用memory的场景" class="headerlink" title="使用memory的场景"></a>使用memory的场景</h2><p>如果用到了内存临时表（用户主动创建的临时表 create temporary table xxx），可以考虑将该表的引擎设置为memory</p>
+
+      
+    </div>
+
+    
+    
+    
+      
+
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/40-insert%E8%AF%AD%E5%8F%A5%E7%9A%84%E9%94%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/40-insert%E8%AF%AD%E5%8F%A5%E7%9A%84%E9%94%81/" class="post-title-link" itemprop="url">insert语句的锁</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-01-07 15:04:35 / 修改时间：15:06:20" itemprop="dateCreated datePublished" datetime="2022-01-07T15:04:35+08:00">2022-01-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/40-insert%E8%AF%AD%E5%8F%A5%E7%9A%84%E9%94%81/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/40-insert%E8%AF%AD%E5%8F%A5%E7%9A%84%E9%94%81/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>637</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="insert-…-select-语句"><a href="#insert-…-select-语句" class="headerlink" title="insert … select 语句"></a>insert … select 语句</h3><h4 id="现象"><a href="#现象" class="headerlink" title="现象"></a>现象</h4><p>如果在RR隔离级别下并且<code>binlog_format=statement</code>的话，如果出现<code>insert ... select xx from t</code>（对全表进行select）,那么整个表t的所有行和间隙都会被加锁</p>
+<h4 id="目的"><a href="#目的" class="headerlink" title="目的"></a>目的</h4><p>为了使得日志和数据的一致性</p>
+<h3 id="insert循环写入"><a href="#insert循环写入" class="headerlink" title="insert循环写入"></a>insert循环写入</h3><h4 id="现象-1"><a href="#现象-1" class="headerlink" title="现象"></a>现象</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">insert into t(c,d) (select c+1,d from t)</span><br></pre></td></tr></table></figure>
+
+<p>类似于这种的，插入和查询都是针对<font color=red>同一张表（也就是循环写入）</font>，会用到临时表，在此过程中会对表t做全表扫描，给表t的所有间隙都加上共享的next-key lock，因此在该语句执行期间不能在该表上插入数据</p>
+<h4 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h4><p>使用临时表，也就是将插入和查询的表分开</p>
+<p>比如上面的就可以优化成</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">create temporary table temp_t(c int,d int) engine=memory;</span><br><span class="line">insert into temp_t(select c+1,d from t);</span><br><span class="line">insert into t select * from temp_t;</span><br><span class="line">drop table temp_t;</span><br></pre></td></tr></table></figure>
+
+<h3 id="insert-唯一键-主键-冲突"><a href="#insert-唯一键-主键-冲突" class="headerlink" title="insert 唯一键/主键 冲突"></a>insert 唯一键/主键 冲突</h3><h4 id="现象-2"><a href="#现象-2" class="headerlink" title="现象"></a>现象</h4><p>insert语句出现了唯一键或者主键冲突，不仅会报错，还会在加上<font color=red>共享</font>的next-key lock（如果当前事务一直没有提提交的话）</p>
+<h3 id="insert-into-…-on-duplicate-key-update（冲突后就执行后面的update语句）"><a href="#insert-into-…-on-duplicate-key-update（冲突后就执行后面的update语句）" class="headerlink" title="insert into … on duplicate key update（冲突后就执行后面的update语句）"></a>insert into … on duplicate key update（冲突后就执行后面的update语句）</h3><h4 id="现象-3"><a href="#现象-3" class="headerlink" title="现象"></a>现象</h4><p>insert语句出现了唯一键或者主键冲突，不仅会报错，还会在加上<font color=red>排他</font>的next-key lock（如果当前事务一直没有提提交的话）</p>
+
+      
+    </div>
+
+    
+    
+    
+      
+
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/41-%E8%A1%A8%E7%9A%84%E5%A4%8D%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/41-%E8%A1%A8%E7%9A%84%E5%A4%8D%E5%88%B6/" class="post-title-link" itemprop="url">表的复制</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-01-07 15:03:04 / 修改时间：15:04:10" itemprop="dateCreated datePublished" datetime="2022-01-07T15:03:04+08:00">2022-01-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/41-%E8%A1%A8%E7%9A%84%E5%A4%8D%E5%88%B6/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/41-%E8%A1%A8%E7%9A%84%E5%A4%8D%E5%88%B6/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="mysqldump"><a href="#mysqldump" class="headerlink" title="mysqldump"></a>mysqldump</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqldump -hhost -Pport -u$user --add-locks=0 --no-create-info --single-transaction  --set-gtid-purged=OFF db1 t --where=&quot;a&gt;900&quot; --result-file=/client_tmp/t.sql</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>–single-transaction 的作用是，在导出数据的时候不需要对表 db1.t 加表锁，而是使用 START TRANSACTION WITH CONSISTENT SNAPSHOT 的方法；</li>
+<li>–add-locks 设置为 0，表示在输出的文件结果里，不增加” LOCK TABLES t WRITE;” ；</li>
+<li>–no-create-info 的意思是，不需要导出表结构；</li>
+<li>–set-gtid-purged=off 表示的是，不输出跟 GTID 相关的信息；</li>
+<li>–result-file 指定了输出文件的路径，其中 client 表示生成的文件是在客户端机器上的。</li>
+</ol>
+<p>默认生成的insert语句是一条，后面有许多的value对</p>
+<p>如果想每一行都是一条插入语句，可以加上<code>–skip-extended-insert</code></p>
+<h3 id="导入"><a href="#导入" class="headerlink" title="导入"></a>导入</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql -h127.0.0.1 -P13000  -uroot db2 -e &quot;source /client_tmp/t.sql&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="导出csv文件"><a href="#导出csv文件" class="headerlink" title="导出csv文件"></a>导出csv文件</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from db1.t where a&gt;900 into outfile &#x27;/server_tmp/t.csv&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p>注意：该条语句生成的文件是在MySQL所在的主机上，不在客户端所在的主机上</p>
+<h3 id="导入-1"><a href="#导入-1" class="headerlink" title="导入"></a>导入</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">load data （local）infile &#x27;/server_tmp/t.csv&#x27; into table db2.t;</span><br></pre></td></tr></table></figure>
+
+<p>注意：不加local 是读取服务端文件，加local是读取客户端文件</p>
+<h2 id="物理拷贝"><a href="#物理拷贝" class="headerlink" title="物理拷贝"></a>物理拷贝</h2><p>只能在MySQL 5.6及以上版本使用</p>
+<p>假设我们现在的目标是在 db1 库下，复制一个跟表 t 相同的表 r，具体的执行步骤如下：</p>
+<ol>
+<li>执行 create table r like t，创建一个相同表结构的空表；</li>
+<li>执行 alter table r discard tablespace，这时候 r.ibd 文件会被删除；</li>
+<li>执行 flush table t for export，这时候 db1 目录下会生成一个 t.cfg 文件；</li>
+<li>在 db1 目录下执行 cp t.cfg r.cfg; cp t.ibd r.ibd；这两个命令（这里需要注意的是，拷贝得到的两个文件，MySQL 进程要有读写权限）；</li>
+<li>执行 unlock tables，这时候 t.cfg 文件会被删除；</li>
+<li>执行 alter table r import tablespace，将这个 r.ibd 文件作为表 r 的新的表空间，由于这个文件的数据内容和 t.ibd 是相同的，所以表 r 中就有了和表 t 相同的数据。</li>
+</ol>
+<p>缺陷：只能全表拷贝</p>
+<p>注意：物理拷贝文件权限所属用户需要修改（如果是root用户拷贝的文件并且mysql是mysql用户启动的，需要将拷贝的文件权限改为mysql用户），不然会报import tablespace找不到文件</p>
+
+      
+    </div>
+
+    
+    
+    
+      
+
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/Ceph/rgw%E5%88%86%E6%AE%B5%E4%B8%8A%E4%BC%A0%E9%97%AE%E9%A2%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/01/07/Ceph/rgw%E5%88%86%E6%AE%B5%E4%B8%8A%E4%BC%A0%E9%97%AE%E9%A2%98/" class="post-title-link" itemprop="url">rgw分段上传问题</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 11:43:59" itemprop="dateCreated datePublished" datetime="2022-01-07T11:43:59+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-01-09 17:22:19" itemprop="dateModified" datetime="2022-01-09T17:22:19+08:00">2022-01-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ceph/" itemprop="url" rel="index"><span itemprop="name">ceph</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/Ceph/rgw%E5%88%86%E6%AE%B5%E4%B8%8A%E4%BC%A0%E9%97%AE%E9%A2%98/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/Ceph/rgw%E5%88%86%E6%AE%B5%E4%B8%8A%E4%BC%A0%E9%97%AE%E9%A2%98/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="关于rgw分段上传问题"><a href="#关于rgw分段上传问题" class="headerlink" title="关于rgw分段上传问题"></a>关于rgw分段上传问题</h2><ul>
+<li><p>分段上传会将每一段都作为一个object，比如一个文件45M，按照默认的分段上传的大小为15M，那么将会分段上传3次，每一个都会作为一个object上传</p>
+<p>如果上传的bucket的max_object=2，那么上传将会失败，因为需要max_object=3</p>
+<p>下面的例子是docker.log=55M，Quota的max_object=3,因此在上传第四块的时候出错</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210522104746.jpg" alt="592FF8FC53C458C103FE1E278475FFCA"></p>
+</li>
+</ul>
+<p>​    可以查询看到</p>
+<ul>
+<li><p><font color=red>为何达不到bucket的max_object，继续上传会报配额不足的情况？</font></p>
+<p>分段上传失败此处太多，导致usage中的rgw.multimeta中的num_objects残留数量太多，因为max_object&lt;(红色箭头之和)</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210522105050.png" alt="image-20210522105049780"></p>
+<p><font color=red>注：</font></p>
+<ol>
+<li><font color=red>下面的第二个红色箭头的数字代表的含义：bucket中上传完毕的对象总个数（包括合并的与为合并的）</font></li>
+</ol>
+<ul>
+<li>当分段上传完成之后会将分片合并为一个object</li>
+<li>当分段上传的一块上传完毕之后也会产生一个object</li>
+</ul>
+<ol start="2">
+<li><font color=red> 下面的第一个红色箭头的数字代表的含义：bucket中未上传完毕的对象总个数</font></li>
+</ol>
+<ul>
+<li>分段上传未上传成功会产生一个num_object （如果不是分段上传，强制停止的话也会作为一个完整的上传对象，不会在第一个箭头处+1，而是在第二个箭头处+1）</li>
+</ul>
+<p>例子：</p>
+<p>一个对象55M，对应的max_bucket为6，上传了2次之后,rgw.main中的num_objects=2，rgw.multimeta=0</p>
+<p>当上传第三次的时候会失败，在第四个分段时报出配额不足的问题，bucket状态查询如下所示：</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210522110011.png" alt="image-20210522110009475"></p>
+</li>
+</ul>
+<p>​           虽然说应该能够完成上传，因为2+4=6，但是我猜测还有一次是告诉ceph上传完毕，从而导致整个过程变为了2+5&gt;max_object</p>
+<p>​            </p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">1.</span> <span class="xml"><span class="tag">&lt;<span class="name">font</span> <span class="attr">color</span>=<span class="string">red</span>&gt;</span></span>分段上传一定要获得最终的结果，如果上传失败一定要记得清理<span class="xml"><span class="tag">&lt;/<span class="name">font</span>&gt;</span></span></span><br><span class="line"><span class="bullet">2.</span> rgw.main中的num<span class="emphasis">_objects代表的是真正上传成功的个数，包括分段上传中上传成功的个数</span></span><br><span class="line"><span class="emphasis">3. rgw.multimeta中的num_</span>objects代表的是所有未上传成功的个数，比如说分段上传中上传失败的个数(失败比如说网络中断、强制停止上传)</span><br><span class="line"><span class="bullet">4.</span> Quota中的max<span class="emphasis">_objects需要&gt;2+3中的nums_</span>objects才能继续完成上传</span><br><span class="line"><span class="bullet">5.</span> Quota中的max<span class="emphasis">_size_</span>kb需要&gt;2+3中的size<span class="emphasis">_kb_</span>utilized才能继续完成上传</span><br><span class="line"><span class="bullet">6.</span> 定期清理失败的上传对象</span><br></pre></td></tr></table></figure>
+
+<p>清理操作参考：<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_16327997/article/details/89635115">https://blog.csdn.net/qq_16327997/article/details/89635115</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      
+
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/Async/Async/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/Async/Async/" class="post-title-link" itemprop="url">未命名</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:52" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:52+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-03 13:55:22" itemprop="dateModified" datetime="2021-04-03T13:55:22+08:00">2021-04-03</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/Async/Async/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/Async/Async/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>0</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          
+      
+    </div>
+
+    
+    
+    
+      
+
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/servlet/servlet/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/servlet/servlet/" class="post-title-link" itemprop="url">Servlet</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:52" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:52+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-01-17 18:17:44" itemprop="dateModified" datetime="2022-01-17T18:17:44+08:00">2022-01-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/servlet/servlet/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/servlet/servlet/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="Servlet-3-0"><a href="#Servlet-3-0" class="headerlink" title="Servlet 3.0"></a>Servlet 3.0</h3><ol>
+<li><p>Servlet容器启动会扫描当前应用里面的每一个jar包的ServletContainerInitializer的实现</p>
+</li>
+<li><p>提供ServletContainerInitializer的实现类</p>
+<p>必须绑定在META-INF/service/javax.servlet.ServletContainerInitializer这个文件下</p>
+<p>文件的内容就是ServletContainerInitializer实现类的全类名</p>
+</li>
+</ol>
+<p>总结：容器在启动应用的时候，会扫描当前应用的每一个jar包里面的META-INF/service/javax.servlet.ServletContainerInitializer</p>
+<p>指定的实现类，启动并运行这个实现类的方法,也可以传入感兴趣的类型（利用@HandlesTypes，感兴趣的类型接受的是该类的子类或者实现类，不包括该类本身）</p>
+<p>如下图所示</p>
+<img src="https://gitee.com/CooperXJ/blog-map-bed/raw/master/img/20210403131931.png" alt="image-20210403131926148" style="zoom:50%;" />
+
+<p><img src="https://gitee.com/CooperXJ/blog-map-bed/raw/master/img/20210403130725.png" alt="image-20210403130714213"></p>
+<p>然后可以在该类的覆写方法下注册Servlet、Listener、Filter</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@HandlesTypes(value = &#123;HelloService.class&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyServletContainerInitializer</span> <span class="keyword">implements</span> <span class="title">ServletContainerInitializer</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onStartup</span><span class="params">(Set&lt;Class&lt;?&gt;&gt; set, ServletContext servletContext)</span> <span class="keyword">throws</span> ServletException </span>&#123;</span><br><span class="line">        set.forEach(s-&gt;&#123;</span><br><span class="line">            System.out.println(s.getName());</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//添加servlet</span></span><br><span class="line">        ServletRegistration.Dynamic userServlet = servletContext.addServlet(<span class="string">&quot;userServlet&quot;</span>, <span class="keyword">new</span> UserServlet());</span><br><span class="line">        userServlet.addMapping(<span class="string">&quot;/user&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//添加Listener</span></span><br><span class="line">        servletContext.addListener(UserListener.class);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//添加filter</span></span><br><span class="line">        FilterRegistration.Dynamic userFilter = servletContext.addFilter(<span class="string">&quot;userFilter&quot;</span>, <span class="keyword">new</span> UserFilter());</span><br><span class="line">        userFilter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST),<span class="keyword">true</span>,<span class="string">&quot;/*&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="在springboot中的体现"><a href="#在springboot中的体现" class="headerlink" title="在springboot中的体现"></a>在springboot中的体现</h3><p><font color=red>在springboot中的spring-web包下也是采用的这种机制</font></p>
+<p><img src="https://gitee.com/CooperXJ/blog-map-bed/raw/master/img/20210403132510.png" alt="image-20210403132508320"></p>
+<p><img src="https://gitee.com/CooperXJ/blog-map-bed/raw/master/img/20210403132734.png" alt="image-20210403132732248"></p>
+<h3 id="springMVC整个过程"><a href="#springMVC整个过程" class="headerlink" title="springMVC整个过程"></a>springMVC整个过程</h3><p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210403133625.png" alt="image-20210403133622948"></p>
+<p><strong>需要形成父子容器的效果</strong></p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210403134103.png" alt="image-20210403134056838" style="zoom:50%;" />
+
+<ul>
+<li><p>子容器：</p>
+<p>​    springmvc只扫描Controller</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210403134254.png" alt="image-20210403134252316"></p>
+<p>下图的最初的继承类指的是 <font color=red>WebMvcConfigurer</font></p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210403135240.png" alt="image-20210403135237563"></p>
+</li>
+<li><p>父容器</p>
+<p>除了Controller都扫描</p>
+<p>![image-20210403134340303](/Users/cooper/Library/Application Support/typora-user-images/image-20210403134340303.png)</p>
+</li>
+<li><p>最终放到AbstractAnnotationConfigDispatcherServletInitializer的实现类（此处也就是MyWebAppInitializer）中</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210403134453.png" alt="image-20210403134452356"></p>
+</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      
+
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/ApplicationListener/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/ApplicationListener/" class="post-title-link" itemprop="url">ApplicationListener</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:47" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:47+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-01-17 18:14:51" itemprop="dateModified" datetime="2022-01-17T18:14:51+08:00">2022-01-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/ApplicationListener/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/ApplicationListener/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="ApplicationListener-监听器中发布的事件"><a href="#ApplicationListener-监听器中发布的事件" class="headerlink" title="ApplicationListener 监听器中发布的事件"></a>ApplicationListener 监听器中发布的事件</h3><p>public interface ApplicationListener&lt; E extends ApplicationEvent&gt;</p>
+<p>监听ApplicationEvent及其下面的子事件</p>
+<p>步骤：</p>
+<ol>
+<li><p>写一个监听器来监听某个事件（ApplicationEvent及其子类）</p>
+<p> 或者</p>
+<p> 在方法上标注</p>
+<p> @EventListener</p>
+<p> 原理：使用EventListenerMethodProcessor处理器解析方法上的@EventListener</p>
+<p> @EventListener底层原理</p>
+<p> SmartInitializingSingleton原理：-&gt;afterSingletonsInstantiated（）；</p>
+<ol>
+<li><p>ioc容器创建对象并refresh（）</p>
+</li>
+<li><p>finishBeanFactoryInitialization（BeanFactory）；初始化剩下的单实例bean</p>
+<ol>
+<li><p>先创建所有的单实例bean:getBean()</p>
+</li>
+<li><p>获取所有创建好的单实例bean，判断是否是SmartInitializingSingleton类型的</p>
+<p>如果是就调用afterSingletonsInstantiated()</p>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p> 把监听器加入到容器中</p>
+</li>
+<li><p>只要容器中有相关事件的发布，我们就能监听到这个事前：</p>
+<ul>
+<li>ContextRefreshedEvent：容器刷新完成（所有bean都完全创建）会发布这个事件</li>
+<li>ContextClosedEvent：关闭容器会发布这个事件</li>
+</ul>
+</li>
+</ol>
+<pre><code>4. 发布事件
+
+application.publishEvent()
+</code></pre>
+<p>原理：</p>
+<ol>
+<li><p>ContextRefreshedEvent事件：</p>
+<ol>
+<li>创建容器对象，refresh（）</li>
+<li>finishRefresh()；容器刷新完成自己也会发布ContextRefreshedEvent事件</li>
+</ol>
+</li>
+<li><p>自己发布事件</p>
+<p>publishEvent（new ContextRefreshedEvent(this)）</p>
+<ol>
+<li><p>获取时间的多播器（派发器): getApplicationEventMulticaster()</p>
+</li>
+<li><p>multicastEvent派发事件</p>
+</li>
+<li><p>获取到所有的ApplicationListener</p>
+<p>for(final ApplicationListener&lt;?&gt; listener : getApplicationListeners（event，type）)</p>
+<ol>
+<li><p>如果有Executor，就可以支持使用Executor进行异步派发</p>
+<p> Executor executor = getTaskExecutor()</p>
+</li>
+<li><p>否则同步的方式直接执行listener方法：invokeListener（listener，event）</p>
+<p>拿到listener回调ApplicationEvent方法</p>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>容器关闭也会发布ContextClosedEvent事件</p>
+</li>
+</ol>
+<p>事件多播器（派发器）</p>
+<ol>
+<li><p>容器创建对象：refresh（）</p>
+</li>
+<li><p>initApplicationEventMulticaster（）；初始化ApplicationEventMulticaster</p>
+<ol>
+<li><p> 先去容器中有没有 id = ApplicationEventMulticaster 的组件</p>
+</li>
+<li><p>如果没有this.applicationEventMulticaster = new SimpleApplicationEventMulticaster（BeanFactory）</p>
+<p> 并且加入到容器中，我们就可以在其他组件派发时间，自动注入这个ApplicationEventMulticaster</p>
+</li>
+</ol>
+</li>
+</ol>
+<p>如何找到容器中有哪些监听器？</p>
+<ol>
+<li><p>容器创建对象：refresh（）</p>
+</li>
+<li><p>registerListeners()</p>
+<p>从容器中拿到所有的监听器，把他们注册到ApplicationEventMulticaster中</p>
+<p>String[] listenerBeanNames = getBeanNamesForType(ApplicationListener.class，true, false)</p>
+<p>也就是我们implement implements ApplicationListener&lt; ApplicationEvent &gt;的类</p>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      
+
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/AOP/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/AOP/" class="post-title-link" itemprop="url">AOP</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:47" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:47+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-01-17 18:14:44" itemprop="dateModified" datetime="2022-01-17T18:14:44+08:00">2022-01-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/AOP/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/AOP/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="AOP"><a href="#AOP" class="headerlink" title="AOP"></a>AOP</h1><h3 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h3><ol>
+<li><p>导入aop模块</p>
+</li>
+<li><p>定义一个业务逻辑类</p>
+</li>
+<li><p>定义一个日志切面类</p>
+<p>通知方法：</p>
+<p>前置通知（@Before）：在目标方法运行之前运行</p>
+<p>后置通知（@After）：在目标方法运行结束之后运行，无论方法是否正常结束</p>
+<p>返回通知（@AfterReturning）：在目标方法正常返回之后运行（在后置通知之前运行）</p>
+<p>异常通知（@AfterThrowing）：在目标方法出现异常之后运行（在后置通知之前运行）</p>
+<p>环绕通知（@Around）：动态代理，手动推进目标方法运行（jointPoint.procced() ）</p>
+</li>
+<li><p>给切面类的目标方法标志何时何地运行</p>
+</li>
+<li><p>将切面类和业务逻辑类都加入到容器中</p>
+</li>
+<li><p>必须告诉Spring哪个类是切面类（给切面类加上一个注解：@Aspect）</p>
+</li>
+<li><p>给配置类加上@EnableAspectJAutoProxy（开启基于注解的aop模型）</p>
+</li>
+</ol>
+<p>例子：</p>
+<p>AOP类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LogAspect</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 抽取公共切入点的表达式</span></span><br><span class="line"><span class="comment">     * 1. 本地引用</span></span><br><span class="line"><span class="comment">     * 2.其他切面类引用</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Pointcut(&quot;execution (public int func.MathCalculator.*(..))&quot; )</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">pointCut</span><span class="params">()</span></span>&#123;&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Before(&quot;pointCut()&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">logStart</span><span class="params">(JoinPoint joinPoint)</span></span>&#123;</span><br><span class="line">        Object[] args = joinPoint.getArgs();</span><br><span class="line">        System.out.println(<span class="string">&quot;除法运行 。。。。@Before &quot;</span>+ Arrays.toString(args));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//其他切面类引用</span></span><br><span class="line">    <span class="meta">@After(&quot;DIY.LogAspect.pointCut()&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">logEnd</span><span class="params">(JoinPoint joinPoint)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;除法运行 。。。。@After &quot;</span>+joinPoint.getSignature().getName());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//joint必须出现在第一位</span></span><br><span class="line">    <span class="meta">@AfterReturning(value = &quot;pointCut()&quot;,returning = &quot;result&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">logReturning</span><span class="params">(JoinPoint joinPoint,Object result)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;除法运行 。。。。@AfterReturning &quot;</span>+result);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@AfterThrowing(value = &quot;pointCut()&quot;,throwing = &quot;exception&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">logException</span><span class="params">(Exception exception)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;除法运行 。。。。@AfterThrowing &quot;</span>+exception);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>业务类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MathCalculator</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">div</span><span class="params">(<span class="keyword">int</span> i,<span class="keyword">int</span> j)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;div --- func&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> i/j;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>配置类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@EnableAspectJAutoProxy</span> <span class="comment">//必须要加上这个，否则就不会自动开启aop</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">mainConfig</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> LogAspect <span class="title">aspect</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> LogAspect();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> MathCalculator <span class="title">mathCalculator</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> MathCalculator();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationStart</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testAop</span><span class="params">()</span></span>&#123;</span><br><span class="line">        AnnotationConfigApplicationContext configApplicationContext = <span class="keyword">new</span> AnnotationConfigApplicationContext(mainConfig.class);</span><br><span class="line">        MathCalculator bean = configApplicationContext.getBean(MathCalculator.class); <span class="comment">//必须从容器中获取，直接new的类无法启动AOP</span></span><br><span class="line">        bean.div(<span class="number">1</span>,<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="原理（看给容器中注册了什么组件，这个组件何时工作以及功能是什么）"><a href="#原理（看给容器中注册了什么组件，这个组件何时工作以及功能是什么）" class="headerlink" title="原理（看给容器中注册了什么组件，这个组件何时工作以及功能是什么）"></a>原理（看给容器中注册了什么组件，这个组件何时工作以及功能是什么）</h3><blockquote>
+<p>注册了什么组件</p>
+</blockquote>
+<p>@EnableAspectJAutoProxy （开启aop注解功能）</p>
+<ol>
+<li><p>@Import(AspectJAutoProxyRegister.class):给容器中导入AspectJAutoProxyRegister.class</p>
+<p>利用AspectJAutoProxyRegister自定义发给容器中注册bean，主要是BeanDefinition信息</p>
+<p>internalAutoPorxyCreator=AnnotationAwareAspectJAutoProxyCreator</p>
+<p>给容器中注册一个AnnotationAwareAspectJAutoProxyCreator</p>
+</li>
+<li><p>AnnotationAwareAspectJAutoProxyCreator</p>
+<p>AnnotationAwareAspectJAutoProxyCreator</p>
+<p>​    -&gt; AspectJAwareAdvisorAutoProxyCreator</p>
+<p>​        -&gt;AbstractAdvisorAutoProxyCreator</p>
+<p>​            -&gt;AbstractAutoProxyCreator</p>
+<p>​                implements SmartInstantiationAwareBeanPostProcessor、BeanFactoryAware </p>
+<p>​            关注后置处理器（在bean初始化前后做事情）、自动装配BeanFactory </p>
+</li>
+</ol>
+<blockquote>
+<p>做了哪些事情</p>
+</blockquote>
+<h5 id="在AbstractAutoProxyCreator中"><a href="#在AbstractAutoProxyCreator中" class="headerlink" title="在AbstractAutoProxyCreator中"></a>在AbstractAutoProxyCreator中</h5><ol>
+<li><p>重写BeanFactoryAware中的方法</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210326094305845.png" alt="image-20210326094305845" style="zoom:50%;" /></li>
+<li><p>重写SmartInstantiationAwareBeanPostProcessor中的方法</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326094401.png" alt="image-20210326094356719" style="zoom:50%;" /></li>
+</ol>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210326094442401.png" alt="image-20210326094442401" style="zoom:50%;" />
+
+
+
+<h5 id="在AbstractAdvisorAutoProxyCreator中"><a href="#在AbstractAdvisorAutoProxyCreator中" class="headerlink" title="在AbstractAdvisorAutoProxyCreator中"></a>在AbstractAdvisorAutoProxyCreator中</h5><ol>
+<li><p>重写setBeanFactory方法，在该方法中会调用initBeanFactory方法</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326094721.png" alt="image-20210326094715926" style="zoom:50%;" /></li>
+</ol>
+<h5 id="在AspectJAwareAdvisorAutoProxyCreator中"><a href="#在AspectJAwareAdvisorAutoProxyCreator中" class="headerlink" title="在AspectJAwareAdvisorAutoProxyCreator中"></a>在AspectJAwareAdvisorAutoProxyCreator中</h5><p>没有与setFactory和BeanPostProcessor相关的方法</p>
+<h5 id="在AnnotationAwareAspectJAutoProxyCreator中"><a href="#在AnnotationAwareAspectJAutoProxyCreator中" class="headerlink" title="在AnnotationAwareAspectJAutoProxyCreator中"></a>在AnnotationAwareAspectJAutoProxyCreator中</h5><ol>
+<li><p>重写了AbstractAdvisorAutoProxyCreator中setBeanFactory中的initBeanFactory</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326095010.png" alt="image-20210326095004545" style="zoom:50%;" /></li>
+</ol>
+<blockquote>
+<p>创建和注册AnnotationAwareAspectJAutoProxyCreator流程</p>
+</blockquote>
+<ol>
+<li><p>传入配置类，创建ioc容器</p>
+</li>
+<li><p>注册配置类，调用refresh() 刷新容器</p>
+</li>
+<li><p>registerBeanPostProcessors(beanFactory);注册bean的后置处理器来方便拦截bean的创建</p>
+<ol>
+<li><p>先获取ioc容器已经定义了的需要创建对象的所有BeanPostProcessor （解析配置类时需要注册的BeanPostProcessor，例如此处的@EnableAspectJAutoProxy），如下图所示</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210326095625322.png" alt="image-20210326095625322" style="zoom:50%;" /></li>
+<li><p>给容器中加别的BeanPostProcessor</p>
+</li>
+<li><p>优先注册实现了PriorityOrdered接口的BeanPostProcessor</p>
+</li>
+<li><p>再给容器中注册实现了Ordered接口的BeanPostProcessor：<strong>我们的AnnotationAwareAspectJAutoProxyCreator父类实现了Ordered接口</strong></p>
+</li>
+<li><p>最后注册没有实现优先级接口的BeanPostProcessor </p>
+</li>
+<li><p>注册BeanPostProcessor，实际上就是创建BeanPostProcessor对象保存在容器中</p>
+<p>创建internalAutoProxyCreator的BeanPostProcessor【AnnotationAwareAspectJAutoProxyCreator】</p>
+<ol>
+<li>创建Bean的实例也就是AnnotationAwareAspectJAutoProxyCreator的实例</li>
+<li>populateBean：给bean的各种属性赋值</li>
+<li>initializeBean：初始化bean<ol>
+<li>invokeAwareMethods():处理Aware接口的方法回调 <strong>我们的AnnotationAwareAspectJAutoProxyCreator的父类实现了BeanFactoryAware的接口</strong></li>
+<li>applyBeanPostProcessorBeforeInitialization()：应用后置处理器的postPorcessorBeforeInitialization（）</li>
+<li>invokeInitMethods(): 执行自定义的初始化方法</li>
+<li>applyBeanPostProcessorAfterInitialization(): 执行后置处理器的postProcessorAfterInitialization（）</li>
+</ol>
+</li>
+<li>BeanPostProcessor(AnnotationAwareAspectJAutoProxyCreator)创建成功：aspectJAdvisorBuilder</li>
+</ol>
+</li>
+<li><p>把BeanPostProcessor注册到BeanFactory中，调用BeanFactory.addBeanPostProcessor(postProcessor)</p>
+</li>
+</ol>
+</li>
+<li><p>finishBeanFactoryInitialization（beanFactory);完成BeanFactory初始化工作，创建剩下的单实例Bean</p>
+<ol>
+<li><p>遍历获取容器中所有的Bean，依次创建对象getBean(beanName)</p>
+<p>getBean-&gt;doGetBean()-&gt;getSingleton()-&gt;</p>
+</li>
+<li><p>创建Bean：<strong>AnnotationAwareAspectJAutoProxyCreator在所有bean创建之前会有一个拦截，InstantiationAwareBeanPostProcessor，会调用PostProcessBeforeInstantiation（）</strong></p>
+<ol>
+<li><p>先从缓存中获取当前bean，如果能获取到，说明bean是之前被创建过的，直接使用，否则再创建</p>
+<p>只要缓存好的Bean都会被缓存起来</p>
+</li>
+<li><p>createBean() 创建bean:     <strong>AnnotationAwareAspectJAutoProxyCreator会在任何bean创建之前先尝试返回bean的实例</strong></p>
+<p>如下图所示：</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210326114738850.png" alt="image-20210326114738850" style="zoom:50%;" />
+
+<p><font color=red>【BeanPostProcessor是在Bean对象创建完成初始化前后调用的】</font></p>
+<p><font color=red>【InstantiationAwareBeanPostProcessor是在创建Bean之前先尝试使用后置处理器返回对象的】</font></p>
+<ol>
+<li><p>resolveBeforeInstantiation(beanName,mbdToUser);解析BeforeInstantiation</p>
+<p>希望后置处理器在此能返回一个代理对象，如果能返回代理对象就使用，如果不能就继续</p>
+<ol>
+<li><p>后置处理器先尝试返回对象</p>
+<p>bean = applyBeanPostProcessorBeforeInstantiation(xxx);</p>
+<p>拿到所有后置处理器，如果是InstantiationAwareBeanPostProcessor就执行postProcessBeforeinstantiation</p>
+</li>
+</ol>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210326113931654.png" alt="image-20210326113931654" style="zoom:50%;" /></li>
+<li><p>doCreateBean(beanName,mbdToUse,args);真正去创建一个bean，和3.6的流程是一样的</p>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<p>​    </p>
+<blockquote>
+<p>创建AOP</p>
+</blockquote>
+<p>如上面所说</p>
+<ol>
+<li><p>每一个bean创建之前，调用postProcessBeforeInstantiation();</p>
+<p>我们只关心要代理的类（MathCaculator）和切面类（LogAspect）</p>
+<ol>
+<li><p>判断当前bean是否在advisedBeans中（该集合保存了所有需要增强的bean）</p>
+</li>
+<li><p>判断当前bean是否是基础类型的Advice、Pointcut、Advisor、AOPInfrastructureBean，或者是否是切面（@Aspect）</p>
+</li>
+<li><p>是否需要跳过</p>
+<ol>
+<li><p>获取候选的增强器（切面里面的通知方法）【List&lt; Advisor &gt; candidateAdvisors】</p>
+<p>每一个封装的通知方法的增强器是InstantiationModelAwarePointcutAdvisor；</p>
+<p>然后判断每一个增强器是否是AspectJointcutAdvisor类型的；如果是返回true</p>
+</li>
+<li><p>永远返回false，因为此处在我们的案例中增强器的类型是InstantiationModelAwarePointcutAdvisor，不是AspectJointcutAdvisor类型</p>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>创建对象，使用PostProcessAfterinitialization</p>
+<p>​                return wrapInfNecessary(bean,beanName,cacheKey);//包装如果需要的情况下</p>
+<ol>
+<li><p>获取当前bean的所有增强器（通知方法） specificInterceptors</p>
+<ol>
+<li><p>找到候选的的所有增强器（找哪些通知方法是需要切入当前bean方法的（根据）@Pointcut、@Before等注解的表达式判断）</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326170027.png" alt="image-20210326170025265"></p>
+</li>
+<li><p>获取到能在bean使用的增强器</p>
+</li>
+<li><p>给增强器排序</p>
+</li>
+</ol>
+</li>
+<li><p>保存当前bean在advisedBeans中</p>
+</li>
+<li><p>如果当前bean需要增强，创建当前bean的代理对象</p>
+<ol>
+<li><p>获取所有增强器（通知方法）</p>
+</li>
+<li><p>保存到proxyFactory</p>
+</li>
+<li><p>创建代理对象：Spring自动决定</p>
+<p>JdkDynamicAopProxy（config）；jdk动态代理</p>
+<p>ObjenesisCglibAopProxy（config）：cglib动态代理</p>
+</li>
+</ol>
+</li>
+<li><p>给容器中返回当前组件使用cglib增强的代理对象</p>
+</li>
+<li><p><strong>以后容器中获取到的就是这个组件的代理对象，执行目标方法的时候，代理对象就会执行通知方法的流程</strong></p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210326171051.png" alt="image-20210326171045255" style="zoom:50%;" /></li>
+</ol>
+</li>
+<li><p>目标方法执行</p>
+<p>容器中保存了组件的代理对象（cglib增强的对象），这个对象里面保存了详细的信息（比如增强器，目标对象，xxx）</p>
+<ol>
+<li><p>CglibAopProxy.intercept()；拦截目标方法的执行</p>
+</li>
+<li><p>根据ProxyFactory对象获取将要执行的目标方法拦截器链</p>
+<p>List&lt; Object &gt; chain = this.advised.getInterceptorAndDynamicInterceptionAdvice</p>
+<ol>
+<li><p>List&lt; Object &gt; interceptorList保存所有拦截器  默认是5个—–Before、After、AfterThrowing、AfterReturning以及自带的ExposeInvocationInterceptor</p>
+</li>
+<li><p>遍历所有的增强器，将其转为Interceptor</p>
+<p>registry.getInterceptors(advisor)</p>
+</li>
+<li><p>将增强器转为List&lt; MethodInteceptor &gt;</p>
+<p>如果是MethodInteceptor，直接加入到集合中</p>
+<p>如果不是，使用AdvisorAdapter将增强器转为MethodInterceptor （针对不同的对象有不同的AdvisorAdapter进行转化）</p>
+<p>转换完成后返回MethodInterceptor数组</p>
+</li>
+</ol>
+</li>
+<li><p>如果没有拦截器链，则直接执行目标方法</p>
+<p>拦截器链（每一个通知方法又被包装为方法拦截器，利用MethodInterceptor机制）</p>
+</li>
+<li><p>如果有拦截器链，把需要执行的目标对象，目标方法，拦截器链等信息传入创建一个CglibMethodInvocation对象并调用Object retVal = mi.proceed();</p>
+</li>
+<li><p>拦截器链的触发过程</p>
+<ol>
+<li><p>如果没有拦截器执行目标方法，或者拦截器的索引和拦截器数组-1大小一样（指定了最后一个拦截器），则执行目标方法</p>
+</li>
+<li><p>链式获取每一个拦截器，拦截器执行invoke方法，每一个拦截器等待下一个拦截器执行完成以后再来执行</p>
+<p>拦截器链的机制，保证通知方法与目标方法的执行顺序</p>
+</li>
+</ol>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210326174717520.png" alt="image-20210326174717520" style="zoom:50%;" /></li>
+</ol>
+<p>​            <font color=red>注意：spring5在@After标注的方法执行顺序变为了最后一个</font></p>
+</li>
+</ol>
+<blockquote>
+<p>总结</p>
+</blockquote>
+<ol>
+<li><p>@EnableAspectJAutoProxy 开启AOP功能</p>
+</li>
+<li><p>@EnableAspectJAutoProxy会给容器注册一个组件：AnnotationAwareAspectJAutoProxyCreator</p>
+</li>
+<li><p>AnnotationAwareAspectJAutoProxyCreator是一个后置处理器</p>
+</li>
+<li><p>容器创建流程</p>
+<ol>
+<li><p>registerBeanPostProcessors（）注册后置处理器，创建AnnotationAwareAspectJAutoProxyCreator</p>
+</li>
+<li><p>finishBeanFactoryInitialization（）初始化生效的单实例bean</p>
+<ol>
+<li><p>创建业务逻辑组件和切面组件</p>
+</li>
+<li><p>AnnotationAwareAspectJAutoProxyCreator拦截组件的创建过程</p>
+</li>
+<li><p>组件创建完之后，判断组件是否需要增强</p>
+<ul>
+<li><p>是</p>
+<p>切面的通知方法，包装成增强器（Advisor）给业务逻辑组件创建一个代理对象（Cglib代理对象）</p>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>执行目标方法</p>
+<ol>
+<li><p>代理对象执行目标方法</p>
+</li>
+<li><p>CglibAopProxy.intercept()</p>
+<ol>
+<li><p>得到目标方法的拦截器链（增强器包装成拦截器MethodInterceptor）</p>
+</li>
+<li><p>利用拦截器的链式机制，一次进入每一个拦截器进行执行</p>
+</li>
+<li><p>效果</p>
+<p>正常执行：前置通知-&gt;目标方法-&gt;返回通知-&gt;后置通知</p>
+<p>异常执行：前置通知-&gt;目标方法-&gt;异常通知-&gt;后置通知</p>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      
+
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/Spring%20Bean/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/Spring%20Bean/" class="post-title-link" itemprop="url">Spring Bean</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-01-07 08:43:47 / 修改时间：14:20:06" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:47+08:00">2022-01-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/Spring%20Bean/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/Spring%20Bean/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="BeanDefintion"><a href="#BeanDefintion" class="headerlink" title="BeanDefintion"></a>BeanDefintion</h2><h3 id="含义"><a href="#含义" class="headerlink" title="含义"></a>含义</h3><p>Spring Framework中定义Bean的配置元信息接口，包含：</p>
+<ul>
+<li>Bean的类名</li>
+<li>Bean行为的配置元素，比如作用域、自动绑定模式、生命周期的回调（初始化、回调）等</li>
+<li>其他Bean引用</li>
+<li>配置设置，比如Bean的属性 </li>
+</ul>
+<h3 id="BeanDefintion元信息"><a href="#BeanDefintion元信息" class="headerlink" title="BeanDefintion元信息"></a>BeanDefintion元信息</h3><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20220103180059.png" alt="image-20220103180042386" style="zoom:50%;" />
+
+
+
+<h3 id="BeanDefintion构建方式"><a href="#BeanDefintion构建方式" class="headerlink" title="BeanDefintion构建方式"></a>BeanDefintion构建方式</h3><ol>
+<li><p>BeanDefintionBuilder</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 通过BeanDefinitionBuilder构建 其实该类本质上也是调用的AbstractBeanDefinition里面的相关设置方法来进行操作的</span></span><br><span class="line">BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(User.class);</span><br><span class="line"><span class="comment">//设置属性</span></span><br><span class="line">beanDefinitionBuilder.addPropertyValue(<span class="string">&quot;id&quot;</span>,<span class="number">1</span>);</span><br><span class="line">beanDefinitionBuilder.addPropertyValue(<span class="string">&quot;name&quot;</span>,<span class="string">&quot;Cooper&quot;</span>);</span><br><span class="line"><span class="comment">//获取实例，获取到之后还可以进行对其自身修改，并非是最终的状态</span></span><br><span class="line">BeanDefinition beanDefinition = beanDefinitionBuilder.getBeanDefinition();</span><br><span class="line">System.out.println(beanDefinition);</span><br></pre></td></tr></table></figure></li>
+<li><p>AbstractBeanDefinition以及派生类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 通过AbstractBeanDefinition 以及派生类</span></span><br><span class="line">GenericBeanDefinition genericBeanDefinition = <span class="keyword">new</span> GenericBeanDefinition();</span><br><span class="line">genericBeanDefinition.setBeanClass(User.class);</span><br><span class="line">MutablePropertyValues values = <span class="keyword">new</span> MutablePropertyValues();</span><br><span class="line">values.add(<span class="string">&quot;id&quot;</span>,<span class="number">1</span>).</span><br><span class="line">        add(<span class="string">&quot;name&quot;</span>,<span class="string">&quot;Cooper&quot;</span>);</span><br><span class="line">genericBeanDefinition.setPropertyValues(values);</span><br><span class="line">System.out.println(genericBeanDefinition);</span><br><span class="line"></span><br><span class="line">System.out.println(beanDefinition==genericBeanDefinition);</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="Bean的名称"><a href="#Bean的名称" class="headerlink" title="Bean的名称"></a>Bean的名称</h3><ul>
+<li>指定名称</li>
+<li>不指定名称默认会调用命名方法（<code>defaultNameGenerator</code>），其名称为（类型+<code>#</code> +count） （count是从0开始计数的）</li>
+</ul>
+<h2 id="BeanDefinition注册"><a href="#BeanDefinition注册" class="headerlink" title="BeanDefinition注册"></a>BeanDefinition注册</h2><h4 id="XML-配置元信息"><a href="#XML-配置元信息" class="headerlink" title="XML 配置元信息"></a>XML 配置元信息</h4><ul>
+<li><bean name="..." /></li>
+</ul>
+<h4 id="Java注解配置元信息"><a href="#Java注解配置元信息" class="headerlink" title="Java注解配置元信息"></a>Java注解配置元信息</h4><ul>
+<li><p>@Bean</p>
+</li>
+<li><p>@Component</p>
+</li>
+<li><p>@Import</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Import(AnnotationBeanDefinitionDemo.class)</span> <span class="comment">//通过Import进行导入</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AnnotationBeanDefinitionDemo</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        AnnotationConfigApplicationContext configApplicationContext = <span class="keyword">new</span> AnnotationConfigApplicationContext();</span><br><span class="line">        configApplicationContext.register(Config.class);</span><br><span class="line"></span><br><span class="line">        configApplicationContext.refresh();</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">&quot;Config 类型的所有Beans&quot;</span> +configApplicationContext.getBeansOfType(Config.class));</span><br><span class="line">        System.out.println(<span class="string">&quot;User 类型的所有Beans&quot;</span>+ configApplicationContext.getBeansOfType(User.class));</span><br><span class="line">        <span class="comment">//自己不能导入自己，因此查询出来是没有的</span></span><br><span class="line">        System.out.println(<span class="string">&quot;AnnotationBeanDefinitionDemo 类型所有的Beans&quot;</span> +configApplicationContext.getBeansOfType(AnnotationBeanDefinitionDemo.class));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//通过@Component定义</span></span><br><span class="line">    <span class="meta">@Component</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Config</span></span>&#123;</span><br><span class="line">        <span class="comment">//通过@Bean定义</span></span><br><span class="line">        <span class="meta">@Bean(name=&#123;&quot;user&quot;,&quot;cooper-user&quot;&#125;)</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> User <span class="title">user</span><span class="params">()</span></span>&#123;</span><br><span class="line">            User user = <span class="keyword">new</span> User();</span><br><span class="line">            user.setId(<span class="number">1</span>);</span><br><span class="line">            user.setName(<span class="string">&quot;Cooper&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> user;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="Java-API配置元信息"><a href="#Java-API配置元信息" class="headerlink" title="Java API配置元信息"></a>Java API配置元信息</h4><ul>
+<li><p>命名方式</p>
+<p>BeanDefinitionRegistry</p>
+</li>
+<li><p>非命名方式</p>
+<p>BeanDefinitionReaderUtils</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">registerBeanDefinition</span><span class="params">(BeanDefinitionRegistry registry,String beanName,Class&lt;?&gt; beanClass)</span></span>&#123;</span><br><span class="line">    BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(beanClass);</span><br><span class="line">    beanDefinitionBuilder.addPropertyValue(<span class="string">&quot;id&quot;</span>,<span class="number">1</span>)</span><br><span class="line">            .addPropertyValue(<span class="string">&quot;name&quot;</span>,<span class="string">&quot;Cooper&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span>(StringUtils.hasText(beanName))&#123;</span><br><span class="line">        <span class="comment">//命名方式</span></span><br><span class="line">        registry.registerBeanDefinition(beanName,beanDefinitionBuilder.getBeanDefinition());</span><br><span class="line">    &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        <span class="comment">//非命名方式</span></span><br><span class="line">        BeanDefinitionReaderUtils.registerWithGeneratedName(beanDefinitionBuilder.getBeanDefinition(),registry);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>配置类方式</p>
+<p>AnnotatedBeanDefinitionReader</p>
+</li>
+</ul>
+<h2 id="实例化Spring-Bean"><a href="#实例化Spring-Bean" class="headerlink" title="实例化Spring Bean"></a>实例化Spring Bean</h2><h3 id="常规方式"><a href="#常规方式" class="headerlink" title="常规方式"></a>常规方式</h3><h4 id="构造器（配置元信息XML、java注解和java-API）"><a href="#构造器（配置元信息XML、java注解和java-API）" class="headerlink" title="构造器（配置元信息XML、java注解和java API）"></a>构造器（配置元信息XML、java注解和java API）</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;user-by-static-method&quot;</span> <span class="attr">class</span>=<span class="string">&quot;pojo.User&quot;</span> <span class="attr">factory-method</span>=<span class="string">&quot;createUser&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> id;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getId</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setId</span><span class="params">(<span class="keyword">int</span> id)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.id = id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;User&#123;&quot;</span> +</span><br><span class="line">                <span class="string">&quot;id=&quot;</span> + id +</span><br><span class="line">                <span class="string">&quot;, name=&#x27;&quot;</span> + name + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&#x27;&#125;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> User <span class="title">createUser</span><span class="params">()</span></span>&#123;</span><br><span class="line">        User user = <span class="keyword">new</span> User();</span><br><span class="line">        user.setId(<span class="number">1</span>);</span><br><span class="line">        user.setName(<span class="string">&quot;Cooper&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> user;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="静态工厂方法（配置元信息：XML和Java-API）"><a href="#静态工厂方法（配置元信息：XML和Java-API）" class="headerlink" title="静态工厂方法（配置元信息：XML和Java API）"></a>静态工厂方法（配置元信息：XML和Java API）</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!--    实例方法--&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;user-by-instance-method&quot;</span> <span class="attr">factory-bean</span>=<span class="string">&quot;userFactory&quot;</span> <span class="attr">factory-method</span>=<span class="string">&quot;createUser&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;userFactory&quot;</span> <span class="attr">class</span>=<span class="string">&quot;factory.DefaultUserFactory&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">UserFactory</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">default</span> User <span class="title">createUser</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> User.createUser();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DefaultUserFactory</span> <span class="keyword">implements</span> <span class="title">UserFactory</span></span>&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Bean工厂方法（配置元信息：XML和Java-API）"><a href="#Bean工厂方法（配置元信息：XML和Java-API）" class="headerlink" title="Bean工厂方法（配置元信息：XML和Java API）"></a>Bean工厂方法（配置元信息：XML和Java API）</h4><h4 id="FactoryBean-（配置元信息：XML、Java注解和Java-API）"><a href="#FactoryBean-（配置元信息：XML、Java注解和Java-API）" class="headerlink" title="FactoryBean （配置元信息：XML、Java注解和Java API）"></a>FactoryBean （配置元信息：XML、Java注解和Java API）</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;user-by-factory-bean&quot;</span> <span class="attr">class</span>=<span class="string">&quot;factory.UserFactoryBean&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserFactoryBean</span> <span class="keyword">implements</span> <span class="title">FactoryBean</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">getObject</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> User.createUser();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Class&lt;?&gt; getObjectType() &#123;</span><br><span class="line">        <span class="keyword">return</span> User.class;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>​    获取Bean</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BeanInstantiationDemo</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        BeanFactory factory = <span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">&quot;META-INF/dependency-instantiation-context.xml&quot;</span>);</span><br><span class="line">        User user = factory.getBean(<span class="string">&quot;user-by-static-method&quot;</span>,User.class);</span><br><span class="line">        User userByInstanceMethod = factory.getBean(<span class="string">&quot;user-by-instance-method&quot;</span>,User.class);</span><br><span class="line">        System.out.println(user);</span><br><span class="line">        System.out.println(userByInstanceMethod);</span><br><span class="line">        System.out.println(user==userByInstanceMethod);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="特殊方式"><a href="#特殊方式" class="headerlink" title="特殊方式"></a>特殊方式</h3><ul>
+<li><p>ServiceLoaderFactoryBean</p>
+</li>
+<li><p>AutowireCapableBeanFactory</p>
+</li>
+<li><p>BeanDefinitionRegistry</p>
+</li>
+</ul>
+<h2 id="初始化Spring-Bean"><a href="#初始化Spring-Bean" class="headerlink" title="初始化Spring Bean"></a>初始化Spring Bean</h2><h3 id="PostConstruct"><a href="#PostConstruct" class="headerlink" title="@PostConstruct"></a>@PostConstruct</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@PostConstruct</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;@PostConstruct UserFactory 初始化中...&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="实现InitializingBean接口的afterPropertiesSet-方法"><a href="#实现InitializingBean接口的afterPropertiesSet-方法" class="headerlink" title="实现InitializingBean接口的afterPropertiesSet() 方法"></a>实现InitializingBean接口的afterPropertiesSet() 方法</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DefaultUserFactory</span> <span class="keyword">implements</span> <span class="title">UserFactory</span>, <span class="title">InitializingBean</span> </span>&#123;</span><br><span class="line">    <span class="meta">@PostConstruct</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;@PostConstruct UserFactory 初始化中...&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initUserFactory</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;自定义初始化方法 initUserFactory(): UserFactory 初始化中...&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;InitializingBean initUserFactory(): UserFactory 初始化中...&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="自定义初始化方法"><a href="#自定义初始化方法" class="headerlink" title="自定义初始化方法"></a>自定义初始化方法</h3><ul>
+<li><p>XML配置 <code>&lt;bean init-method=&quot;init&quot; .../&gt;</code></p>
+</li>
+<li><p>Java注解 <code>@Bean(initMethod=&quot;init&quot;)</code></p>
+</li>
+<li><p>Java API: <code>AbstractBeanDefinition</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean(initMethod = &quot;initUserFactory&quot;)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> DefaultUserFactory <span class="title">userFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> DefaultUserFactory();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="三者顺序"><a href="#三者顺序" class="headerlink" title="三者顺序"></a>三者顺序</h3><p>@PostConstruct UserFactory 初始化中…<br>InitializingBean initUserFactory(): UserFactory 初始化中…<br>自定义初始化方法 initUserFactory(): UserFactory 初始化中…</p>
+<p>即@PostConstruct -&gt; InitializingBean initUserFactory() -&gt; 自定义初始化方法</p>
+<h2 id="延迟初始化"><a href="#延迟初始化" class="headerlink" title="延迟初始化"></a>延迟初始化</h2><h3 id="XML-配置：-lt-bean-lazy-init-”true”-…-gt"><a href="#XML-配置：-lt-bean-lazy-init-”true”-…-gt" class="headerlink" title="XML 配置：&lt;bean lazy-init=”true” …/&gt;"></a>XML 配置：&lt;bean lazy-init=”true” …/&gt;</h3><h3 id="Java注解-：-Lazy-true"><a href="#Java注解-：-Lazy-true" class="headerlink" title="Java注解 ：@Lazy(true)"></a>Java注解 ：@Lazy(true)</h3><p>延迟加载指的是Spring应用上下文启动之后之后才会进行加载</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BeanInitializationDemon</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        AnnotationConfigApplicationContext context = <span class="keyword">new</span> AnnotationConfigApplicationContext();</span><br><span class="line">        context.register(BeanInitializationDemon.class);</span><br><span class="line">        context.refresh();</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">&quot;context已经启动。。。&quot;</span>);</span><br><span class="line">        DefaultUserFactory factory = context.getBean(DefaultUserFactory.class);</span><br><span class="line">        context.close();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean(initMethod = &quot;initUserFactory&quot;)</span></span><br><span class="line">    <span class="meta">@Lazy</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> DefaultUserFactory <span class="title">userFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> DefaultUserFactory();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">context已经启动。。。</span><br><span class="line">@PostConstruct UserFactory 初始化中...</span><br><span class="line">InitializingBean initUserFactory(): UserFactory 初始化中...</span><br><span class="line">自定义初始化方法 initUserFactory(): UserFactory 初始化中...</span><br></pre></td></tr></table></figure>
+
+<p>可以看到Spring上下文已经启动了，但是DefaultUserFactory是在启动之后才进行加载的（此处进行了依赖查找，因此使用到了该Bean，因此需要进行加载）</p>
+<h2 id="销毁Spring-Bean"><a href="#销毁Spring-Bean" class="headerlink" title="销毁Spring Bean"></a>销毁Spring Bean</h2><h3 id="PreDestory"><a href="#PreDestory" class="headerlink" title="@PreDestory"></a>@PreDestory</h3><h3 id="实现DisposableBean接口的destroy-方法"><a href="#实现DisposableBean接口的destroy-方法" class="headerlink" title="实现DisposableBean接口的destroy()方法"></a>实现DisposableBean接口的destroy()方法</h3><h3 id="自定义销毁方法"><a href="#自定义销毁方法" class="headerlink" title="自定义销毁方法"></a>自定义销毁方法</h3><ul>
+<li>XML 配置：&lt;bean destroy=”destroy” …/&gt;</li>
+<li>Java注解：@Bean(destroy=”destroy”)</li>
+<li>Java API: AbstractBeanDefinition#setDestroyMethodName(String)</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DefaultUserFactory</span> <span class="keyword">implements</span> <span class="title">UserFactory</span>, <span class="title">InitializingBean</span>, <span class="title">DisposableBean</span> </span>&#123;</span><br><span class="line">    <span class="meta">@PostConstruct</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;@PostConstruct UserFactory 初始化中...&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initUserFactory</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;自定义初始化方法 initUserFactory(): UserFactory 初始化中...&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;InitializingBean initUserFactory(): UserFactory 初始化中...&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@PreDestroy</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">preDestroy</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot; @PreDestroy UserFactory销毁中。。。&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;DisposableBean UserFactory销毁中。。。&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doDestroy</span><span class="params">()</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;自定义销毁方法 UserFactory销毁中。。。&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>三者的执行顺序为</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">@PreDestroy UserFactory销毁中。。。</span><br><span class="line">DisposableBean UserFactory销毁中。。。</span><br><span class="line">自定义销毁方法 UserFactory销毁中。。。</span><br></pre></td></tr></table></figure>
+
+<p>其<font color=red>销毁方法是有<code>context.close();</code>方法进行触发的</font></p>
+<h2 id="垃圾回收Spring-Bean"><a href="#垃圾回收Spring-Bean" class="headerlink" title="垃圾回收Spring Bean"></a>垃圾回收Spring Bean</h2><h3 id="执行流程"><a href="#执行流程" class="headerlink" title="执行流程"></a>执行流程</h3><ol>
+<li><p>关闭Spring容器（应用上下文）</p>
+</li>
+<li><p>执行GC （不是必须的）</p>
+</li>
+<li><p>Spring Bean覆盖的finalize()方法被回调 （不一定会主动触发该方法）</p>
+<p>其实就是重写Object类中的<code>finalize</code>方法</p>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      
+
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+
+  
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/35/">35</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+  </nav>
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

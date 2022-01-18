@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="分析过程 观察，至少跑一天，查看生产 的慢SQL情况 开启慢查询日志，设置阈值，比如超过5s的就是慢SQL，将其抓取出来 explain+慢SQL分析 show profile 进行sql数据库服务器的参数调优  查询优化 永远小表驱动大表  exits 将主查询的数据，放到子查询中做条件验证，根据验证结果（true或false）来决定主查询的数据结构是否得以保留    order by关键字优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="查询截取分析">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/MySQL/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="分析过程 观察，至少跑一天，查看生产 的慢SQL情况 开启慢查询日志，设置阈值，比如超过5s的就是慢SQL，将其抓取出来 explain+慢SQL分析 show profile 进行sql数据库服务器的参数调优  查询优化 永远小表驱动大表  exits 将主查询的数据，放到子查询中做条件验证，根据验证结果（true或false）来决定主查询的数据结构是否得以保留    order by关键字优化">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210223210831823.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210223213433512.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223213655.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210223214027917.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223220853.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210223220953798.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210223221057082.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223221307.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223222510.png">
+<meta property="article:published_time" content="2022-01-07T00:43:29.568Z">
+<meta property="article:modified_time" content="2021-02-24T00:26:07.000Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="MySQL">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20210223210831823.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/MySQL/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>查询截取分析 | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/MySQL/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          查询截取分析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:29" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:29+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 08:26:07" itemprop="dateModified" datetime="2021-02-24T08:26:07+08:00">2021-02-24</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/MySQL/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/MySQL/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="分析过程"><a href="#分析过程" class="headerlink" title="分析过程"></a>分析过程</h2><ol>
+<li>观察，至少跑一天，查看生产 的慢SQL情况</li>
+<li>开启慢查询日志，设置阈值，比如超过5s的就是慢SQL，将其抓取出来</li>
+<li>explain+慢SQL分析</li>
+<li>show profile</li>
+<li>进行sql数据库服务器的参数调优</li>
+</ol>
+<h3 id="查询优化"><a href="#查询优化" class="headerlink" title="查询优化"></a>查询优化</h3><ul>
+<li><p>永远小表驱动大表</p>
+<ul>
+<li><p>exits</p>
+<p>将主查询的数据，放到子查询中做条件验证，根据验证结果（true或false）来决定主查询的数据结构是否得以保留</p>
+</li>
+</ul>
+</li>
+<li><p>order by关键字优化</p>
+<ul>
+<li><p>order by子句，尽量使用Index方式排序，避免使用filesort方式排序</p>
+<p>排序如果按照顺序一升一降排序，也会导致最终的使用filesort</p>
+</li>
+<li><p>尽可能在索引列上完成排序操作，遵照索引建立的最佳左前缀</p>
+</li>
+<li><p>如果不在索引列上，filesort有两种算法：MySQL会启动双路排序和单路排序</p>
+<ul>
+<li><p>双路排序</p>
+<p>MySQL4.1之前使用双路排序，字面意思是两次扫描磁盘，最终得到数据</p>
+</li>
+<li><p>单路排序</p>
+<p>MySQL4.1之后使用单路排序，从磁盘读取查询需要的列，按照order by列在buffer对他们进行排序，然后扫描排序后的列表进行输出，它的效率更快一些，避免了第二次读取数据，并且把随机io变成了顺序io，但是它会使用更多的 空间，因为它把每一行都保存在唉内存中了。</p>
+</li>
+<li><p>两者比较</p>
+<p>总体而言，单路排序好于双路排序，但是单路排序如果无法一次完成，则需要多次io，而双路排序是稳定的，始终都是两次io</p>
+<p>在sort_buffer中，单路排序比双路排序多占用很多空间，有可能取出的数据总大小超过了sort_buffer的容量，导致每次只能取sort_buffer容量大小的数据进行排序，排序完再取sort_buffer的容量大小，再排序…从而导致多次io</p>
+</li>
+</ul>
+</li>
+<li><p>优化策略</p>
+<ul>
+<li><p>增大sort_buffer_size参数设置</p>
+</li>
+<li><p>增大max_length_for_sort_data参数设置</p>
+</li>
+<li><p>尽一切可能在使用order by的时候不要使用select *</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223210831823.png" alt="image-20210223210831823" style="zoom:50%;" /></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>group by</p>
+<p>group by的实质是先排序后分组</p>
+<p>其他与order by一样，多了一条如下：</p>
+<p>where 高于having，能写在where限定的条件就不要去having限定</p>
+</li>
+</ul>
+<h3 id="慢查询日志"><a href="#慢查询日志" class="headerlink" title="慢查询日志"></a>慢查询日志</h3><p>默认情况下MySQL没有开启慢查询日志，需要我们手动设置该参数</p>
+<p>如果不是调优需要，则不要开启该功能</p>
+<ul>
+<li><p>开启慢查询日志</p>
+<ul>
+<li><p>查看</p>
+<p>show variables like ‘%slow_query_log%’;</p>
+</li>
+<li><p>开启</p>
+<p>set global slow_query_log=1;</p>
+<p>只会对当前数据库生效，重启MySQL就会失效</p>
+<p>如果想要永久生效</p>
+<p>则需要在my.cnf中的[mysqld]下增加或修改参数</p>
+<p>slow_query_log=1</p>
+<p>slow_query_log_file =  /var/lib/mysql/VM-12-5-centos-slow.log</p>
+<p>重启MySQL即可</p>
+</li>
+<li><p>查看对应的阈值</p>
+<p>show variables like ‘long_query_time%’</p>
+<p>假如运行时间正好等于long_query_time的情况则不会被记录下来</p>
+<p>如果想要其他阈值，可以直接修改 :set long_query_time = 3;(<font color=red>注意</font>：直接修改的话看不到long_query_time有变化，需要重新登录MySQL才会看到修改的值,也可以通过show global variables like ‘long_query_time%’查看)</p>
+<p>也可以通过my.cnf进行修改</p>
+</li>
+<li><p>查看</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223213433512.png" alt="image-20210223213433512" style="zoom:50%;" /></li>
+<li><p>查看有多少慢SQL</p>
+<p>show global status like ‘%Slow_queries’;</p>
+</li>
+<li><p>配置</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223213655.png" alt="image-20210223213650510" style="zoom:50%;" /></li>
+</ul>
+</li>
+<li><p>日志分析工具</p>
+<p>mysqldumpslow  –help 可以查看其用法</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223214027917.png" alt="image-20210223214027917" style="zoom:50%;" /></li>
+</ul>
+<h3 id="show-profile"><a href="#show-profile" class="headerlink" title="show profile"></a>show profile</h3><p>MySQL提供可以用来分析当前会话中语句执行的资源消耗情况</p>
+<ul>
+<li><p>默认情况下show profile是处于关闭状态的，只保存最近15次 的运行结果</p>
+<ul>
+<li><p>是否支持</p>
+<p>show variables like ‘profiling’;</p>
+</li>
+<li><p>开启功能</p>
+<p>set profiling = on; (也只是暂时生效，重启就会失效)</p>
+</li>
+<li><p>运行SQL</p>
+</li>
+<li><p>查看结果 show profiles</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223220853.png" alt="image-20210223220847797" style="zoom:50%;" /></li>
+<li><p>诊断SQL，show profile cpu,block io for query 上一步前面的问题SQL数字号码</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223220953798.png" alt="image-20210223220953798" style="zoom:50%;" />
+
+<p>当然除了cpu、io也可以查看其它的，如下</p>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20210223221057082.png" alt="image-20210223221057082" style="zoom:50%;" /></li>
+<li><p>日常开发需要注意的结论</p>
+<p>出现了一下字眼则说明该SQL比较危险</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223221307.png" alt="image-20210223221302953" style="zoom:50%;" /></li>
+</ul>
+</li>
+</ul>
+<h3 id="全局查询日志"><a href="#全局查询日志" class="headerlink" title="全局查询日志"></a>全局查询日志</h3><p>主要是用于测试环境，将所有的SQL抓取出来查看</p>
+<ul>
+<li><p>配置启用</p>
+<p>在my.cnf中设置如下：</p>
+<p>general_log = 1</p>
+<p>General_log_file = {path}</p>
+<p>Log_output =FILE</p>
+</li>
+<li><p>命令启用</p>
+<p>set global general_log = 1;</p>
+<p>set global log_output = ‘TABLE’</p>
+<p>这样开启之后我们所有的SQL语句都会被记录到mysql库中 的general_log表中，查看如下</p>
+<p>select * from mysql.general_log;</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223222510.png" alt="image-20210223222503338" style="zoom:50%;" /></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\BLGC\" rel="bookmark">BLGC</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\CheckPoint\" rel="bookmark">CheckPoint</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB\" rel="bookmark">InnoDB</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB存储引擎文件\" rel="bookmark">InnoDB存储引擎文件</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB数据页结构\" rel="bookmark">InnoDB数据页结构</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/MySQL/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/" title="查询截取分析">http://cooperxj.github.io/2022/01/07/MySQL/查询截取分析/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/%E7%B4%A2%E5%BC%95/" rel="prev" title="索引">
+      <i class="fa fa-chevron-left"></i> 索引
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/%E6%96%87%E4%BB%B6/" rel="next" title="文件">
+      文件 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">分析过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96"><span class="nav-number">1.1.</span> <span class="nav-text">查询优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%85%A2%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97"><span class="nav-number">1.2.</span> <span class="nav-text">慢查询日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#show-profile"><span class="nav-number">1.3.</span> <span class="nav-text">show profile</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97"><span class="nav-number">1.4.</span> <span class="nav-text">全局查询日志</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

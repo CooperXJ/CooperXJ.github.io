@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="非模式节点节点组成集群命令各个节点服务器需要将cluster-enabled配置选项配置为yes开启集群模式 cluster meet &lt;ip&gt; &lt;port&gt; meet命令的实现 三次沟通之后双方都为彼此创建了对应的clusterNode结构 最后结点A会通过Gossip协议将B的信息传递给集群中的其他结点 集群数据结构clusterNode属性 节点的创建时间  名字">
+<meta property="og:type" content="article">
+<meta property="og:title" content="集群">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/redis/%E9%9B%86%E7%BE%A4/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="非模式节点节点组成集群命令各个节点服务器需要将cluster-enabled配置选项配置为yes开启集群模式 cluster meet &lt;ip&gt; &lt;port&gt; meet命令的实现 三次沟通之后双方都为彼此创建了对应的clusterNode结构 最后结点A会通过Gossip协议将B的信息传递给集群中的其他结点 集群数据结构clusterNode属性 节点的创建时间  名字">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210913102818.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210913102646.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210913104835.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210913105747.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210913111715.png">
+<meta property="article:published_time" content="2022-01-07T00:43:29.212Z">
+<meta property="article:modified_time" content="2022-01-07T04:00:30.123Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210913102818.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/redis/%E9%9B%86%E7%BE%A4/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>集群 | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/redis/%E9%9B%86%E7%BE%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          集群
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-01-07 08:43:29 / 修改时间：12:00:30" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:29+08:00">2022-01-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/redis/%E9%9B%86%E7%BE%A4/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/redis/%E9%9B%86%E7%BE%A4/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="非模式"><a href="#非模式" class="headerlink" title="非模式"></a>非模式</h2><h2 id="节点"><a href="#节点" class="headerlink" title="节点"></a>节点</h2><h3 id="节点组成集群命令"><a href="#节点组成集群命令" class="headerlink" title="节点组成集群命令"></a>节点组成集群命令</h3><p>各个节点服务器需要将cluster-enabled配置选项配置为yes开启集群模式</p>
+<p><code>cluster meet &lt;ip&gt; &lt;port&gt;</code></p>
+<h4 id="meet命令的实现"><a href="#meet命令的实现" class="headerlink" title="meet命令的实现"></a>meet命令的实现</h4><p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210913102818.png" alt="image-20210913102817330"></p>
+<p>三次沟通之后双方都为彼此创建了对应的clusterNode结构</p>
+<p>最后结点A会通过Gossip协议将B的信息传递给集群中的其他结点</p>
+<h3 id="集群数据结构"><a href="#集群数据结构" class="headerlink" title="集群数据结构"></a>集群数据结构</h3><h4 id="clusterNode"><a href="#clusterNode" class="headerlink" title="clusterNode"></a>clusterNode</h4><h5 id="属性"><a href="#属性" class="headerlink" title="属性"></a>属性</h5><ul>
+<li><p>节点的创建时间</p>
+</li>
+<li><p>名字</p>
+</li>
+<li><p>当前配置纪元</p>
+</li>
+<li><p>ip</p>
+</li>
+<li><p>端口号</p>
+</li>
+<li><p>flag</p>
+<p>节点标识（主要包括节点的主从状态、是否上下线状态）</p>
+</li>
+<li><p>保存连接节点所需要的有关信息</p>
+<p>clusterLink *link</p>
+</li>
+</ul>
+<h4 id="clusterLink"><a href="#clusterLink" class="headerlink" title="clusterLink"></a>clusterLink</h4><h5 id="属性-1"><a href="#属性-1" class="headerlink" title="属性"></a>属性</h5><ul>
+<li>连接的创建时间</li>
+<li>套接字描述符</li>
+<li>输出缓冲区（发送）</li>
+<li>输入缓冲区（接受）</li>
+<li>与该连接相关联的结点</li>
+</ul>
+<h4 id="clusterStat"><a href="#clusterStat" class="headerlink" title="clusterStat"></a>clusterStat</h4><p>每个节点都会保存一个该结构</p>
+<h5 id="属性-2"><a href="#属性-2" class="headerlink" title="属性"></a>属性</h5><ul>
+<li><p>myself</p>
+<p>指向当前结点的指针</p>
+</li>
+<li><p>当前配置的纪元</p>
+</li>
+<li><p>集群当前状态（在线还是下线）</p>
+</li>
+<li><p>处理槽的数量</p>
+</li>
+<li><p>集群结点的名单（包括myself）数据结构是一个字典</p>
+<p>key为结点的名字，val为对应的clusterNode结构</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210913102646.png" alt="image-20210913102644496"></p>
+</li>
+</ul>
+<h2 id="槽"><a href="#槽" class="headerlink" title="槽"></a>槽</h2><h3 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h3><ul>
+<li><p>集群的整个数据库被分为16384个槽，数据库中的每个键都属于整个16384个槽中的其中一个，集群中的每个节点可以处理0~16384个槽</p>
+</li>
+<li><p>如果0~16384个槽都有对应的结点得到处理，那么集群处于上线状态，如果任何一个槽没有得到处理，那么集群处于下线状态</p>
+</li>
+<li><p>命令</p>
+<p><code>cluster addslots &#123;槽id...&#125;</code></p>
+</li>
+</ul>
+<h3 id="记录节点的槽指派信息"><a href="#记录节点的槽指派信息" class="headerlink" title="记录节点的槽指派信息"></a>记录节点的槽指派信息</h3><p>clusterNode中有两个属性与其有关</p>
+<ul>
+<li>slots数组</li>
+<li>numslots 槽的数量</li>
+</ul>
+<p>这些槽是以二进制位进行标号，类似于状态压缩一样，每一个二进制位为1代表当前槽被当前节点处理，为0则表示不被当前节点处理</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210913104835.png" alt="image-20210913104834346"></p>
+<p>对于程序来说检查当前节点是否处理某个槽或者将某个槽分配给当前节点的时间复杂度都是O(1),因为只需要对二进制位操作即可</p>
+<h3 id="传播槽信息"><a href="#传播槽信息" class="headerlink" title="传播槽信息"></a>传播槽信息</h3><p>当前节点除了会记录自己的槽信息之外，还会自己的slots数组发送给集群中的其他结点</p>
+<h3 id="记录集群所有槽的指派信息"><a href="#记录集群所有槽的指派信息" class="headerlink" title="记录集群所有槽的指派信息"></a>记录集群所有槽的指派信息</h3><p>clusterState结构中的slots数组记录了集群中所有16384个槽的指派信息</p>
+<p>slots数组中的每一项都指向一个clusterNode结点，表示该槽已经指派给了clusterNode结构所代表的结点</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210913105747.png" alt="image-20210913105746538"></p>
+<p><font color=red>注意：clusterState.slots数组记录了集群中所有槽的指派信息，而clusterNode.slots只记录了clusterNode结构所代表的结点的槽指派信息</font></p>
+<h3 id="addslots命令的实现"><a href="#addslots命令的实现" class="headerlink" title="addslots命令的实现"></a>addslots命令的实现</h3><p>当结点接受该命令时会通过clusterState结构中的slots数组检查当前槽是否有对应的clusterNode结点，如果有则表示已经当前槽被分配了结点，否则则执行分配操作，执行完毕之后会发送消息告知集群中的其他结点自己目前正在负责哪些槽</p>
+<h2 id="集群中执行命令"><a href="#集群中执行命令" class="headerlink" title="集群中执行命令"></a>集群中执行命令</h2><p>当客户端发送与数据库键相关的指令时，接受命令的结点会计算出命令要处理的数据库键属于哪个槽，并检查该槽是否指派给了自己</p>
+<ul>
+<li>如果该键所在的槽正好在当前节点上，则直接执行</li>
+<li>如果不在，则返回一个moved命令，并指引客户端转向至正确的结点并在此发送之前执行的命令</li>
+</ul>
+<h3 id="计算属于哪个槽"><a href="#计算属于哪个槽" class="headerlink" title="计算属于哪个槽"></a>计算属于哪个槽</h3><p>CRC16(key)&amp;16383</p>
+<h3 id="节点数据库的实现"><a href="#节点数据库的实现" class="headerlink" title="节点数据库的实现"></a>节点数据库的实现</h3><ul>
+<li><p>节点数据库与单机数据库的区别之一：节点只能使用0号数据库</p>
+</li>
+<li><p>节点会使用clusterState结构中的slots_to_keys跳跃表来保存槽和键之间的关系</p>
+<p>跳跃表中的每个节点的分值都是一个槽号，每个节点的成员都是一个数据库键</p>
+<p>这样的好处在于可以对数据某个或者某个槽的所有数据库键进行批量操作，例如返回count个数据槽slot的数据库键</p>
+</li>
+</ul>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210913111715.png" alt="img" style="zoom:80%;" />
+
+
+
+
+
+<h2 id="重新分片"><a href="#重新分片" class="headerlink" title="重新分片"></a>重新分片</h2><h4 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h4><p>redis集群的重新分片可以将任意数量已经指派给某个节点的槽改为指派给另一个节点，并且相关槽所属的键值对也会从源节点被移动到目标节点</p>
+<p>重新分片对源节点和目标节点上的其他正常操作没有影响</p>
+<h3 id="重新分片原理"><a href="#重新分片原理" class="headerlink" title="重新分片原理"></a>重新分片原理</h3><p>重新分片步骤如下：</p>
+<ol>
+<li>redis-trib对目标节点发送信息并让目标节点准备好从源节点导入属于槽slot的键值对</li>
+<li>redis-trib对源节点发送信息并让源节点准备好属于槽slot的键值对迁移至目标节点</li>
+<li>redis-trib向目标节点发送<code>cluster getkeysinslot &lt;slot&gt; &lt;count&gt;</code>命令，最多获得count个属于槽slot的键值对的键名</li>
+<li>对于步骤3获得的每个键名，redis-trib都向源节点发送一个命令，将被选中的键原子地从源节点迁移至目标节点</li>
+<li>重复3、4步骤</li>
+<li>redis-trib向集群中的任意一个节点发送消息，将槽slot指派给目标节点，该消息会发送给集群中的每个节点，最终集群中的每个节点都会知道槽slot已经指派给了目标节点</li>
+</ol>
+<h2 id="ASK错误"><a href="#ASK错误" class="headerlink" title="ASK错误"></a>ASK错误</h2><h3 id="错误发送的情况"><a href="#错误发送的情况" class="headerlink" title="错误发送的情况"></a>错误发送的情况</h3><p>在进行重新分片的期间，源节点向目标节点迁移一个槽的过程中，有一份数据在源节点的槽中，还有一部分数据在目标节点的槽中。</p>
+<p>因此当客户端针对该槽中数据的查询会最多经过两个步骤</p>
+<ol>
+<li>源节点在自己的槽中查找指定的键，如果找到的话就执行相应的命令</li>
+<li>源节点没有能够在自己的槽中找到指定的键，源节点会向客户端返回一个ASK错误，指引客户端转向正在导入槽的目标节点并再次发送之前想要执行的命令</li>
+</ol>
+<h3 id="ASKING命令"><a href="#ASKING命令" class="headerlink" title="ASKING命令"></a>ASKING命令</h3><p>当某个槽所包含的各个键分散在节点 A 和节点 B 中， 客户端在节点 A 中没找到某个键时， 它应该转向到节点 B 中去寻找， 但是这种转向应该仅仅影响一次命令查询， 而不是让客户端每次都直接去查找节点 B ： 在节点 A 所持有的属于该槽的键没有全部被迁移到节点 B 之前， 客户端应该先访问节点 A ， 然后再访问节点 B 。</p>
+<p>只有先执行了ASKING命令才会使得客户端在B节点访问该槽时执行命令，否则将会返回moved的错误。</p>
+<p>因为上述原因， 如果我们要在查找节点 A 之后， 继续查找节点 B ， 那么客户端在向节点 B 发送命令请求之前， 应该先发送一个 <code>ASKING</code> 命令， 否则这个针对带有 <code>IMPORTING</code> 状态的槽的命令请求将被节点 B 拒绝执行。因为此时B节点并不拥有该槽，A节点仍然是该槽的拥有者，所以不加ASKING命令的话B节点会拒绝执行命令。</p>
+<p>注意：ASKING命令是一次性的，用完就生效了。</p>
+<h2 id="复制与故障转移"><a href="#复制与故障转移" class="headerlink" title="复制与故障转移"></a>复制与故障转移</h2><h3 id="设置从节点"><a href="#设置从节点" class="headerlink" title="设置从节点"></a>设置从节点</h3><p>集群中的各个节点都可以对其进行设置从节点，用来复制自身的数据</p>
+<p>命令为：<code>cluster replicate &lt;node_id&gt;</code></p>
+<p>clusterNode结构中的salveof属性会指向一个clusterNode，表示当前节点的主节点</p>
+<p>clusterNode结构中的slaves属性会指向一个clusterNode数组，表示当前节点的从节点数组</p>
+<h3 id="故障检测"><a href="#故障检测" class="headerlink" title="故障检测"></a>故障检测</h3><p>集群中的每个节点都会定期向集群中的其他结点发送PING命令，检测对方是否在线。</p>
+<p>如果接受ping消息的结点没有在规定时间内返回pong消息，那么发送ping消息的结点就会将目标节点标识为疑似下线</p>
+<p>集群中的各个主节点通过消息交换，超过半数以上的主节点得知某个主节点的疑似下线，那么该主节点就会被标记为已下线，并且第一个发现该主节点下线的结点将发送一条该主节点标记为下线的消息，并在集群进行广播，所有收到消息的结点会将该主结点标记为已下线</p>
+<h3 id="故障转移"><a href="#故障转移" class="headerlink" title="故障转移"></a>故障转移</h3><p>当一个从节点发现自己正在复制的主节点已经进入下线状态，从节点将开始对下线结点进行故障转移，具体步骤如下：</p>
+<ol>
+<li><p>从已下线的主节点的从节点中选中一个</p>
+<p>选举方法和Sentinel那边差不多</p>
+</li>
+<li><p>被选中的从节点执行slave of no one命令使其成为新的主节点</p>
+</li>
+<li><p>新的主节点会撤销所有已下线主节点的槽指派，并将这些槽指派给自己</p>
+</li>
+<li><p>新的主节点广播消息，告诉其他人我已经成为主节点并负责哪些槽</p>
+</li>
+</ol>
+<h2 id="消息"><a href="#消息" class="headerlink" title="消息"></a>消息</h2><p>集群中的结点通过发送和接受消息来进行通信</p>
+<p>常见的消息包括以下五种：</p>
+<ul>
+<li><p>meet</p>
+<p>请求加入到集群中</p>
+</li>
+<li><p>ping</p>
+<p>健康检测</p>
+</li>
+<li><p>pong</p>
+<p>回应消息或者广播自己的pong消息让集群中的其他结点立即刷新这个结点的认识</p>
+</li>
+<li><p>fall （为了满足及时性，使用广播的方式）</p>
+<p>下线</p>
+</li>
+<li><p>publish</p>
+<p>当集群中的一个节点接收到一个publish命令，节点会执行这个命令并向集群广播该命令，接收到该消息的其他结点也会执行相同的命令</p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\redis\AOF持久化\" rel="bookmark">AOF持久化</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\redis\RDB持久化\" rel="bookmark">RBD持久化</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\redis\redis客户端\" rel="bookmark">redis客户端</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\redis\Sentinel\" rel="bookmark">哨兵</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\redis\redis数据库\" rel="bookmark">redis数据库</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/redis/%E9%9B%86%E7%BE%A4/" title="集群">http://cooperxj.github.io/2022/01/07/redis/集群/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/redis/" rel="tag"># redis</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/redis/redis%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="prev" title="redis数据库">
+      <i class="fa fa-chevron-left"></i> redis数据库
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/redis/%E4%BA%8B%E4%BB%B6/" rel="next" title="事件">
+      事件 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.</span> <span class="nav-text">非模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8A%82%E7%82%B9"><span class="nav-number">2.</span> <span class="nav-text">节点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E7%BB%84%E6%88%90%E9%9B%86%E7%BE%A4%E5%91%BD%E4%BB%A4"><span class="nav-number">2.1.</span> <span class="nav-text">节点组成集群命令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#meet%E5%91%BD%E4%BB%A4%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.1.1.</span> <span class="nav-text">meet命令的实现</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9B%86%E7%BE%A4%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">2.2.</span> <span class="nav-text">集群数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#clusterNode"><span class="nav-number">2.2.1.</span> <span class="nav-text">clusterNode</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B1%9E%E6%80%A7"><span class="nav-number">2.2.1.1.</span> <span class="nav-text">属性</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#clusterLink"><span class="nav-number">2.2.2.</span> <span class="nav-text">clusterLink</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B1%9E%E6%80%A7-1"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">属性</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#clusterStat"><span class="nav-number">2.2.3.</span> <span class="nav-text">clusterStat</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B1%9E%E6%80%A7-2"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">属性</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A7%BD"><span class="nav-number">3.</span> <span class="nav-text">槽</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="nav-number">3.1.</span> <span class="nav-text">基础知识</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%B0%E5%BD%95%E8%8A%82%E7%82%B9%E7%9A%84%E6%A7%BD%E6%8C%87%E6%B4%BE%E4%BF%A1%E6%81%AF"><span class="nav-number">3.2.</span> <span class="nav-text">记录节点的槽指派信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%A0%E6%92%AD%E6%A7%BD%E4%BF%A1%E6%81%AF"><span class="nav-number">3.3.</span> <span class="nav-text">传播槽信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%B0%E5%BD%95%E9%9B%86%E7%BE%A4%E6%89%80%E6%9C%89%E6%A7%BD%E7%9A%84%E6%8C%87%E6%B4%BE%E4%BF%A1%E6%81%AF"><span class="nav-number">3.4.</span> <span class="nav-text">记录集群所有槽的指派信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#addslots%E5%91%BD%E4%BB%A4%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.5.</span> <span class="nav-text">addslots命令的实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9B%86%E7%BE%A4%E4%B8%AD%E6%89%A7%E8%A1%8C%E5%91%BD%E4%BB%A4"><span class="nav-number">4.</span> <span class="nav-text">集群中执行命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A1%E7%AE%97%E5%B1%9E%E4%BA%8E%E5%93%AA%E4%B8%AA%E6%A7%BD"><span class="nav-number">4.1.</span> <span class="nav-text">计算属于哪个槽</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">4.2.</span> <span class="nav-text">节点数据库的实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E6%96%B0%E5%88%86%E7%89%87"><span class="nav-number">5.</span> <span class="nav-text">重新分片</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">5.0.1.</span> <span class="nav-text">定义</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8D%E6%96%B0%E5%88%86%E7%89%87%E5%8E%9F%E7%90%86"><span class="nav-number">5.1.</span> <span class="nav-text">重新分片原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ASK%E9%94%99%E8%AF%AF"><span class="nav-number">6.</span> <span class="nav-text">ASK错误</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%94%99%E8%AF%AF%E5%8F%91%E9%80%81%E7%9A%84%E6%83%85%E5%86%B5"><span class="nav-number">6.1.</span> <span class="nav-text">错误发送的情况</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ASKING%E5%91%BD%E4%BB%A4"><span class="nav-number">6.2.</span> <span class="nav-text">ASKING命令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%8D%E5%88%B6%E4%B8%8E%E6%95%85%E9%9A%9C%E8%BD%AC%E7%A7%BB"><span class="nav-number">7.</span> <span class="nav-text">复制与故障转移</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E4%BB%8E%E8%8A%82%E7%82%B9"><span class="nav-number">7.1.</span> <span class="nav-text">设置从节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%85%E9%9A%9C%E6%A3%80%E6%B5%8B"><span class="nav-number">7.2.</span> <span class="nav-text">故障检测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%85%E9%9A%9C%E8%BD%AC%E7%A7%BB"><span class="nav-number">7.3.</span> <span class="nav-text">故障转移</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B6%88%E6%81%AF"><span class="nav-number">8.</span> <span class="nav-text">消息</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="概念索引是一种帮助数据库高效获取数据的数据结构 排好序的快速查找数据结构 功能 排序 查找  原则 不是索引越多越好 不要对经常变动的数据添加索引 小数据量的表不需要添加索引 索引一般加在经常需要查询的字段上  劣势 占用磁盘空间 虽然提升了查询速度，但是会降低表的更新速度，如对表进行INSERT、UPDATE和DELETE。因为每次更新表都需要重新对索引进行调整  注意：索引是需要不停的分析，逐">
+<meta property="og:type" content="article">
+<meta property="og:title" content="索引">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/MySQL/%E7%B4%A2%E5%BC%95/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="概念索引是一种帮助数据库高效获取数据的数据结构 排好序的快速查找数据结构 功能 排序 查找  原则 不是索引越多越好 不要对经常变动的数据添加索引 小数据量的表不需要添加索引 索引一般加在经常需要查询的字段上  劣势 占用磁盘空间 虽然提升了查询速度，但是会降低表的更新速度，如对表进行INSERT、UPDATE和DELETE。因为每次更新表都需要重新对索引进行调整  注意：索引是需要不停的分析，逐">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210810093211.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210808100250.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210808102448.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210221212309.png">
+<meta property="og:image" content="http://cooperxj.github.io/Volumes/共享文件夹/Snipaste_2021-02-23_09-30-58.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223100444.png">
+<meta property="article:published_time" content="2022-01-07T00:43:29.566Z">
+<meta property="article:modified_time" content="2021-08-11T01:16:49.000Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="MySQL">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210810093211.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/MySQL/%E7%B4%A2%E5%BC%95/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>索引 | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/MySQL/%E7%B4%A2%E5%BC%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          索引
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:29" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:29+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-11 09:16:49" itemprop="dateModified" datetime="2021-08-11T09:16:49+08:00">2021-08-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/MySQL/%E7%B4%A2%E5%BC%95/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/MySQL/%E7%B4%A2%E5%BC%95/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>索引是一种帮助数据库高效获取数据的数据结构</p>
+<p>排好序的快速查找数据结构</p>
+<h2 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h2><ul>
+<li>排序</li>
+<li>查找</li>
+</ul>
+<h2 id="原则"><a href="#原则" class="headerlink" title="原则"></a>原则</h2><ol>
+<li>不是索引越多越好</li>
+<li>不要对经常变动的数据添加索引</li>
+<li>小数据量的表不需要添加索引</li>
+<li>索引一般加在经常需要查询的字段上</li>
+</ol>
+<h2 id="劣势"><a href="#劣势" class="headerlink" title="劣势"></a>劣势</h2><ul>
+<li>占用磁盘空间</li>
+<li>虽然提升了查询速度，但是会降低表的更新速度，如对表进行INSERT、UPDATE和DELETE。因为每次更新表都需要重新对索引进行调整</li>
+</ul>
+<p><font color=red>注意：索引是需要不停的分析，逐步优化出来的</font></p>
+<h2 id="索引分类"><a href="#索引分类" class="headerlink" title="索引分类"></a>索引分类</h2><ul>
+<li><p>单值索引：该索引只包含一个字段</p>
+</li>
+<li><p>唯一索引：索引列的值必须是唯一的，但是允许有空值</p>
+</li>
+<li><p>复合索引 （联合索引）</p>
+<p><font color=red>最重要的一点在于最左匹配原则，不能跳索引</font></p>
+<p>因为对于联合索引来说构建二叉树是按照键值的顺序来进行插入的，比如说是（a,b）这2个字段构建的联合索引</p>
+</li>
+</ul>
+<p>​       <img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210810093211.png" alt="image-20210810093201946" style="zoom:50%;" /></p>
+<p>​        可以看到是排序是按照a然后b，因此需要按照最左匹配原则进行查询</p>
+<p>​       联合索引的一个好处是对第二个键值已经进行了排序，如果查询时a为一个固定值来说的话</p>
+<ul>
+<li><p>聚集索引</p>
+<p>按照每张表的主键构造一棵B+树，同时==叶子==节点中存放的即为==整张表==的行记录数据（这里指的不是单个叶子节点，单个叶子节点只是一部分表的行记录数据，这里指的是所有叶子节点加起来就是整张表的行记录数据），也将聚簇索引的叶子节点称为数据页</p>
+<ul>
+<li><p>组成</p>
+<ul>
+<li>非数据页的索引页存放的仅仅是键值以及指向数据页的偏移量，<font color=red>而不是一个完整的行记录</font></li>
+<li>数据页的存放是完整的行记录</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210808100250.png" alt="image-20210808100241025"></p>
+</li>
+</ul>
+</li>
+<li><p>辅助索引</p>
+<p>辅助索引的非叶子节点包含对应的辅助索引键值，叶子节点不同于聚集索引，<font color=red>不含行数据</font>，而是包含了一个<font color=red>聚集索引键（主键）</font>，通过查找非聚集索引B+树找到其叶子节点上的主键，然后再去聚集索引B+树上去查找对应的行数据。其树高一般也是2~4层，故查询次数较聚集索引多了一倍（因为有两次查询过程，先是辅助索引-&gt;聚集索引，然后是聚集索引-&gt;辅助索引，<strong>相当于是查找了2棵树</strong>）。</p>
+<ul>
+<li><p>组成</p>
+<ul>
+<li><p>非叶子节点是辅助索引键值（辅助索引，聚集索引）</p>
+</li>
+<li><p>叶子节点是聚集索引键值</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210808102448.png" alt="image-20210808102446193"></p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p>自适应哈希索引</p>
+<p>该索引是InnoDB自己建立的。经常访问的辅助索引数据会自动被生成到hash索引里面去(最近连续被访问三次的数据)，自适应哈希索引通过缓冲池的B+树构造而来，因此建立的速度很快。</p>
+<p>它会占用InnoDB buffer pool</p>
+<p>缺点：只能用于等值查询</p>
+<p>查看是否开启：<code>show variables like &#39;innodb_adaptive_hash_index;</code></p>
+</li>
+</ul>
+<h2 id="索引创建"><a href="#索引创建" class="headerlink" title="索引创建"></a>索引创建</h2><ul>
+<li><p>fast index creation</p>
+<ul>
+<li><p>辅助索引创建</p>
+<ul>
+<li><p>5.5之前</p>
+<p>重建表</p>
+</li>
+<li><p>5.5</p>
+<p>InnoDB引擎会对创建索引的表加上一个S锁，在创建的过程中不需要重建表，因此只能进行<font color=red>读操作</font></p>
+</li>
+<li><p>5.6及其之后</p>
+<p>允许在辅助索引创建或删除的同时进行增删改查</p>
+<p>几种在创建和删除辅助索引时的加锁方案：</p>
+<ul>
+<li><p>None</p>
+<p>不添加任何锁</p>
+</li>
+<li><p>share</p>
+<p>添加s锁，只允许读，写操作会被阻塞</p>
+</li>
+<li><p>exclusive</p>
+<p>添加x锁，阻塞所有线程</p>
+</li>
+<li><p>default</p>
+<p>通过判断事务的最大并发性来选择加锁方案</p>
+</li>
+</ul>
+<p><strong>原理</strong></p>
+<p>执行辅助索引创建或删除的时候的同时将DML操作(增删改)日志写入到一个缓存中，待索引完成创建之后重做应用到表上。</p>
+<p>缓存的大小由参数<code>innodb_online_alter_log_max_size</code>,默认大小为欸128M</p>
+<p><font color=red>注意：在索引创建的过程中，不会使用到正在创建的索引</font></p>
+</li>
+</ul>
+</li>
+<li><p>对于主键的创建和删除需要重建一张表，其过程如下</p>
+<ol>
+<li><p>创建一张新的临时表</p>
+</li>
+<li><p>将原表数据导入到临时表</p>
+</li>
+<li><p>删除原表</p>
+</li>
+<li><p>临时表重命名为原来的表名</p>
+<p><font color=red>注意：临时表的创建路径是通过tmpdir进行设置的，因此需要保证tmpdir要有足够的空间可以存放临时表</font></p>
+<p><strong>索引最好提前创建，尤其是主键索引</strong></p>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="索引语法"><a href="#索引语法" class="headerlink" title="索引语法"></a>索引语法</h2><ul>
+<li><p>创建索引</p>
+<p>CREATE [unique] INDEX BKNameIdx ON books (bookname);</p>
+<p>alter mytable add [unique] index [indexname] on [columnname]</p>
+</li>
+<li><p>删除索引</p>
+<p>drop index [indexname] on mytable</p>
+</li>
+<li><p>show index from tablename</p>
+</li>
+<li><p>可以只对当前字段前n个字节构建索引</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter table t add key idx_b(b(100)) #表示只对b字段的前100个字节构成辅助索引</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="索引的数据结构"><a href="#索引的数据结构" class="headerlink" title="索引的数据结构"></a>索引的数据结构</h2><ul>
+<li><p>BTree</p>
+<p><font color=red>B+树索引并不能找到一个给定键值的具体行，找到的只是被查找数据行所在的页，然后数据库将页读取到内存中，在内存中进行查找</font></p>
+</li>
+<li><p>Hash索引</p>
+<p>InnoDB的哈希索引是自适应的，也就是说InnoDB会根据当前的表的使用情况，自动判断是否是生产哈希索引好一些，如果建立哈希索引能够提高查询效率，那么会建立哈希索引，如果不能则不建立该索引</p>
+</li>
+<li><p>full-text索引</p>
+</li>
+<li><p>R-Tree索引</p>
+</li>
+</ul>
+<h2 id="建立索引的情况"><a href="#建立索引的情况" class="headerlink" title="建立索引的情况"></a>建立索引的情况</h2><ol>
+<li>主键自动建立唯一索引</li>
+<li>频繁作为查询条件的字段应该作为索引</li>
+<li>查询中与其他表关联的字段，外键关系建立索引</li>
+<li>查询中排序字段，排序字段若通过索引去访问将大大提高排序速度</li>
+<li>查询中统计或分组的字段</li>
+<li>字段具有高选择性，也就是该字段包含的值有很多种，例如性别只有两种字段就不应该建立索引</li>
+</ol>
+<h2 id="不建立索引的情况"><a href="#不建立索引的情况" class="headerlink" title="不建立索引的情况"></a>不建立索引的情况</h2><ol>
+<li><p>表记录比较少（一般以300w为界限，虽然官方文档上说支持500w-600w）</p>
+</li>
+<li><p>经常增删改的表</p>
+</li>
+<li><p>如果某个数据列包含许多重复的内容，为他建立索引就没有太大的实际效果</p>
+<p>按照下面的原则来判断：</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210221212309.png" alt="image-20210221212257372" style="zoom:50%;" /></li>
+</ol>
+<h2 id="索引失效-（注意MySQL版本的不同可能导致以下情况发生变化）"><a href="#索引失效-（注意MySQL版本的不同可能导致以下情况发生变化）" class="headerlink" title="索引失效 （注意MySQL版本的不同可能导致以下情况发生变化）"></a>索引失效 （<font color=red>注意MySQL版本的不同可能导致以下情况发生变化</font>）</h2><p>索引所建立的顺序用不上了</p>
+<p>常见索引失效的原因如下：</p>
+<ul>
+<li><p>未遵守最左前缀法则  （where后面的条件）</p>
+<p>最左前缀法则：查询从索引的最左前列开始并且<font color=red>不跳过索引中的列</font>（<font color=red>一定要按照顺序</font>）</p>
+</li>
+<li><p>不能在索引列上做任何操作（计算、函数、（自动or手动）类型转换），会导致索引失效而转向全表扫描</p>
+</li>
+<li><p>存储引擎不能使用索引中范围条件右边的列</p>
+<img src="/Volumes/共享文件夹/Snipaste_2021-02-23_09-30-58.png" alt="Snipaste_2021-02-23_09-30-58" style="zoom:50%;" />
+
+<p>​    最下面的查询在索引列上使用了范围导致后面的pos索引失效了</p>
+</li>
+<li><p>尽量使用索引覆盖（只访问索引的查询（索引列和查询列一致）），减少select *</p>
+</li>
+<li><p>MySQL在使用不等于（！=或者&lt;&gt;）的时候无法使用索引会导致全表扫描</p>
+<p>MySQL 8.0用到了索引，type是range，之前的版本type是ALL</p>
+</li>
+<li><p>is null，is not null 也无法使用索引</p>
+</li>
+<li><p>like以通配符开头（’%abc’）mysql索引失效会变成全表扫描</p>
+<p>主要%在最左边，则出现全表扫描</p>
+<p>解决方法：</p>
+<p>查询的字段为遵循覆盖索引原则</p>
+</li>
+<li><p>字符串不加单引号会导致索引失效</p>
+<p>因为MySQL底层会帮我们进行转换，也就是变相在索引列上进行了操作，导致索引失效</p>
+</li>
+<li><p>少用or，用它来连接时索引会失效</p>
+</li>
+<li><p>group by基本上都需要进行排序，会有临时表产生</p>
+</li>
+</ul>
+<h3 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h3><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210223100444.png" alt="Snipaste_2021-02-23_10-04-09" style="zoom:50%;" />
+
+
+
+<h2 id="索引优化"><a href="#索引优化" class="headerlink" title="索引优化"></a>索引优化</h2><ul>
+<li><p>left join</p>
+<p>右表建立索引</p>
+</li>
+<li><p>left join</p>
+<p>左表建立索引</p>
+</li>
+<li><p>对于单键索引，尽量选择针对当前query过滤性更好的索引</p>
+</li>
+<li><p>在选择组合索引的时候，当前query中过滤性最好的字段在索引字段顺序中，位置越靠前越好</p>
+</li>
+<li><p>在选择组合索引的时候，尽量选择可以包含当前query中的where子句中更多的索引字段</p>
+</li>
+<li><p>尽可能通过分析统计信息和调整query的写法来达到选择合适索引的目的</p>
+</li>
+<li><p>order by 字段需要按照建立索引的顺序</p>
+<p>例如索引为index_abc,则order by a ,b,c 最为合适</p>
+<p>如果order by a ,c,b 则可能会用到using filesort</p>
+<p>如果c为常量则不会产生影响</p>
+</li>
+<li><p>对于应用程序的几张核心表，可以在非高峰时间执行<code>analyze table &#123;table name&#125;</code>,能够是优化器和索引更好的为我们工作，因为执行该命令会对Cardinality进行更新，而<strong>优化器会根据这个值来判断是否使用这个索引</strong></p>
+<p><font color=red>Cardinality这个值对于索引来说很重要，因为它表示索引中不重复记录数量的预估值</font></p>
+<p>该值的更新策略为</p>
+<ul>
+<li>表中的1/16的数据已经发生了变化</li>
+<li>stat_modified_counter&gt;2000000000</li>
+</ul>
+<p>每次更新时是对索引B+树中的叶子节点进行随机采样，每次采取8页，具体采取的页数通过参数<code>innodb_stats_sample_pages</code>进行控制</p>
+</li>
+</ul>
+<h2 id="索引的使用"><a href="#索引的使用" class="headerlink" title="索引的使用"></a>索引的使用</h2><ul>
+<li><p>覆盖索引 （<a target="_blank" rel="noopener" href="https://www.cnblogs.com/myseries/p/11265849.html%EF%BC%89">https://www.cnblogs.com/myseries/p/11265849.html）</a></p>
+<ul>
+<li><p>覆盖索引的定义</p>
+<p>从辅助索引中就可查询得到记录，而不需要查询聚集索引中的记录</p>
+</li>
+<li><p>好处</p>
+<p>因为一般的对于辅助索引的查询会导致回表查询，也就是先查辅助索引，再找主键索引，最终查询到具体的数据，可以大大减少IO操作</p>
+</li>
+<li><p>查看是否出发覆盖索引</p>
+<p>explain的输出结果Extra字段为<strong>Using index</strong>时，能够触发索引覆盖</p>
+</li>
+<li><p>注意</p>
+<p><font color=red>对于SQL的统计操作，有时候是可以利用到覆盖索引信息的</font></p>
+<p>比如对于辅助索引（id，date）</p>
+<p>执行select count(*) from table where date&gt;=’2021-1-1’ and date&lt;=’2021-8-10’</p>
+<p>通过辅助索引就可以查询成功，因为查询到日期之后，可以通过id进行统计</p>
+</li>
+</ul>
+</li>
+<li><p>索引提示</p>
+<p>强制告诉mysql使用哪个索引去查询</p>
+<p><code>select * from table use index(a) where a = 1 and b = 2 </code></p>
+<p><code>select * from force table use index(a) where a = 1 and b = 2 </code></p>
+<p>第二个更可靠，第一个有可能还是会使用优化器自己选择的索引</p>
+</li>
+<li><p>multi-range read （MRR）</p>
+<ul>
+<li><p>好处</p>
+<ul>
+<li>使得数据访问变得较为顺序</li>
+<li>减少缓冲池中页被替换的次数</li>
+<li>批量处理对键值的查询操作</li>
+</ul>
+</li>
+<li><p>优化场景</p>
+<ul>
+<li>range</li>
+<li>ref</li>
+<li>eq_ref</li>
+</ul>
+</li>
+<li><p>本质上来说是空间换时间</p>
+</li>
+</ul>
+</li>
+<li><p>index condition pushdown （ICP）</p>
+<ul>
+<li><p>好处</p>
+<p>在取出索引的同时会判断是否可以进行where条件的过滤（如果索引中有字段在where条件中）</p>
+</li>
+<li><p>例子</p>
+<p>比如有一个联合索引为（zip_code,last_name,first_name）</p>
+<p>查询如下：</p>
+<p><code>select * from people where zip_code=&#39;123&#39; and last_name like &#39;%hello%&#39; and first_name like &#39;%world%&#39;;</code></p>
+<p>如果不开启ICP，则会先过滤出所有的zipcode=123的记录，然后再过滤where之后的两个条件，如果支持ICP，则会在索引取出的同时进行where条件的过滤</p>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\BLGC\" rel="bookmark">BLGC</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\CheckPoint\" rel="bookmark">CheckPoint</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB\" rel="bookmark">InnoDB</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB存储引擎文件\" rel="bookmark">InnoDB存储引擎文件</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB数据页结构\" rel="bookmark">InnoDB数据页结构</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/MySQL/%E7%B4%A2%E5%BC%95/" title="索引">http://cooperxj.github.io/2022/01/07/MySQL/索引/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/MySQL%E4%BA%8B%E5%8A%A1/" rel="prev" title="MySQL事物">
+      <i class="fa fa-chevron-left"></i> MySQL事物
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/%E6%9F%A5%E8%AF%A2%E6%88%AA%E5%8F%96%E5%88%86%E6%9E%90/" rel="next" title="查询截取分析">
+      查询截取分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%9F%E8%83%BD"><span class="nav-number">2.</span> <span class="nav-text">功能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E5%88%99"><span class="nav-number">3.</span> <span class="nav-text">原则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A3%E5%8A%BF"><span class="nav-number">4.</span> <span class="nav-text">劣势</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95%E5%88%86%E7%B1%BB"><span class="nav-number">5.</span> <span class="nav-text">索引分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95%E5%88%9B%E5%BB%BA"><span class="nav-number">6.</span> <span class="nav-text">索引创建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95%E8%AF%AD%E6%B3%95"><span class="nav-number">7.</span> <span class="nav-text">索引语法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">8.</span> <span class="nav-text">索引的数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BB%BA%E7%AB%8B%E7%B4%A2%E5%BC%95%E7%9A%84%E6%83%85%E5%86%B5"><span class="nav-number">9.</span> <span class="nav-text">建立索引的情况</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8D%E5%BB%BA%E7%AB%8B%E7%B4%A2%E5%BC%95%E7%9A%84%E6%83%85%E5%86%B5"><span class="nav-number">10.</span> <span class="nav-text">不建立索引的情况</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88-%EF%BC%88%E6%B3%A8%E6%84%8FMySQL%E7%89%88%E6%9C%AC%E7%9A%84%E4%B8%8D%E5%90%8C%E5%8F%AF%E8%83%BD%E5%AF%BC%E8%87%B4%E4%BB%A5%E4%B8%8B%E6%83%85%E5%86%B5%E5%8F%91%E7%94%9F%E5%8F%98%E5%8C%96%EF%BC%89"><span class="nav-number">11.</span> <span class="nav-text">索引失效 （注意MySQL版本的不同可能导致以下情况发生变化）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%83%E4%B9%A0"><span class="nav-number">11.1.</span> <span class="nav-text">练习</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96"><span class="nav-number">12.</span> <span class="nav-text">索引优化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">13.</span> <span class="nav-text">索引的使用</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

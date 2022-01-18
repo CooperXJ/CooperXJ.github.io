@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="binlog写入机制流程 日志写入到binlog cache  事务提交时将binlog cache写入到binlog中 注意：一个事务的binlog是不能被拆开的，无论这个事务多大，也必须确保一次性写入   机制系统给binlog cache分配了一块内存，每个线程一个（binlog_cache_size控制其大小，如果超过了该参数规定大小，则暂存到磁盘，也就是写到tmp中），但是所有线程共用同">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL数据保证">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/23-MySQL%E6%95%B0%E6%8D%AE%E4%BF%9D%E8%AF%81/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="binlog写入机制流程 日志写入到binlog cache  事务提交时将binlog cache写入到binlog中 注意：一个事务的binlog是不能被拆开的，无论这个事务多大，也必须确保一次性写入   机制系统给binlog cache分配了一块内存，每个线程一个（binlog_cache_size控制其大小，如果超过了该参数规定大小，则暂存到磁盘，也就是写到tmp中），但是所有线程共用同">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20211104110946.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20211104113418.png">
+<meta property="article:published_time" content="2022-01-07T00:43:38.466Z">
+<meta property="article:modified_time" content="2022-01-07T06:44:20.120Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="MySQL">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20211104110946.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/23-MySQL%E6%95%B0%E6%8D%AE%E4%BF%9D%E8%AF%81/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL数据保证 | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/23-MySQL%E6%95%B0%E6%8D%AE%E4%BF%9D%E8%AF%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL数据保证
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-01-07 08:43:38 / 修改时间：14:44:20" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:38+08:00">2022-01-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/23-MySQL%E6%95%B0%E6%8D%AE%E4%BF%9D%E8%AF%81/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/23-MySQL%E6%95%B0%E6%8D%AE%E4%BF%9D%E8%AF%81/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="binlog写入机制"><a href="#binlog写入机制" class="headerlink" title="binlog写入机制"></a>binlog写入机制</h3><h4 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h4><ol>
+<li><p>日志写入到binlog cache</p>
+</li>
+<li><p>事务提交时将binlog cache写入到binlog中</p>
+<p><font color=red>注意：一个事务的binlog是不能被拆开的，无论这个事务多大，也必须确保一次性写入</font></p>
+</li>
+</ol>
+<h4 id="机制"><a href="#机制" class="headerlink" title="机制"></a>机制</h4><p>系统给binlog cache分配了一块内存，<strong>每个线程</strong>一个（<code>binlog_cache_size</code>控制其大小，如果超过了该参数规定大小，则暂存到磁盘，也就是写到tmp中），但是所有线程共用同一份binlog文件</p>
+<h3 id="redo-log写入机制"><a href="#redo-log写入机制" class="headerlink" title="redo log写入机制"></a>redo log写入机制</h3><h4 id="流程-1"><a href="#流程-1" class="headerlink" title="流程"></a>流程</h4><ol>
+<li>日志写入到redo log buffer中</li>
+<li>落盘</li>
+</ol>
+<h4 id="机制-1"><a href="#机制-1" class="headerlink" title="机制"></a>机制</h4><ol>
+<li><p>redo log buffer中的内容不是每次生成后都要直接持久化到磁盘中的</p>
+</li>
+<li><p>有可能事务还没有提交的时候，redo log buffer中的部分日志有可能会被持久化到磁盘，情况如下</p>
+<ul>
+<li><p>后台线程每一秒会将redo log buffer持久化到磁盘</p>
+</li>
+<li><p>redo log buffer占用的空间即将达到innodb_log_buffer_size一半的时候后台线程会主动写盘</p>
+</li>
+<li><p>并行事务提交的时候，顺带将这个事务的redo log buffer持久化到磁盘</p>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="组提交"><a href="#组提交" class="headerlink" title="组提交"></a>组提交</h3><h4 id="redo-log的组提交"><a href="#redo-log的组提交" class="headerlink" title="redo log的组提交"></a>redo log的组提交</h4><p>比如说有一个场景下，有三个事务按顺序到达（trx1,trx2,trx3为并发事务，彼此间不受影响），并且都已经写完了redo log buffer,那么组提交的顺序为</p>
+<ol>
+<li>trx1是第一个到达的，会被选为这组的leader</li>
+<li>等trx1要开始写盘的时候，这个组中已经有了三个事务，这时候LSN变成了160</li>
+<li>trx1去写盘的时候，带的就是LSN=160，因此等trx1返回的时候，所有LSN小于等于160的redo log都已经被持久化到磁盘</li>
+<li>这时候trx2和trx3就可以直接返回了</li>
+</ol>
+<p><strong>优点</strong>：一次组提交中，组员越多越好，节约磁盘的IOPS的效果越好</p>
+<h4 id="binlog组提交"><a href="#binlog组提交" class="headerlink" title="binlog组提交"></a>binlog组提交</h4><p>为了使得binlog也能够组提交，引入了<strong>三阶段提交</strong></p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20211104110946.png" alt="image-20211104110941020" style="zoom:50%;" />
+
+<p>（图是经过淘宝优化后的组提交）</p>
+<p>MySQL通过<strong>两阶段提交</strong>(<strong>内部XA的两阶段提交</strong>)很好地解决了这一问题：</p>
+<p><strong>第一阶段：</strong>InnoDB prepare，持有prepare_commit_mutex，并且write/sync redo log； 将回滚段设置为Prepared状态，binlog不作任何操作；</p>
+<p><strong>第二阶段：</strong>包含两步，1&gt; write/sync Binlog； 2&gt; InnoDB commit (写入COMMIT标记后释放prepare_commit_mutex)；</p>
+<p>以 binlog 的写入与否作为事务提交成功与否的标志，innodb commit标志并不是事务成功与否的标志。因为此时的事务崩溃恢复过程如下：</p>
+<p>1&gt; 崩溃恢复时，扫描最后一个Binlog文件，提取其中的xid；<br> 2&gt; InnoDB维持了状态为Prepare的事务链表，将这些事务的xid和Binlog中记录的xid做比较，如果在Binlog中存在，则提交，否则回滚事务。</p>
+<p>通过这种方式，可以让InnoDB和Binlog中的事务状态保持一致。如果在写入innodb commit标志时崩溃，则恢复时，会重新对commit标志进行写入；</p>
+<p>在prepare阶段崩溃，则会回滚，在write/sync binlog阶段崩溃，也会回滚。这种事务提交的实现是MySQL5.6之前的实现。</p>
+<p><strong>4. binlog 组提交</strong></p>
+<p>上面的事务的两阶段提交过程是5.6之前版本中的实现，有严重的缺陷。当sync_binlog=1时，很明显上述的第二阶段中的 write/sync binlog会成为瓶颈，<strong>而且还是持有全局大锁(prepare_commit_mutex: prepare 和 commit共用一把锁)，这会导致性能急剧下降</strong>。解决办法就是MySQL5.6中的 binlog组提交。</p>
+<p><strong>4.1 MySQL5.6中的binlog group commit:</strong></p>
+<p>将<strong>Binlog Group Commit</strong>的过程拆分成了三个阶段：</p>
+<p>1&gt; flush stage 将各个线程的binlog从cache写到文件中;</p>
+<p>2&gt; sync stage 对binlog做fsync操作（如果需要的话；<strong>最重要的就是这一步，对多个线程的binlog合并写入磁盘</strong>）；</p>
+<p>3&gt; <strong>commit stage</strong> <em>为各个线程做*<em>引擎层的</em>事务commit(这里不用写redo log，*<em>在prepare阶段已写</em></em>)。<strong>每个stage同时只有一个线程在操作</strong>。**(<strong>分成三个阶段，每个阶段的任务分配给一个专门的线程，这是典型的并发优化</strong>)</p>
+<p>这种实现的<strong>优势在于三个阶段可以并发执行，从而提升效率</strong>。注意prepare阶段没有变，还是write/sync redo log.</p>
+<p>(另外：5.7中引入了<strong>MTS</strong>：多线程slave复制，也是通过binlog组提交实现的，在binlog组提交时，给每一个组提交打上一个seqno，然后在slave中就可以按照master中一样按照seqno的大小顺序，进行事务组提交了。)</p>
+<p><strong>4.2</strong> <strong>MySQL5.7中的binlog group commit:</strong></p>
+<p>淘宝对binlog group commit进行了进一步的优化，其原理如下：</p>
+<p>从XA恢复的逻辑我们可以知道，只要保证InnoDB Prepare的redo日志在写Binlog前完成write/sync即可。因此我们对Group Commit的第一个stage的逻辑做了些许修改，大概描述如下：</p>
+<p>Step1. InnoDB Prepare，记录当前的LSN到thd中；<br> Step2. 进入Group Commit的flush stage；Leader搜集队列，同时算出队列中最大的LSN。<br> Step3. 将InnoDB的redo log write/fsync到指定的LSN  (<strong>注：这一步就是redo log的组写入。因为小于等于LSN的redo log被一次性写入到ib_logfile[0|1]</strong>)<br> Step4. 写Binlog并进行随后的工作(sync Binlog, InnoDB commit , etc)</p>
+<p>也就是将 redo log的write/sync延迟到了 binlog group commit的 flush stage 之后，sync binlog之前。</p>
+<p>通过延迟写redo log的方式，显式的为redo log做了一次组写入(<strong>redo log group write</strong>)，并减少了(redo log) log_sys-&gt;mutex的竞争。</p>
+<p>也就是将 binlog group commit 对应的redo log也进行了 group write. 这样binlog 和 redo log都进行了优化。</p>
+<h3 id="WAL机制的好处"><a href="#WAL机制的好处" class="headerlink" title="WAL机制的好处"></a>WAL机制的好处</h3><ol>
+<li>redo log和binlog都是顺序写，磁盘顺序写比随机写速度快</li>
+<li>组提交机制。可以大幅降低磁盘的IOPS消耗</li>
+</ol>
+<h3 id="mysql-性能出现了瓶颈，主要在IO上，可以通过如下方法解决"><a href="#mysql-性能出现了瓶颈，主要在IO上，可以通过如下方法解决" class="headerlink" title="mysql 性能出现了瓶颈，主要在IO上，可以通过如下方法解决"></a>mysql 性能出现了瓶颈，主要在IO上，可以通过如下方法解决</h3><ol>
+<li>设置binlog_group_commit_sync_delay和binlog_group_commit_sync_no_delay_count减少binlog的写盘次数，故意等待，但是会增加语句响应时间</li>
+<li>将sync_binlog设置大于1的值，风险是掉电会丢失binloig日志 （binlog不落盘）</li>
+<li>将innodb_flush_log_at_trx_commit设置为2，风险是主机掉电会丢失数据 （redo log不落盘）</li>
+</ol>
+<h3 id="sync-no-delay-count-gt-sync-binlog-如果两者都设置了那么前者优先级高"><a href="#sync-no-delay-count-gt-sync-binlog-如果两者都设置了那么前者优先级高" class="headerlink" title="sync_no_delay_count&gt;sync_binlog (如果两者都设置了那么前者优先级高)"></a>sync_no_delay_count&gt;sync_binlog (如果两者都设置了那么前者优先级高)</h3><p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20211104113418.png" alt="image-20211104113415197"></p>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\BLGC\" rel="bookmark">BLGC</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\CheckPoint\" rel="bookmark">CheckPoint</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB\" rel="bookmark">InnoDB</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB存储引擎文件\" rel="bookmark">InnoDB存储引擎文件</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB数据页结构\" rel="bookmark">InnoDB数据页结构</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/23-MySQL%E6%95%B0%E6%8D%AE%E4%BF%9D%E8%AF%81/" title="MySQL数据保证">http://cooperxj.github.io/2022/01/07/MySQL/极客时间/23-MySQL数据保证/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/37-%E4%BD%95%E6%97%B6%E4%BD%BF%E7%94%A8%E5%86%85%E9%83%A8%E4%B8%B4%E6%97%B6%E8%A1%A8/" rel="prev" title="何时使用内部临时表">
+      <i class="fa fa-chevron-left"></i> 何时使用内部临时表
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/%E6%9E%81%E5%AE%A2%E6%97%B6%E9%97%B4/33-MySQL%E6%9F%A5%E8%AF%A2%E5%A4%A7%E9%87%8F%E6%95%B0%E6%8D%AE/" rel="next" title="MySQL查询大量数据">
+      MySQL查询大量数据 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#binlog%E5%86%99%E5%85%A5%E6%9C%BA%E5%88%B6"><span class="nav-number">1.</span> <span class="nav-text">binlog写入机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B5%81%E7%A8%8B"><span class="nav-number">1.1.</span> <span class="nav-text">流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%BA%E5%88%B6"><span class="nav-number">1.2.</span> <span class="nav-text">机制</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#redo-log%E5%86%99%E5%85%A5%E6%9C%BA%E5%88%B6"><span class="nav-number">2.</span> <span class="nav-text">redo log写入机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B5%81%E7%A8%8B-1"><span class="nav-number">2.1.</span> <span class="nav-text">流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%BA%E5%88%B6-1"><span class="nav-number">2.2.</span> <span class="nav-text">机制</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%84%E6%8F%90%E4%BA%A4"><span class="nav-number">3.</span> <span class="nav-text">组提交</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#redo-log%E7%9A%84%E7%BB%84%E6%8F%90%E4%BA%A4"><span class="nav-number">3.1.</span> <span class="nav-text">redo log的组提交</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#binlog%E7%BB%84%E6%8F%90%E4%BA%A4"><span class="nav-number">3.2.</span> <span class="nav-text">binlog组提交</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WAL%E6%9C%BA%E5%88%B6%E7%9A%84%E5%A5%BD%E5%A4%84"><span class="nav-number">4.</span> <span class="nav-text">WAL机制的好处</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mysql-%E6%80%A7%E8%83%BD%E5%87%BA%E7%8E%B0%E4%BA%86%E7%93%B6%E9%A2%88%EF%BC%8C%E4%B8%BB%E8%A6%81%E5%9C%A8IO%E4%B8%8A%EF%BC%8C%E5%8F%AF%E4%BB%A5%E9%80%9A%E8%BF%87%E5%A6%82%E4%B8%8B%E6%96%B9%E6%B3%95%E8%A7%A3%E5%86%B3"><span class="nav-number">5.</span> <span class="nav-text">mysql 性能出现了瓶颈，主要在IO上，可以通过如下方法解决</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sync-no-delay-count-gt-sync-binlog-%E5%A6%82%E6%9E%9C%E4%B8%A4%E8%80%85%E9%83%BD%E8%AE%BE%E7%BD%AE%E4%BA%86%E9%82%A3%E4%B9%88%E5%89%8D%E8%80%85%E4%BC%98%E5%85%88%E7%BA%A7%E9%AB%98"><span class="nav-number">6.</span> <span class="nav-text">sync_no_delay_count&gt;sync_binlog (如果两者都设置了那么前者优先级高)</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

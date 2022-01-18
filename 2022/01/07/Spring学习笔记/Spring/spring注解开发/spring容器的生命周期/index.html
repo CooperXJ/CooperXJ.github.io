@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="BeanFactory的创建及预准备工作spring容器的refresh()【创建刷新】prepareRefresh()刷新前的预处理 initPropertySources() 初始化一些属性的设置，子类自定义个性化的属性设置方法  getEnvironment().validateRequiredProperties() 校验属性的合法性等  earlyApplicationEvents &#x3D;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring容器的生命周期">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/spring%E5%AE%B9%E5%99%A8%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="BeanFactory的创建及预准备工作spring容器的refresh()【创建刷新】prepareRefresh()刷新前的预处理 initPropertySources() 初始化一些属性的设置，子类自定义个性化的属性设置方法  getEnvironment().validateRequiredProperties() 校验属性的合法性等  earlyApplicationEvents &#x3D;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/CooperXJ/blog-map-bed/raw/master/img/20210402093002.png">
+<meta property="article:published_time" content="2022-01-07T00:43:47.098Z">
+<meta property="article:modified_time" content="2021-08-27T14:24:32.000Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="Spring">
+<meta property="article:tag" content="Spring源码">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/CooperXJ/blog-map-bed/raw/master/img/20210402093002.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/spring%E5%AE%B9%E5%99%A8%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Spring容器的生命周期 | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/spring%E5%AE%B9%E5%99%A8%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring容器的生命周期
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:47" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:47+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-27 22:24:32" itemprop="dateModified" datetime="2021-08-27T22:24:32+08:00">2021-08-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/spring%E5%AE%B9%E5%99%A8%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/spring%E5%AE%B9%E5%99%A8%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="BeanFactory的创建及预准备工作"><a href="#BeanFactory的创建及预准备工作" class="headerlink" title="BeanFactory的创建及预准备工作"></a>BeanFactory的创建及预准备工作</h2><h3 id="spring容器的refresh-【创建刷新】"><a href="#spring容器的refresh-【创建刷新】" class="headerlink" title="spring容器的refresh()【创建刷新】"></a>spring容器的refresh()【创建刷新】</h3><h4 id="prepareRefresh-刷新前的预处理"><a href="#prepareRefresh-刷新前的预处理" class="headerlink" title="prepareRefresh()刷新前的预处理"></a>prepareRefresh()刷新前的预处理</h4><ol>
+<li><p>initPropertySources()</p>
+<p>初始化一些属性的设置，子类自定义个性化的属性设置方法</p>
+</li>
+<li><p>getEnvironment().validateRequiredProperties()</p>
+<p>校验属性的合法性等</p>
+</li>
+<li><p>earlyApplicationEvents = new LinkedHashSet&lt; ApplicationEvent &gt;();</p>
+<p>保存容器的一些早期事件</p>
+</li>
+</ol>
+<h4 id="obtainFreshBeanFactory-获取BeanFactory"><a href="#obtainFreshBeanFactory-获取BeanFactory" class="headerlink" title="obtainFreshBeanFactory();获取BeanFactory"></a>obtainFreshBeanFactory();获取BeanFactory</h4><ol>
+<li><p>refreshBeanFactory()</p>
+<p>刷新【创建】BeanFactory</p>
+<p>设置了一个this.beanFactory = new DefaultListableBeanFactory();</p>
+<p>设置id</p>
+</li>
+<li><p>getBeanFactory()</p>
+<p>返回刚才GenericApplicationContext创建的BeanFactory对象</p>
+</li>
+<li><p>将创建的BeanFactory【DefaultListableBeanFactory】返回</p>
+</li>
+</ol>
+<h4 id="prepareBeanFactory-beanFactory-BeanFactory的预准备工作（BeanFactory进行一些设置）"><a href="#prepareBeanFactory-beanFactory-BeanFactory的预准备工作（BeanFactory进行一些设置）" class="headerlink" title="prepareBeanFactory(beanFactory);BeanFactory的预准备工作（BeanFactory进行一些设置）"></a>prepareBeanFactory(beanFactory);BeanFactory的预准备工作（BeanFactory进行一些设置）</h4><ol>
+<li><p>设置BeanFactory的类加载器、支持表达式解析器</p>
+</li>
+<li><p>添加部分BeanPostProcessor【ApplicationContextAwareProcessor】</p>
+</li>
+<li><p>设置忽略的自动装配接口，例如EnvironmentAware、EmbeddedValueResolverAware、xxx</p>
+</li>
+<li><p>注册可以解析的自动装配，我们能直接在任何组件中自动注入：BeanFactory、ResourceLoader、ApplicationEventPublisher 、ApplicationContext</p>
+</li>
+<li><p>添加BeanPostProcessor【ApplicationListenerDetector】</p>
+</li>
+<li><p>添加编译时的AspectJ</p>
+</li>
+<li><p>给BeanFactory中注册一些能用的组件</p>
+<p>environment【ConfigurableEnvironment】</p>
+<p>systemProperties【Map&lt; String,Object &gt;】</p>
+<p>systemEnviroment【Map&lt; String,Object &gt;】</p>
+</li>
+</ol>
+<h4 id="postProcessBeanFactory-beanFactory-；BeanFactory准备工作完成后进行的一些后置处理工作"><a href="#postProcessBeanFactory-beanFactory-；BeanFactory准备工作完成后进行的一些后置处理工作" class="headerlink" title="postProcessBeanFactory(beanFactory)；BeanFactory准备工作完成后进行的一些后置处理工作"></a>postProcessBeanFactory(beanFactory)；BeanFactory准备工作完成后进行的一些后置处理工作</h4><ol>
+<li>子类通过重写这个方法来在BeanFactory创建并预准备完成以后做进一步的设置</li>
+</ol>
+<hr>
+<h4 id="invokeBeanFactoryPostProcessors-beanFactory-；执行BeanFactoryPostProcessor；"><a href="#invokeBeanFactoryPostProcessors-beanFactory-；执行BeanFactoryPostProcessor；" class="headerlink" title="invokeBeanFactoryPostProcessors(beanFactory)；执行BeanFactoryPostProcessor；"></a>invokeBeanFactoryPostProcessors(beanFactory)；执行BeanFactoryPostProcessor；</h4><p><font color=red>主要就是对BeanFactory里面的bean做一些修改操作，使得里面的Bean满足自己的需求</font></p>
+<p>BeanFactoryPostProcessor：BeanFactory的后置处理器。在BeanFactory标准初始化之后执行</p>
+<ol>
+<li><p>执行BeanFactoryPostProcessor的方法</p>
+<p>先执行BeanDefinitionRegistryPostProcessor</p>
+<ol>
+<li><p>获取所有的BeanDefinitionRegistryPostProcessor</p>
+</li>
+<li><p>先执行实现了PriorityOrdered优先级接口的BeanDefinitionRegistryPostProcessor</p>
+<p>PostProcessor.postProcessBeanDefinitionRegistry（registry）</p>
+</li>
+<li><p>在执行实现了Ordered顺序接口的BeanDefinitionRegistry（registry）</p>
+<p>PostProcessor.postProcessBeanDefinitionRegistry（registry）</p>
+</li>
+<li><p>最后执行没有实现任何优先级或者是顺序接口的BeanDefinitionRegistryPostProcessor</p>
+<p>PostProcessor.postProcessBeanDefinitionRegistry（registry）</p>
+</li>
+</ol>
+<p>再执行BeanFactoryPostProcessor的方法</p>
+<ol>
+<li><p>获取所有的BeanDefinitionRegistryPostProcessor</p>
+</li>
+<li><p>先执行实现了PriorityOrdered优先级接口的BeanDefinitionRegistryPostProcessor</p>
+<p>PostProcessor.postProcessBeanDefinitionRegistry（registry）</p>
+</li>
+<li><p>在执行实现了Ordered顺序接口的BeanDefinitionRegistry（registry）</p>
+<p>PostProcessor.postProcessBeanDefinitionRegistry（registry）</p>
+</li>
+<li><p>最后执行没有实现任何优先级或者是顺序接口的BeanDefinitionRegistryPostProcessor</p>
+<p>PostProcessor.postProcessBeanDefinitionRegistry（registry）</p>
+</li>
+</ol>
+</li>
+</ol>
+<hr>
+<h4 id="registerBeanPostProcessors-beanFactory-注册BeanPostProcessor（Bean的后置处理器），拦截Bean的创建过程"><a href="#registerBeanPostProcessors-beanFactory-注册BeanPostProcessor（Bean的后置处理器），拦截Bean的创建过程" class="headerlink" title="registerBeanPostProcessors(beanFactory) 注册BeanPostProcessor（Bean的后置处理器），拦截Bean的创建过程"></a>registerBeanPostProcessors(beanFactory) 注册BeanPostProcessor（Bean的后置处理器），拦截Bean的创建过程</h4><p>不同接口类型的BeanPostProcessor在Bean创建前后执行的时机是不一样的</p>
+<p>BeanPostProcessor、DestructionAwareBeanPostProcessor、InstantiationAwareBeanPostProcessor、</p>
+<p>SmartInstantiationAwareBeanPostProcessor、MergedBeanDefinitionPostProcessor【internalPostProcessors】</p>
+<ol>
+<li><p>先获取所有的BeanPostProcess</p>
+<p>后置处理器默认度可以通过PriorityOrdered、Ordered接口来执行优先级</p>
+</li>
+<li><p>先注册PriorityOrdered优先级接口的BeanPostProcessor</p>
+<p>把每一个BeanPostProcessor添加到BeanFactory中</p>
+<p>beanFactory.addBeanPostProcessor(postProcessor)</p>
+</li>
+<li><p>再注册Ordered接口的BeanPostProcessor</p>
+</li>
+<li><p>然后注册没有实现任何优先级接口的BeanPostProcessor</p>
+</li>
+<li><p>最终注册MergedBeanDefinitionPostProcessor</p>
+</li>
+<li><p>注册一个ApplicationListenerDetector在Bean创建完成后检查是否是ApplicationListener；</p>
+<p>如果是则加入到容器中</p>
+<p>applicationContext.addApplicationListener((ApplicationListener&lt;?&gt; bean));</p>
+</li>
+</ol>
+<hr>
+<h4 id="initMessageSource-初始化MessageSource组件（做国际化功能、消息绑定、消息解析）"><a href="#initMessageSource-初始化MessageSource组件（做国际化功能、消息绑定、消息解析）" class="headerlink" title="initMessageSource() 初始化MessageSource组件（做国际化功能、消息绑定、消息解析）"></a>initMessageSource() 初始化MessageSource组件（做国际化功能、消息绑定、消息解析）</h4><ol>
+<li><p>获取BeanFactory</p>
+</li>
+<li><p>看容器中是否有id为messageSource的，类型是MessageSource的组件</p>
+<p>如果有赋值给messageSource，如果没有自己创建一个DelegatingMessageSource</p>
+<p>MessageSource：取出国际化配置文件中的某个key的值，能按照区域信息获取</p>
+</li>
+<li><p>把创建好的MessageSource创建在容器中，以后获取国际化配置文件的值的时候，可以自动注入MessageSource</p>
+<p>BeanFactory.registerSingleton(MESSAGE_SOURCE_BEAN_NAME,this.messageSource);</p>
+<p>MessageSource.String getMessage(String code,Object[] agrs,String defaultMessage)</p>
+</li>
+</ol>
+<hr>
+<h4 id="initApplicationEventMulticaster-初始化事件派发器"><a href="#initApplicationEventMulticaster-初始化事件派发器" class="headerlink" title="initApplicationEventMulticaster() 初始化事件派发器"></a>initApplicationEventMulticaster() 初始化事件派发器</h4><ol>
+<li>获取BeanFactory</li>
+<li>从BeanFactory中获取applicationEventMulticaster的ApplicationEventMulticaster</li>
+<li>如果上一步没有配置，则会自动创建一个SimpleApplicationMulticaster</li>
+<li>将创建的ApplicationEventMulticaster添加到BeanFactory中，以后其他组件直接自动注入</li>
+</ol>
+<hr>
+<h4 id="onRefresh-留给子容器（子类）"><a href="#onRefresh-留给子容器（子类）" class="headerlink" title="onRefresh() 留给子容器（子类）"></a>onRefresh() 留给子容器（子类）</h4><ol>
+<li>子类重写这个方法，在容器刷新的时候可以自定义逻辑</li>
+</ol>
+<hr>
+<h4 id="registerListener-给容器中所有将项目里面的ApplicationListener注册进来"><a href="#registerListener-给容器中所有将项目里面的ApplicationListener注册进来" class="headerlink" title="registerListener()  给容器中所有将项目里面的ApplicationListener注册进来"></a>registerListener()  给容器中所有将项目里面的ApplicationListener注册进来</h4><ol>
+<li><p>从容器中拿到所有的ApplicationListener</p>
+</li>
+<li><p>将每个监听器派发到事件派发器中</p>
+<p>getApplicationEventMulticaster().addApplicationListenerBean(listenerBeanName)</p>
+</li>
+<li><p>派发之前步骤产生的事件</p>
+</li>
+</ol>
+<hr>
+<h4 id="finishBeanFactoryInitialization-beanFactory-初始化所有剩下的单实例Bean"><a href="#finishBeanFactoryInitialization-beanFactory-初始化所有剩下的单实例Bean" class="headerlink" title="finishBeanFactoryInitialization(beanFactory) 初始化所有剩下的单实例Bean"></a>finishBeanFactoryInitialization(beanFactory) 初始化所有剩下的单实例Bean</h4><ol>
+<li><p>beanFactory.preInstantiateSingletons() 初始化后剩下的单实例bean</p>
+<ol>
+<li><p>获取容器中的所有Bean，依次进行初始化和创建对象</p>
+</li>
+<li><p>获取Bean的定义信息；RootBeanDefinition</p>
+</li>
+<li><p>Bean不是抽象的，是单实例的，是懒加载的</p>
+<ol>
+<li><p>判断是否是FactoryBean,是否是实现FactoryBean接口的Bean,如果是则利用创建工厂Bean的方法对Bean进行创建</p>
+</li>
+<li><p>不是工厂的Bean，利用getBean(beanName)创建对象</p>
+<ol>
+<li><p>getBean(beanName)</p>
+<p>Ioc.getBean()</p>
+</li>
+<li><p>doGetBean(name，null,null,false)</p>
+</li>
+<li><p><font color=red>先获取缓存中保存的单实例Bean</font>。如果能获取到说明这个Bean之前被创建过（所有创建过的单实例Bean都会被缓存起来）</p>
+</li>
+<li><p>标记当前bean已经被创建，防止多线程对bean进行了创建，保持其单例的特性</p>
+</li>
+<li><p>获取Bean的定义信息</p>
+</li>
+<li><p><font color=red>获取当前Bean依赖的其他Bean；如果有，按照getBean()把依赖的Bean先创建出来</font></p>
+</li>
+<li><p>启动单实例Bean的创建流程：</p>
+<ol>
+<li><p>createBean(beanName.mbd,args)</p>
+</li>
+<li><p>Object bean = resolveBeforeInstantiation(beanName,mbdToUser) </p>
+<p><font color=red>让BeanPostProcessor拦截返回代理对象</font></p>
+<p>【InstantiationAwareBeanPostProcessor】提前执行</p>
+<p>先触发：postProcessBeforeInstantiation()</p>
+<p>如果有返回值：触发PostProcessorAfterInitialization()</p>
+</li>
+<li><p>如果前面的InstantiationAwareBeanPostProcessor没有返回代理对象，调用4</p>
+</li>
+<li><p>Object beanInstance = doCreateBean(beanName,mbdToUse,args);创建Bean</p>
+<ol>
+<li><p>【创建Bean实例】，createBeanInstance(beanName,mbd,args)</p>
+<p>利用工厂方法或者对象的构造器创建出Bean实例</p>
+</li>
+<li><p>applyMergedBeanDefinitionPostProcessors(mbd,beanType,beanName)</p>
+<p>调用MergedBeanDefinitionPostProcessor的postProcessMergedBeanDefinition</p>
+</li>
+<li><p>【Bean属性赋值】 populateBean（beanName,mbd,instanceWrapper)；</p>
+<p>赋值之前：</p>
+<ol>
+<li><p>拿到InstantiationAwareBeanPostProcessor后置处理器</p>
+<p>PostProcessAfterInstantiation();</p>
+</li>
+<li><p>拿到InstantiationAwareBeanPostProcess后置处理器</p>
+<p>postProcessPropertyValues();</p>
+<p>——–赋值之前————</p>
+</li>
+<li><p>应用Bean属性的值</p>
+<p>为属性利用setter方法等进行赋值</p>
+<p>applyPropertyValues(beanName,mbd,bw,pvs)</p>
+</li>
+</ol>
+</li>
+<li><p>【Bean初始化】initializeBean(beanName,exposedObject,mbd)</p>
+<ol>
+<li><p>【执行Aware接口方法】invokeAwareMethods(beanName,bean);执行xxxxAware接口的方法</p>
+<p>BeanNameAware、BeanClassLoaderAware、BeanFactoryAware</p>
+</li>
+<li><p>【执行后置处理器初始化之前】applyBeanPostProcessorsBeforeInitialization(wrappedBean,beanName)</p>
+<p>BeanPostProcessor.postProcessBeforeInitialization()</p>
+</li>
+<li><p>【执行初始化方法】invokeInitMethods(beanName,wrappedBean,mbd)</p>
+<ol>
+<li>是否是InitializatingBean接口的实现；执行接口规定的初始化</li>
+<li>是否有自定义初始化的方法，有则执行</li>
+</ol>
+</li>
+<li><p>【执行后置处理器初始化之后】applyBeanPostProcessorsAfterInitialization</p>
+<p>BeanPostProcessor.postProcessAfterInitialization()</p>
+</li>
+<li><p>注册Bean的销毁方法</p>
+</li>
+</ol>
+</li>
+<li><p>将创建的Bean添加到缓存中的singletonObjects</p>
+<p><font color=red>ioc容器就是这些Map，Map里面保存了单实例Bean、环境信息等等</font></p>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>所有Bean都利用getBean创建完成以后</p>
+<p>检查所有的Bean是否是SmartInitializalizingSingleton接口的</p>
+<p>如果是就执行afterSingletonsInstantiated()方法</p>
+<img src="https://gitee.com/CooperXJ/blog-map-bed/raw/master/img/20210402093002.png" alt="image-20210402092956671" style="zoom:50%;" /></li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<hr>
+<h4 id="finishRefresh-完成BeanFactory的初始化创建工作，IOC容器创建完成"><a href="#finishRefresh-完成BeanFactory的初始化创建工作，IOC容器创建完成" class="headerlink" title="finishRefresh() 完成BeanFactory的初始化创建工作，IOC容器创建完成"></a>finishRefresh() 完成BeanFactory的初始化创建工作，IOC容器创建完成</h4><ol>
+<li><p>initLifecycleProcessor（） 初始化和生命周期有关的后置处理器：LifecycleProcessor</p>
+<p>默认从容器中找是否有LifecycleProcessor的组件【LifecycleProcessor】</p>
+<p>如果没有则new DefaultLifecycleProcessor，加入到容器中</p>
+<p>写一个LifecycleProcessor的实现类，可以在BeanFactory</p>
+<p>void onRefresh（）</p>
+<p>void onClose()</p>
+<p>这些生命周期时对该实现类的方法进行调用</p>
+</li>
+<li><p>getLifeCycleProcessor().onRefresh()</p>
+<p>拿到前面定义的生命周期处理器（BeanFactory）回调onRefresh()</p>
+</li>
+<li><p>publishEvent(new ContextRefreshdEvent(this));发布容器刷新完成事件</p>
+</li>
+<li><p>liveBeansView.registerApplicationContext(this);</p>
+</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ol>
+<li><p>spring容器在启动的时候，会先保存所有注册进来的Bean的定义信息</p>
+<ul>
+<li><p>xml注册bean</p>
+</li>
+<li><p>注解注册bean；@Service、@Bean、@Component</p>
+</li>
+</ul>
+</li>
+<li><p>spring容器会在合适的时机创建这些Bean</p>
+<ul>
+<li>用到这个Bean的时候，利用getBean创建Bean，创建好以后保存在容器中</li>
+<li>统一创建所有剩下bean的时候，finishBeanFactoryInitialization()</li>
+</ul>
+</li>
+<li><p>后置处理器 BeanPostProcessor</p>
+<ol>
+<li><p>每一个Bean创建完成，都会使用各种后置处理器进行处理来增强Bean的功能</p>
+<p>比如AutowiredAnnotationBeanPostProcessor、AnnotationAwareAspectJAutoProxyCreator来做AOP<br>功能</p>
+</li>
+</ol>
+</li>
+<li><p>事件驱动模型</p>
+<p>ApplicationListener：事件监听</p>
+<p>ApplicationEventMulticaster：事件派发</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Spring学习笔记\Spring\spring注解开发\AOP\" rel="bookmark">AOP</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Spring学习笔记\Spring\spring注解开发\ApplicationListener\" rel="bookmark">ApplicationListener</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Spring学习笔记\Spring\spring注解开发\BeanFactoryPostProcessor\" rel="bookmark">BeanFactoryPostProcessor</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Spring学习笔记\Spring\spring注解开发\IOC\" rel="bookmark">IOC</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Spring学习笔记\Spring\spring注解开发\Transactional\" rel="bookmark">Transactional</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/spring%E5%AE%B9%E5%99%A8%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" title="Spring容器的生命周期">http://cooperxj.github.io/2022/01/07/Spring学习笔记/Spring/spring注解开发/spring容器的生命周期/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+              <a href="/tags/Spring%E6%BA%90%E7%A0%81/" rel="tag"># Spring源码</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/IOC/" rel="prev" title="IOC">
+      <i class="fa fa-chevron-left"></i> IOC
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/Spring%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Spring/spring%E6%B3%A8%E8%A7%A3%E5%BC%80%E5%8F%91/Transactional/" rel="next" title="Transactional">
+      Transactional <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#BeanFactory%E7%9A%84%E5%88%9B%E5%BB%BA%E5%8F%8A%E9%A2%84%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C"><span class="nav-number">1.</span> <span class="nav-text">BeanFactory的创建及预准备工作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#spring%E5%AE%B9%E5%99%A8%E7%9A%84refresh-%E3%80%90%E5%88%9B%E5%BB%BA%E5%88%B7%E6%96%B0%E3%80%91"><span class="nav-number">1.1.</span> <span class="nav-text">spring容器的refresh()【创建刷新】</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#prepareRefresh-%E5%88%B7%E6%96%B0%E5%89%8D%E7%9A%84%E9%A2%84%E5%A4%84%E7%90%86"><span class="nav-number">1.1.1.</span> <span class="nav-text">prepareRefresh()刷新前的预处理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#obtainFreshBeanFactory-%E8%8E%B7%E5%8F%96BeanFactory"><span class="nav-number">1.1.2.</span> <span class="nav-text">obtainFreshBeanFactory();获取BeanFactory</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#prepareBeanFactory-beanFactory-BeanFactory%E7%9A%84%E9%A2%84%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C%EF%BC%88BeanFactory%E8%BF%9B%E8%A1%8C%E4%B8%80%E4%BA%9B%E8%AE%BE%E7%BD%AE%EF%BC%89"><span class="nav-number">1.1.3.</span> <span class="nav-text">prepareBeanFactory(beanFactory);BeanFactory的预准备工作（BeanFactory进行一些设置）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#postProcessBeanFactory-beanFactory-%EF%BC%9BBeanFactory%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C%E5%AE%8C%E6%88%90%E5%90%8E%E8%BF%9B%E8%A1%8C%E7%9A%84%E4%B8%80%E4%BA%9B%E5%90%8E%E7%BD%AE%E5%A4%84%E7%90%86%E5%B7%A5%E4%BD%9C"><span class="nav-number">1.1.4.</span> <span class="nav-text">postProcessBeanFactory(beanFactory)；BeanFactory准备工作完成后进行的一些后置处理工作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#invokeBeanFactoryPostProcessors-beanFactory-%EF%BC%9B%E6%89%A7%E8%A1%8CBeanFactoryPostProcessor%EF%BC%9B"><span class="nav-number">1.1.5.</span> <span class="nav-text">invokeBeanFactoryPostProcessors(beanFactory)；执行BeanFactoryPostProcessor；</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#registerBeanPostProcessors-beanFactory-%E6%B3%A8%E5%86%8CBeanPostProcessor%EF%BC%88Bean%E7%9A%84%E5%90%8E%E7%BD%AE%E5%A4%84%E7%90%86%E5%99%A8%EF%BC%89%EF%BC%8C%E6%8B%A6%E6%88%AABean%E7%9A%84%E5%88%9B%E5%BB%BA%E8%BF%87%E7%A8%8B"><span class="nav-number">1.1.6.</span> <span class="nav-text">registerBeanPostProcessors(beanFactory) 注册BeanPostProcessor（Bean的后置处理器），拦截Bean的创建过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#initMessageSource-%E5%88%9D%E5%A7%8B%E5%8C%96MessageSource%E7%BB%84%E4%BB%B6%EF%BC%88%E5%81%9A%E5%9B%BD%E9%99%85%E5%8C%96%E5%8A%9F%E8%83%BD%E3%80%81%E6%B6%88%E6%81%AF%E7%BB%91%E5%AE%9A%E3%80%81%E6%B6%88%E6%81%AF%E8%A7%A3%E6%9E%90%EF%BC%89"><span class="nav-number">1.1.7.</span> <span class="nav-text">initMessageSource() 初始化MessageSource组件（做国际化功能、消息绑定、消息解析）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#initApplicationEventMulticaster-%E5%88%9D%E5%A7%8B%E5%8C%96%E4%BA%8B%E4%BB%B6%E6%B4%BE%E5%8F%91%E5%99%A8"><span class="nav-number">1.1.8.</span> <span class="nav-text">initApplicationEventMulticaster() 初始化事件派发器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#onRefresh-%E7%95%99%E7%BB%99%E5%AD%90%E5%AE%B9%E5%99%A8%EF%BC%88%E5%AD%90%E7%B1%BB%EF%BC%89"><span class="nav-number">1.1.9.</span> <span class="nav-text">onRefresh() 留给子容器（子类）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#registerListener-%E7%BB%99%E5%AE%B9%E5%99%A8%E4%B8%AD%E6%89%80%E6%9C%89%E5%B0%86%E9%A1%B9%E7%9B%AE%E9%87%8C%E9%9D%A2%E7%9A%84ApplicationListener%E6%B3%A8%E5%86%8C%E8%BF%9B%E6%9D%A5"><span class="nav-number">1.1.10.</span> <span class="nav-text">registerListener()  给容器中所有将项目里面的ApplicationListener注册进来</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#finishBeanFactoryInitialization-beanFactory-%E5%88%9D%E5%A7%8B%E5%8C%96%E6%89%80%E6%9C%89%E5%89%A9%E4%B8%8B%E7%9A%84%E5%8D%95%E5%AE%9E%E4%BE%8BBean"><span class="nav-number">1.1.11.</span> <span class="nav-text">finishBeanFactoryInitialization(beanFactory) 初始化所有剩下的单实例Bean</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#finishRefresh-%E5%AE%8C%E6%88%90BeanFactory%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E5%88%9B%E5%BB%BA%E5%B7%A5%E4%BD%9C%EF%BC%8CIOC%E5%AE%B9%E5%99%A8%E5%88%9B%E5%BB%BA%E5%AE%8C%E6%88%90"><span class="nav-number">1.1.12.</span> <span class="nav-text">finishRefresh() 完成BeanFactory的初始化创建工作，IOC容器创建完成</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">1.2.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

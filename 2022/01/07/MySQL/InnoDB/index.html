@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="InnoDB体系架构  后台线程的作用  负责刷新内存池中的数据，保存缓冲池中的内存缓存是最近的数据 将已经修改 大数据文件刷新到磁盘文件 保证数据库发生异常能够恢复  后台线程类型 Master Thread （核心线程） &#x3D;&#x3D;作用&#x3D;&#x3D;  将缓冲池中的数据异步刷新到磁盘，保证数据一致性  Matser Thread优先级是最高的 &#x3D;&#x3D;组成：&#x3D;&#x3D;  主循环 loop （主要状态）  每秒操作  日">
+<meta property="og:type" content="article">
+<meta property="og:title" content="InnoDB">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/MySQL/InnoDB/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="InnoDB体系架构  后台线程的作用  负责刷新内存池中的数据，保存缓冲池中的内存缓存是最近的数据 将已经修改 大数据文件刷新到磁盘文件 保证数据库发生异常能够恢复  后台线程类型 Master Thread （核心线程） &#x3D;&#x3D;作用&#x3D;&#x3D;  将缓冲池中的数据异步刷新到磁盘，保证数据一致性  Matser Thread优先级是最高的 &#x3D;&#x3D;组成：&#x3D;&#x3D;  主循环 loop （主要状态）  每秒操作  日">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210713093309.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210715095737.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210713094949.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210713104018.png">
+<meta property="article:published_time" content="2022-01-07T00:43:29.573Z">
+<meta property="article:modified_time" content="2021-08-27T14:39:07.000Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="InnoDB技术探究">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210713093309.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/MySQL/InnoDB/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>InnoDB | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/MySQL/InnoDB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          InnoDB
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:29" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:29+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-27 22:39:07" itemprop="dateModified" datetime="2021-08-27T22:39:07+08:00">2021-08-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/MySQL/InnoDB/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/MySQL/InnoDB/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="InnoDB体系架构"><a href="#InnoDB体系架构" class="headerlink" title="InnoDB体系架构"></a>InnoDB体系架构</h3><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210713093309.png" alt="image-20210713093304615" style="zoom:50%;" />
+
+<p>后台线程的作用</p>
+<ul>
+<li>负责刷新内存池中的数据，保存缓冲池中的内存缓存是最近的数据</li>
+<li>将已经修改 大数据文件刷新到磁盘文件</li>
+<li>保证数据库发生异常能够恢复</li>
+</ul>
+<h4 id="后台线程类型"><a href="#后台线程类型" class="headerlink" title="后台线程类型"></a>后台线程类型</h4><ul>
+<li><p>Master Thread （核心线程）</p>
+<p>==作用==</p>
+<ul>
+<li>将缓冲池中的数据异步刷新到磁盘，保证数据一致性</li>
+</ul>
+<p><strong>Matser Thread优先级是最高的</strong></p>
+<p>==组成：==</p>
+<ul>
+<li><p>主循环 loop （主要状态）</p>
+<ul>
+<li><p>每秒操作</p>
+<ul>
+<li><p>日志缓冲刷新到磁盘，即使没有提交 （总是）</p>
+</li>
+<li><p>合并缓冲 （可能）</p>
+<p>当前一秒内IO操作次数&lt;5 执行该操作</p>
+</li>
+<li><p>至多刷新100个InnoDB的缓冲池中的脏页到磁盘 （可能）</p>
+<p>当前缓冲池中的脏页比例&gt;对应参数innodb_max_dirty_pages_pct 执行该操作</p>
+</li>
+<li><p>如果没有当前用户活动，切换至backgroup loop （可能）</p>
+</li>
+</ul>
+</li>
+<li><p>每10s操作</p>
+<ul>
+<li><p>刷新100个脏页到磁盘（可能）</p>
+<p>当前10s内IO次数&lt;200 执行该操作</p>
+</li>
+<li><p>合并至多5个插入缓冲区（总是）</p>
+</li>
+<li><p>将日志缓冲刷新到磁盘（总是）</p>
+</li>
+<li><p>删除无用的Undo页（总是）</p>
+<p>full page操作</p>
+<p>最多尝试回收20个undo页</p>
+</li>
+<li><p>刷新100个或者10个脏页到磁盘（总是）</p>
+<p>脏页比例&gt;70% 刷新100个到磁盘</p>
+<p>脏页比例&lt;70% 刷新10个到磁盘</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>后台循环 backgroup loop</p>
+<ul>
+<li>删除无用的undo页（总是）</li>
+<li>合并20个插入缓冲区 （总是）</li>
+<li>跳回到主循环（总是）</li>
+<li>不断刷新100个页直到符合条件 （可能跳转到flush loop中完成）</li>
+</ul>
+</li>
+<li><p>刷新循环 flush loop</p>
+</li>
+<li><p>暂停循环 suspend loop</p>
+</li>
+</ul>
+<p>==切换状态==</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210715095737.png" alt="image-20210715095730533"></p>
+<p>==Master Thread的更新==</p>
+<ul>
+<li><p>添加了可以自定义的数值Innodb_io_capacity</p>
+<ul>
+<li>在合并插入缓冲时（insert buffer），合并插入缓冲的数量为innodb_io_capacity的5%</li>
+<li>从缓冲区刷新脏页时，刷新脏页的数量为innodb_io_capacity</li>
+</ul>
+</li>
+<li><p>添加了innodb_adaptive_flushing参数</p>
+<p>该参数开启之后可以通过一个函数来判断需要刷新脏页最合适的数量，相当于一个自适应的参数开启，而不是靠原来innodb_max_dirty_pages_pct的参数决定刷新脏页的数量</p>
+<p>该函数是通过判断重做日志的速度来决定最适合的刷新脏页的数量</p>
+<p><strong>注意：开启该参数之后当脏页比例小于innodb_max_dirty_pages_pct的时候也会刷新一定量的脏页</strong></p>
+</li>
+<li><p>添加了参数innodb_purge_batch_size</p>
+<p>可以通过修改该参数控制full purge时回收Undo页的数量</p>
+</li>
+<li><p>刷新脏页的操作从master thread分离到一个单独的page cleaner thread</p>
+</li>
+</ul>
+<p>==查看系统的负载==</p>
+<p>可以通过<code>show engine innodb status\G </code>中的srv_main_thread loop中的1_seconds和sleeps中的差值来反映当前数据库的负载压力</p>
+</li>
+<li><p>IO Thread</p>
+<ul>
+<li><p>作用：</p>
+<ul>
+<li>负责IO请求的回调</li>
+</ul>
+</li>
+<li><p>IO种类：</p>
+<ul>
+<li>read</li>
+<li>write</li>
+<li>insert buffer</li>
+<li>log IO thread</li>
+</ul>
+<p><strong>注意：在MySQL5.1.X之前linux下IO Thread数量不能调整，但是现在版本在linux上可以根据CPU核心数进行调整，之前和现在的在windows平台下可以调整</strong></p>
+<p>现在版本的InnoDB中的read和write已经分别增大到了4个</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_40901788/article/details/84969375">IO Thread的个数参考</a></p>
+</li>
+<li><p>相关命令</p>
+<ul>
+<li><p>查看InnoDB版本</p>
+<p><code>show variables like &#39;innodb_version&#39;\G</code></p>
+</li>
+<li><p>查看read和write线程数量</p>
+<p><code>show variables like &#39;innodb_%io_threads&#39;\G</code></p>
+</li>
+<li><p>查看当前各个线程状态</p>
+<p><code>show engine innodb status\G</code></p>
+<p>可以看到总的线程状态为：</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210713094949.png" alt="image-20210713094947694"></p>
+<p>其中insert buffer thread数量为1，log thread数量为1，read和write分别为4</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Purge Thread</p>
+<p>事物被提交之后其所使用过的undolog可能不再需要，因此需要PurgeThread来回收已经使用并分配到undo页</p>
+<p>之前的版本purge操作都是在master thread中完成的，从1.1版本开始purge thread可以独立到单独的线程中进行 </p>
+<ul>
+<li><p>如何启用独立的purge thread？</p>
+<p>在配置文件中添加如下命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">innodb_purge_threads = 1 #1.1版本只能有1个，之后版本可以设置为多个</span><br></pre></td></tr></table></figure></li>
+<li><p>查看purge thread数量</p>
+<p><code> show variables like &#39;innodb_purge_threads&#39;\G</code></p>
+</li>
+</ul>
+</li>
+<li><p>Page Cleaner Thread</p>
+<ul>
+<li><p>作用</p>
+<p>将之前版本中的脏页的刷新操作放入到单独的线程中完成</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="内存"><a href="#内存" class="headerlink" title="内存"></a>内存</h4><ul>
+<li><p>页从缓冲区刷新回磁盘的操作并不是每次页发生变更时触发的，而是通过一种成为Checkpoint的机制刷新回磁盘</p>
+</li>
+<li><p>内存结构</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210713104018.png" alt="image-20210713104013265" style="zoom:50%;" /></li>
+<li><p>缓冲池相关指令</p>
+<ul>
+<li><p>查看缓冲池大小 (单位为字节，除以三个1024单位为G)</p>
+<p><code>show variables like &#39;innodb_buffer_pool_size&#39;\G</code></p>
+</li>
+</ul>
+</li>
+<li><p>缓冲池实例</p>
+<p>InnoDB允许有多个缓冲池实例，每个页根据哈希值平均分配到不同的缓冲池实例中，这样可以减少数据库内部资源竞争，增加数据库的并发</p>
+<ul>
+<li><p>缓冲池实例指令</p>
+<ul>
+<li><p>查看缓冲池实例个数</p>
+<p><code>show variables like &#39;innodb_buffer_pool_instances&#39;\G</code></p>
+</li>
+<li><p>查看每个缓冲池的状态</p>
+<p><code>show engine innodb status\G</code></p>
+<p>在INDIVIDUAL BUFFER POOL INFO标签下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">use information_schema;</span><br><span class="line">select pool_id,pool_size,free_buffers,database_pages from INNODB_BUFFER_POOL_STATS\G</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>缓冲池配置注意事项</p>
+<p>要启用多个缓冲池实例，请将innodb_buffer_pool_instances配置选项设置为 大于1(默认)的值，最大为64(最大)。仅当您将innodb_buffer_pool_size大小设置为1GB或更大时，此选项才生效 。您指定的总大小将分配给所有缓冲池。为了获得最佳效率，指定的组合 innodb_buffer_pool_instances 和innodb_buffer_pool_size，使得每个缓冲池实例是至少为1GB。</p>
+</li>
+</ul>
+</li>
+<li><p>LRU List</p>
+<ul>
+<li><p>缓冲区的管理策略为LRU：频繁使用的页放在前端，最少使用的页放在后端</p>
+</li>
+<li><p>默认缓冲区中的每页大小为16K</p>
+</li>
+<li><p>LRU的优化</p>
+<p>新加入的页面不是立刻放入LRU页表的首部，而是放在LRU列表的midpoint位置</p>
+<p>该位置查询指令</p>
+<p><code>show variables like &#39;innodb_old_blocks_pct&#39;\G</code></p>
+<p>指的是距离LTU列表尾端多少的百分比</p>
+<p>在 midpoint之前的为new表，之后的为old表</p>
+<p>优化的原因：</p>
+<p>因为有些操作需要表中的许多数据，比如说是索引，数据扫描（select * ）操作只是在一次操作中使用到，但并非是真正的热点操作。</p>
+</li>
+<li><p>相关参数</p>
+<ul>
+<li><p>innodb_old_blocks_pct</p>
+<p>可以看到，参数innodb_old_blocks_pct 默认值是37，表示新读取的页插入到LRU列表尾端的37%的位置（差不多3/8的位置）。在innodb存储引擎中，把midpoint之后的列表称为old列表，之前的列表称为new列表。可以简单理解为new列表中的页都是最为活跃的热点数据。</p>
+<p>innodb的37%的空间是可以让人来刷的。（意思就是内存的37%拿出来让人刷，就是冷数据区的大小）；<br>建议innodb_old_blocks_pct 调成20%（调整内存参数）：</p>
+<p><code>set global innodb_old_blocks_pct = 20;</code></p>
+<p>即，一个64G的物理内存，80%给数据库，数据库的80%给热数据区，即40.96G给了热数据区。</p>
+</li>
+</ul>
+<ul>
+<li><p>innodb_old_blocks_time</p>
+<p>这个参数用来表示 页读取到mid位置后，需要等待多久才会被加入到LRU列表的热端。<br>使LRU列表中的热点数据不被刷出：</p>
+<p><code>set global innodb_old_blocks_time=1000；</code></p>
+<p>放在冷热数据交界处，默认1000ms，过了这1s，还能存活下去，就调到热数据区了。</p>
+</li>
+</ul>
+</li>
+<li><p>查看当前LRU列表情况</p>
+<p>命令</p>
+<p><code>show engine innodb status\G</code></p>
+<ul>
+<li><p>free buffers</p>
+<p>当前free列表中页的数量</p>
+</li>
+<li><p>database pages</p>
+<p>LRU列表中的数量</p>
+<p>注意：有可能free buffers+database pages!=buffer pool size,因为有可能页会被分配给自适应哈希索引，Lock信息，Insert Buffer等页</p>
+</li>
+<li><p>pages made young</p>
+<p>LRU列表中页移动到前端的次数</p>
+</li>
+<li><p>buffer pool hit rate</p>
+<p>缓冲池的命中率 如果&lt;95%则效果不太好，正常都是&gt;95%</p>
+</li>
+<li><p>查看每个LRU列表中的每个页的具体信息</p>
+<p><code>select table_name,space,page_number,page_type from INNODB_BUFFER_PAGE_LRU where space = 1;</code></p>
+</li>
+</ul>
+</li>
+<li><p>LRU列表中的压缩页</p>
+<p>支持压缩页的功能，将原来的16K压缩为1K，2K，4K和8K</p>
+<p>对于非16K的页是通过unzip_LRU进行管理的</p>
+<p>这些压缩页的分配策略是伙伴算法</p>
+<p>查看压缩页指令</p>
+<p><code>select table_name,space,page_number,compresed_size from INNODB_BUFFER_PAGE_LRU where compresed_size != 0;</code></p>
+</li>
+<li><p>LRU表中的脏页</p>
+<ul>
+<li><p>定义</p>
+<p>当LRU表中页被修改了之后成为脏页，数据库会在checkpoint时机将其刷新回磁盘</p>
+</li>
+<li><p>脏页所在地点</p>
+<p>flush list中的页就是脏页列表</p>
+<p>脏页不仅存在于flush list中，同样也存在于LRU 列表中（因为不可能每次都将脏页存放到flush list中）</p>
+<p>flush list用来管理将脏页写回到磁盘</p>
+</li>
+<li><p>脏页相关命令</p>
+<ul>
+<li><p>查看脏页</p>
+<p><code>select table_name,space,page_number,page_type from INNODB_BUFFER_PAGE_LRU where OLDEST_MODIFICATION&gt;0;</code></p>
+<p>或者是</p>
+<p><code>show engine innodb status\G</code></p>
+<p>中的Modified db pages</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>重做日志缓冲</p>
+<ul>
+<li><p>定义</p>
+<p>首先将重做日志信息存放到这个缓冲区，然后按照一定频率将其刷新到重做日志文件</p>
+</li>
+<li><p>刷新到重做日志文件时机</p>
+<ul>
+<li>Master thread每一秒将其刷新到重做日志</li>
+<li>每个事物提交时会将重做日志刷新到重做日志</li>
+<li>当重做日志缓冲池剩余空间小于1/2时，重做日志缓冲刷新到重做日志文件</li>
+</ul>
+</li>
+<li><p>重做日志缓冲区大小</p>
+<ul>
+<li><p>只需要保证每秒产生的事务量在这个缓冲区大小之内即可</p>
+</li>
+<li><p>一般默认是8M，满足绝大部分应用</p>
+</li>
+<li><p>查看指令</p>
+<p><code>show variables like &#39;innodb_log_buffer_size&#39;\G</code></p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>额外内存池</p>
+<p>InnoDB对内存管理是内存堆的方式进行</p>
+<p>innodb_buffer_pool_size:主要针对InnoDB表性能影响最大的一个参数。功能与Key_buffer_size一样。InnoDB占用的内存，除innodb_buffer_pool_size用于存储页面缓存数据外，另外正常情况下还有大约8%的开销，主要用在每个缓存页帧的描述、adaptive hash、缓冲控制对象等数据结构，如果不是安全关闭，启动时还要恢复的话，还要另开大约12%的内存用于恢复，两者相加就有差不多21%的开销。</p>
+<p>因此在申请了很大的InnoDB缓冲池时，也应考虑相应增加这个值</p>
+</li>
+</ul>
+<h3 id="启动、恢复与关闭"><a href="#启动、恢复与关闭" class="headerlink" title="启动、恢复与关闭"></a>启动、恢复与关闭</h3><h4 id="关闭"><a href="#关闭" class="headerlink" title="关闭"></a>关闭</h4><ul>
+<li><p>对应参数</p>
+<p>innodb_fast_shutdown</p>
+</li>
+<li><p>参数选项</p>
+<ul>
+<li><p>0</p>
+<p>数据库关闭时，InnoDB需要完成所有的full purge和merge Insert buffer，并且将脏页刷新会磁盘</p>
+<p>在进行InnoDB升级时，必须将该参数调为0，在关闭数据库</p>
+</li>
+<li><p>1（默认值）</p>
+<p>不需要完成full purge和merge Insert buffer操作，但是缓冲池的数据脏页会刷新会磁盘</p>
+</li>
+<li><p>2</p>
+<p>不完成full purge和merge Insert buffer操作，也不将缓冲池中的数据脏页写回磁盘，而是将日志都写入日志文件，下次数据库启动时会进行恢复操作</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="恢复"><a href="#恢复" class="headerlink" title="恢复"></a>恢复</h4><ul>
+<li><p>对应参数</p>
+<p>innodb_force_recovery</p>
+</li>
+<li><p>参数选项</p>
+<ul>
+<li><p>0 （默认）</p>
+<p>进行所有的恢复操作</p>
+</li>
+<li><p>1</p>
+<p>忽略检查到的corrupt页</p>
+</li>
+<li><p>2</p>
+<p>阻止Master Thread线程的运行</p>
+</li>
+<li><p>3</p>
+<p>不进行事务的回滚操作</p>
+</li>
+<li><p>4</p>
+<p>不进行插入缓冲的合并操作</p>
+</li>
+<li><p>5</p>
+<p>不查看撤销日志（undo_log），InnoDB存储引擎会将未提交的事务视为已提交</p>
+</li>
+<li><p>6</p>
+<p>不进行前滚操作</p>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\BLGC\" rel="bookmark">BLGC</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\CheckPoint\" rel="bookmark">CheckPoint</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB存储引擎文件\" rel="bookmark">InnoDB存储引擎文件</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB数据页结构\" rel="bookmark">InnoDB数据页结构</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB特性\" rel="bookmark">InnoDB特性</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/MySQL/InnoDB/" title="InnoDB">http://cooperxj.github.io/2022/01/07/MySQL/InnoDB/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+              <a href="/tags/InnoDB%E6%8A%80%E6%9C%AF%E6%8E%A2%E7%A9%B6/" rel="tag"># InnoDB技术探究</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/%E6%96%87%E4%BB%B6/" rel="prev" title="文件">
+      <i class="fa fa-chevron-left"></i> 文件
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/%E8%A1%A8/" rel="next" title="表">
+      表 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#InnoDB%E4%BD%93%E7%B3%BB%E6%9E%B6%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">InnoDB体系架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%8E%E5%8F%B0%E7%BA%BF%E7%A8%8B%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.1.</span> <span class="nav-text">后台线程类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E5%AD%98"><span class="nav-number">1.2.</span> <span class="nav-text">内存</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E3%80%81%E6%81%A2%E5%A4%8D%E4%B8%8E%E5%85%B3%E9%97%AD"><span class="nav-number">2.</span> <span class="nav-text">启动、恢复与关闭</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B3%E9%97%AD"><span class="nav-number">2.1.</span> <span class="nav-text">关闭</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%81%A2%E5%A4%8D"><span class="nav-number">2.2.</span> <span class="nav-text">恢复</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

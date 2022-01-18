@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="上传过程上传可以有多种情况：单个文件上传、多个、文件夹上传，可以参考：https:&#x2F;&#x2F;docs.amazonaws.cn&#x2F;sdk-for-java&#x2F;v1&#x2F;developer-guide&#x2F;examples-s3-transfermanager.html#transfermanager-upload-directory  对上传的对象请求的元数据进行填充 如果请求中有元数据，那么使用请求的元数据 如果">
+<meta property="og:type" content="article">
+<meta property="og:title" content="aws s3 upload分析">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/Ceph/aws/aws%20s3%20upload%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="上传过程上传可以有多种情况：单个文件上传、多个、文件夹上传，可以参考：https:&#x2F;&#x2F;docs.amazonaws.cn&#x2F;sdk-for-java&#x2F;v1&#x2F;developer-guide&#x2F;examples-s3-transfermanager.html#transfermanager-upload-directory  对上传的对象请求的元数据进行填充 如果请求中有元数据，那么使用请求的元数据 如果">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210405134257.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210405134346.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210405134459.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210405134630.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210405135913.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210405140240.png">
+<meta property="article:published_time" content="2022-01-07T00:43:38.352Z">
+<meta property="article:modified_time" content="2021-08-27T14:03:45.000Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="aws">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210405134257.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/Ceph/aws/aws%20s3%20upload%E5%88%86%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>aws s3 upload分析 | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/Ceph/aws/aws%20s3%20upload%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          aws s3 upload分析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:38" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:38+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-27 22:03:45" itemprop="dateModified" datetime="2021-08-27T22:03:45+08:00">2021-08-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/aws/" itemprop="url" rel="index"><span itemprop="name">aws</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/Ceph/aws/aws%20s3%20upload%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/Ceph/aws/aws%20s3%20upload%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>11k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>10 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="上传过程"><a href="#上传过程" class="headerlink" title="上传过程"></a>上传过程</h3><h4 id="上传可以有多种情况：单个文件上传、多个、文件夹上传，可以参考："><a href="#上传可以有多种情况：单个文件上传、多个、文件夹上传，可以参考：" class="headerlink" title="上传可以有多种情况：单个文件上传、多个、文件夹上传，可以参考："></a>上传可以有多种情况：单个文件上传、多个、文件夹上传，可以参考：</h4><p><a target="_blank" rel="noopener" href="https://docs.amazonaws.cn/sdk-for-java/v1/developer-guide/examples-s3-transfermanager.html#transfermanager-upload-directory">https://docs.amazonaws.cn/sdk-for-java/v1/developer-guide/examples-s3-transfermanager.html#transfermanager-upload-directory</a></p>
+<ol>
+<li><p>对上传的对象请求的元数据进行填充</p>
+<p>如果请求中有元数据，那么使用请求的元数据</p>
+<p>如果没有则进行填充</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210405134257.png" alt="image-20210405134252350"></p>
+</li>
+<li><p>设置监听器</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210405134346.png" alt="image-20210405134344286" style="zoom:80%;" /></li>
+<li><p>提交下载任务并设置monitor</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210405134459.png" alt="image-20210405134456144"></p>
+</li>
+<li><p>判断是否可以进行分段上传，如果&lt;=16M，则不进行分段上传，否则进行分段上传</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210405134630.png" alt="image-20210405134627998"></p>
+</li>
+<li><p>对每次上传的大小和类型进行一个合适的选择，为分段传输做准备</p>
+<ul>
+<li>如果是加密传输，则需要大小和传输进行特殊的选择，比如大小方面需要进行填充，传输需要选择加密传输方式</li>
+<li>如果是一般的传输，则长度的选择伪Max（(double)contentLength / (double)MAXIMUM_UPLOAD_PARTS，configuration.getMinimumUploadPartSize()），因为每次分段传输有一个限制就是分的段数不能超过10000（默认，可以修改）</li>
+</ul>
+</li>
+<li><p>对是否可以并行传输做一个判断，如果可行则进行并行传输，否则串行传输</p>
+<p><font color=red>此处需要注意一下，加密的数据不能使用并行传输，因为前后chunk之间有联系</font></p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210405135913.png" alt="image-20210405135910699"></p>
+</li>
+<li><p>并行：</p>
+<ol>
+<li><p>将未上传的任务提交到线程池中，每个任务调用s3提供的底层方法——-PartETag partETag = s3.uploadPart(request).getPartETag();</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210405140240.png" alt="image-20210405140239325"></p>
+</li>
+<li><p>该方法每一次上传都会去找已经上传完的part，也就是identifyExistingPartsForResume()</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//该方法查看  https://docs.aws.amazon.com/cli/latest/reference/s3api/list-parts.html</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> Map&lt;Integer, PartSummary&gt; <span class="title">identifyExistingPartsForResume</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">            String uploadId)</span> </span>&#123;</span><br><span class="line">  			<span class="comment">//使用map进行记录</span></span><br><span class="line">        Map&lt;Integer, PartSummary&gt; partNumbers = <span class="keyword">new</span> HashMap&lt;Integer, PartSummary&gt;();</span><br><span class="line">        <span class="keyword">if</span> (uploadId == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> partNumbers;</span><br><span class="line">        &#125;</span><br><span class="line">  </span><br><span class="line">  			<span class="comment">//partNumber为0是因为防止一次性的的返回的part不够，每一次最多返回1000个part</span></span><br><span class="line">        <span class="keyword">int</span> partNumber = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            ListPartsRequest listPartsRequest = <span class="keyword">new</span> ListPartsRequest(</span><br><span class="line">                    origReq.getBucketName(),</span><br><span class="line">                    origReq.getKey(), uploadId)</span><br><span class="line">                    .withPartNumberMarker(partNumber)</span><br><span class="line">                    .withRequesterPays(origReq.isRequesterPays())</span><br><span class="line">                    .withRequestCredentialsProvider(origReq.getRequestCredentialsProvider());</span><br><span class="line"></span><br><span class="line">            PartListing parts = s3.listParts(listPartsRequest);</span><br><span class="line">            <span class="keyword">for</span> (PartSummary partSummary : parts.getParts()) &#123;</span><br><span class="line">                partNumbers.put(partSummary.getPartNumber(), partSummary);</span><br><span class="line">            &#125;</span><br><span class="line">          <span class="comment">//该part是否发送完毕？</span></span><br><span class="line">            <span class="keyword">if</span> (!parts.isTruncated()) &#123;</span><br><span class="line">                <span class="keyword">return</span> partNumbers;</span><br><span class="line">            &#125;</span><br><span class="line">          <span class="comment">//如果该part没有发送完毕，也就是partNumber&gt;1000,那么就会再次进行请求</span></span><br><span class="line">            partNumber = parts.getNextPartNumberMarker();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+</li>
+<li><p>串行</p>
+<p>串行是将每个chunk一次进行上传</p>
+</li>
+<li><p>关于上传校验</p>
+<p>系统中设置如果设置了变量<code>DISABLE_GET_OBJECT_MD5_VALIDATION_PROPERTY</code>，可以<code>System.getProperty(DISABLE_GET_OBJECT_MD5_VALIDATION_PROPERTY)</code>来查看是否已经设置了，如果已经设置了，那么s3会默认禁用上传校验功能。</p>
+<p>默认是会启用校验功能的。但是只要你的<code>DISABLE_GET_OBJECT_MD5_VALIDATION_PROPERTY</code>设置了任何的值，那么就会认为禁用了上传校验功能。</p>
+<p>那么它是如何校验的呢？</p>
+<p>如果提供了MD5 digist的值，那么会和返回的Etag进行比较，如果一致则认为合格，否则会认为该上传块存在问题。</p>
+</li>
+</ol>
+<h3 id="代码演示"><a href="#代码演示" class="headerlink" title="代码演示"></a>代码演示</h3><ol>
+<li>上传</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> AWSCredentials credentials = <span class="keyword">new</span> BasicAWSCredentials(<span class="string">&quot;U6DVKQNYCPHCIIP0XZFJ&quot;</span>, <span class="string">&quot;A32aqcbXEECBtfxL2UqqBoMs2zyJJBMnRpG0gj7i&quot;</span>);</span><br><span class="line"><span class="keyword">static</span> AmazonS3 s3 = AmazonS3ClientBuilder.standard()</span><br><span class="line">        .withCredentials(<span class="keyword">new</span> AWSStaticCredentialsProvider(credentials))</span><br><span class="line">        .withEndpointConfiguration(<span class="keyword">new</span> AwsClientBuilder.EndpointConfiguration(<span class="string">&quot;http://172.23.27.119:7480&quot;</span>,<span class="string">&quot;&quot;</span>))</span><br><span class="line">        .withPathStyleAccessEnabled(<span class="keyword">true</span>)</span><br><span class="line">        .build();</span><br><span class="line"><span class="keyword">static</span> TransferManager tm = TransferManagerBuilder.standard().withS3Client(s3).build();</span><br><span class="line"></span><br><span class="line"> 				File file = <span class="keyword">new</span> File(<span class="string">&quot;/Users/cooper/Desktop/upload/transporter.zip&quot;</span>);</span><br><span class="line"> 				PutObjectRequest request = <span class="keyword">new</span> PutObjectRequest(<span class="string">&quot;Aaa&quot;</span>, <span class="string">&quot;upload.zip&quot;</span>, file)</span><br><span class="line">        Upload upload = tm.upload(request);</span><br><span class="line">				Thread.sleep(<span class="number">1000</span>*<span class="number">5</span>);</span><br><span class="line"></span><br><span class="line">				PauseResult&lt;PersistableUpload&gt; persistableUploadPauseResult = upload.tryPause(<span class="keyword">true</span>);</span><br><span class="line">				<span class="comment">//获取暂停状态，必须为success才是成功暂停上传，否则有问题，此处可以将暂停的信息进行持久化，防止程序崩溃时重新进行上传</span></span><br><span class="line">        System.out.println(persistableUploadPauseResult.getPauseStatus().toString());</span><br><span class="line">        PersistableUpload infoToResume = persistableUploadPauseResult.getInfoToResume();</span><br><span class="line">        System.out.println(infoToResume.toString());</span><br><span class="line">				</span><br><span class="line">        tm.resumeUpload(infoToResume);</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><p>进度显示</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">XferMgrProgress</span> </span>&#123;</span><br><span class="line">    <span class="comment">// waits for the transfer to complete, catching any exceptions that occur.</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">waitForCompletion</span><span class="params">(Transfer xfer)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// snippet-start:[s3.java1.s3_xfer_mgr_progress.wait_for_transfer]</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            xfer.waitForCompletion();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (AmazonServiceException e) &#123;</span><br><span class="line">            System.err.println(<span class="string">&quot;Amazon service error: &quot;</span> + e.getMessage());</span><br><span class="line">            System.exit(<span class="number">1</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (AmazonClientException e) &#123;</span><br><span class="line">            System.err.println(<span class="string">&quot;Amazon client error: &quot;</span> + e.getMessage());</span><br><span class="line">            System.exit(<span class="number">1</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            System.err.println(<span class="string">&quot;Transfer interrupted: &quot;</span> + e.getMessage());</span><br><span class="line">            System.exit(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// snippet-end:[s3.java1.s3_xfer_mgr_progress.wait_for_transfer]</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Prints progress while waiting for the transfer to finish.</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">showTransferProgress</span><span class="params">(Transfer xfer)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// snippet-start:[s3.java1.s3_xfer_mgr_progress.poll]</span></span><br><span class="line">        <span class="comment">// print the transfer&#x27;s human-readable description</span></span><br><span class="line">        System.out.println(xfer.getDescription());</span><br><span class="line">        <span class="comment">// print an empty progress bar...</span></span><br><span class="line">        printProgressBar(<span class="number">0.0</span>);</span><br><span class="line">        <span class="comment">// update the progress bar while the xfer is ongoing.</span></span><br><span class="line">        <span class="keyword">do</span> &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Thread.sleep(<span class="number">100</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// Note: so_far and total aren&#x27;t used, they&#x27;re just for</span></span><br><span class="line">            <span class="comment">// documentation purposes.</span></span><br><span class="line">            TransferProgress progress = xfer.getProgress();</span><br><span class="line">            <span class="keyword">long</span> so_far = progress.getBytesTransferred();</span><br><span class="line">            log.info(<span class="string">&quot;so for  &quot;</span>+so_far);</span><br><span class="line">            <span class="keyword">long</span> total = progress.getTotalBytesToTransfer();</span><br><span class="line">            <span class="keyword">double</span> pct = progress.getPercentTransferred();</span><br><span class="line">            eraseProgressBar();</span><br><span class="line">            printProgressBar(pct);</span><br><span class="line">        &#125; <span class="keyword">while</span> (xfer.isDone() == <span class="keyword">false</span>);</span><br><span class="line">        <span class="comment">// print the final state of the transfer.</span></span><br><span class="line">        TransferState xfer_state = xfer.getState();</span><br><span class="line">        log.info(<span class="string">&quot;: &quot;</span> + xfer_state);</span><br><span class="line">        <span class="comment">// snippet-end:[s3.java1.s3_xfer_mgr_progress.poll]</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Prints progress of a multiple file upload while waiting for it to finish.</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">showMultiUploadProgress</span><span class="params">(MultipleFileUpload multi_upload)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// print the upload&#x27;s human-readable description</span></span><br><span class="line">        System.out.println(multi_upload.getDescription());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// snippet-start:[s3.java1.s3_xfer_mgr_progress.substranferes]</span></span><br><span class="line">        Collection&lt;? extends Upload&gt; sub_xfers = <span class="keyword">new</span> ArrayList&lt;Upload&gt;();</span><br><span class="line">        sub_xfers = multi_upload.getSubTransfers();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">do</span> &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;\nSubtransfer progress:\n&quot;</span>);</span><br><span class="line">            <span class="keyword">for</span> (Upload u : sub_xfers) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;  &quot;</span> + u.getDescription());</span><br><span class="line">                <span class="keyword">if</span> (u.isDone()) &#123;</span><br><span class="line">                    TransferState xfer_state = u.getState();</span><br><span class="line">                    System.out.println(<span class="string">&quot;  &quot;</span> + xfer_state);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    TransferProgress progress = u.getProgress();</span><br><span class="line">                    <span class="keyword">double</span> pct = progress.getPercentTransferred();</span><br><span class="line">                    printProgressBar(pct);</span><br><span class="line">                    System.out.println();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// wait a bit before the next update.</span></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Thread.sleep(<span class="number">200</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">while</span> (multi_upload.isDone() == <span class="keyword">false</span>);</span><br><span class="line">        <span class="comment">// print the final state of the transfer.</span></span><br><span class="line">        TransferState xfer_state = multi_upload.getState();</span><br><span class="line">        System.out.println(<span class="string">&quot;\nMultipleFileUpload &quot;</span> + xfer_state);</span><br><span class="line">        <span class="comment">// snippet-end:[s3.java1.s3_xfer_mgr_progress.substranferes]</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// prints a simple text progressbar: [#####     ]</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">printProgressBar</span><span class="params">(<span class="keyword">double</span> pct)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// if bar_size changes, then change erase_bar (in eraseProgressBar) to</span></span><br><span class="line">        <span class="comment">// match.</span></span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">int</span> bar_size = <span class="number">40</span>;</span><br><span class="line">        <span class="keyword">final</span> String empty_bar = <span class="string">&quot;                                        &quot;</span>;</span><br><span class="line">        <span class="keyword">final</span> String filled_bar = <span class="string">&quot;########################################&quot;</span>;</span><br><span class="line">        <span class="keyword">int</span> amt_full = (<span class="keyword">int</span>) (bar_size * (pct / <span class="number">100.0</span>));</span><br><span class="line">        System.out.format(<span class="string">&quot;  [%s%s]\n&quot;</span>, filled_bar.substring(<span class="number">0</span>, amt_full),</span><br><span class="line">                empty_bar.substring(<span class="number">0</span>, bar_size - amt_full));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// erases the progress bar.</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">eraseProgressBar</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// erase_bar is bar_size (from printProgressBar) + 4 chars.</span></span><br><span class="line">        <span class="keyword">final</span> String erase_bar = <span class="string">&quot;\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b&quot;</span>;</span><br><span class="line">        System.out.format(erase_bar);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">uploadFileWithListener</span><span class="params">(String file_path,</span></span></span><br><span class="line"><span class="params"><span class="function">                                              String bucket_name, String key_prefix, <span class="keyword">boolean</span> pause)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;file: &quot;</span> + file_path +</span><br><span class="line">                (pause ? <span class="string">&quot; (pause)&quot;</span> : <span class="string">&quot;&quot;</span>));</span><br><span class="line"></span><br><span class="line">        String key_name = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">if</span> (key_prefix != <span class="keyword">null</span>) &#123;</span><br><span class="line">            key_name = key_prefix + <span class="string">&#x27;/&#x27;</span> + file_path;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            key_name = file_path;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// snippet-start:[s3.java1.s3_xfer_mgr_progress.progress_listener]</span></span><br><span class="line">        File f = <span class="keyword">new</span> File(file_path);</span><br><span class="line">        TransferManager xfer_mgr = TransferManagerBuilder.standard().build();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Upload u = xfer_mgr.upload(bucket_name, key_name, f);</span><br><span class="line">            <span class="comment">// print an empty progress bar...</span></span><br><span class="line">            printProgressBar(<span class="number">0.0</span>);</span><br><span class="line">            u.addProgressListener(<span class="keyword">new</span> ProgressListener() &#123;</span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">progressChanged</span><span class="params">(ProgressEvent e)</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">double</span> pct = e.getBytesTransferred() * <span class="number">100.0</span> / e.getBytes();</span><br><span class="line">                    eraseProgressBar();</span><br><span class="line">                    printProgressBar(pct);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            <span class="comment">// block with Transfer.waitForCompletion()</span></span><br><span class="line">            XferMgrProgress.waitForCompletion(u);</span><br><span class="line">            <span class="comment">// print the final state of the transfer.</span></span><br><span class="line">            TransferState xfer_state = u.getState();</span><br><span class="line">            System.out.println(<span class="string">&quot;: &quot;</span> + xfer_state);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (AmazonServiceException e) &#123;</span><br><span class="line">            System.err.println(e.getErrorMessage());</span><br><span class="line">            System.exit(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        xfer_mgr.shutdownNow();</span><br><span class="line">        <span class="comment">// snippet-end:[s3.java1.s3_xfer_mgr_progress.progress_listener]</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">uploadDirWithSubprogress</span><span class="params">(String dir_path,</span></span></span><br><span class="line"><span class="params"><span class="function">                                                String bucket_name, String key_prefix, <span class="keyword">boolean</span> recursive,</span></span></span><br><span class="line"><span class="params"><span class="function">                                                <span class="keyword">boolean</span> pause)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;directory: &quot;</span> + dir_path + (recursive ?</span><br><span class="line">                <span class="string">&quot; (recursive)&quot;</span> : <span class="string">&quot;&quot;</span>) + (pause ? <span class="string">&quot; (pause)&quot;</span> : <span class="string">&quot;&quot;</span>));</span><br><span class="line"></span><br><span class="line">        TransferManager xfer_mgr = <span class="keyword">new</span> TransferManager();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            MultipleFileUpload multi_upload = xfer_mgr.uploadDirectory(</span><br><span class="line">                    bucket_name, key_prefix, <span class="keyword">new</span> File(dir_path), recursive);</span><br><span class="line">            <span class="comment">// loop with Transfer.isDone()</span></span><br><span class="line">            XferMgrProgress.showMultiUploadProgress(multi_upload);</span><br><span class="line">            <span class="comment">// or block with Transfer.waitForCompletion()</span></span><br><span class="line">            XferMgrProgress.waitForCompletion(multi_upload);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (AmazonServiceException e) &#123;</span><br><span class="line">            System.err.println(e.getErrorMessage());</span><br><span class="line">            System.exit(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        xfer_mgr.shutdownNow();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">final</span> String USAGE = <span class="string">&quot;\n&quot;</span> +</span><br><span class="line">                <span class="string">&quot;Usage:\n&quot;</span> +</span><br><span class="line">                <span class="string">&quot;    XferMgrProgress [--recursive] [--pause] &lt;s3_path&gt; &lt;local_path&gt;\n\n&quot;</span> +</span><br><span class="line">                <span class="string">&quot;Where:\n&quot;</span> +</span><br><span class="line">                <span class="string">&quot;    --recursive - Only applied if local_path is a directory.\n&quot;</span> +</span><br><span class="line">                <span class="string">&quot;                  Copies the contents of the directory recursively.\n\n&quot;</span> +</span><br><span class="line">                <span class="string">&quot;    --pause     - Attempt to pause+resume the upload. This may not work for\n&quot;</span> +</span><br><span class="line">                <span class="string">&quot;                  small files.\n\n&quot;</span> +</span><br><span class="line">                <span class="string">&quot;    s3_path     - The S3 destination (bucket/path) to upload the file(s) to.\n\n&quot;</span> +</span><br><span class="line">                <span class="string">&quot;    local_path  - The path to a local file or directory path to upload to S3.\n\n&quot;</span> +</span><br><span class="line">                <span class="string">&quot;Examples:\n&quot;</span> +</span><br><span class="line">                <span class="string">&quot;    XferMgrProgress public_photos/cat_happy.png my_photos/funny_cat.png\n&quot;</span> +</span><br><span class="line">                <span class="string">&quot;    XferMgrProgress public_photos my_photos/cat_sad.png\n&quot;</span> +</span><br><span class="line">                <span class="string">&quot;    XferMgrProgress public_photos my_photos\n\n&quot;</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (args.length &lt; <span class="number">2</span>) &#123;</span><br><span class="line">            System.out.println(USAGE);</span><br><span class="line">            System.exit(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span> cur_arg = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">boolean</span> recursive = <span class="keyword">false</span>;</span><br><span class="line">        <span class="keyword">boolean</span> pause = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// first, parse any switches</span></span><br><span class="line">        <span class="keyword">while</span> (args[cur_arg].startsWith(<span class="string">&quot;--&quot;</span>)) &#123;</span><br><span class="line">            <span class="keyword">if</span> (args[cur_arg].equals(<span class="string">&quot;--recursive&quot;</span>)) &#123;</span><br><span class="line">                recursive = <span class="keyword">true</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (args[cur_arg].equals(<span class="string">&quot;--pause&quot;</span>)) &#123;</span><br><span class="line">                pause = <span class="keyword">true</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;Unknown argument: &quot;</span> + args[cur_arg]);</span><br><span class="line">                System.out.println(USAGE);</span><br><span class="line">                System.exit(<span class="number">1</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            cur_arg += <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// only the first &#x27;/&#x27; character is of interest to get the bucket name.</span></span><br><span class="line">        <span class="comment">// Subsequent ones are part of the key name.</span></span><br><span class="line">        String[] s3_path = args[cur_arg].split(<span class="string">&quot;/&quot;</span>, <span class="number">2</span>);</span><br><span class="line">        cur_arg += <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        String bucket_name = s3_path[<span class="number">0</span>];</span><br><span class="line">        String key_prefix = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">if</span> (s3_path.length &gt; <span class="number">1</span>) &#123;</span><br><span class="line">            key_prefix = s3_path[<span class="number">1</span>];</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        String local_path = args[cur_arg];</span><br><span class="line"></span><br><span class="line">        <span class="comment">// check to see if local path is a directory or file...</span></span><br><span class="line">        File f = <span class="keyword">new</span> File(args[cur_arg]);</span><br><span class="line">        <span class="keyword">if</span> (f.exists() == <span class="keyword">false</span>) &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;Input path doesn&#x27;t exist: &quot;</span> + args[cur_arg]);</span><br><span class="line">            System.exit(<span class="number">1</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (f.isDirectory()) &#123;</span><br><span class="line">            uploadDirWithSubprogress(local_path, bucket_name, key_prefix,</span><br><span class="line">                    recursive, pause);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            uploadFileWithListener(local_path, bucket_name, key_prefix, pause);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Ceph\aws\S3开发\" rel="bookmark">aws s3 开发</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Ceph\aws\aws s3 download分析\" rel="bookmark">aws s3 download分析</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/Ceph/aws/aws%20s3%20upload%E5%88%86%E6%9E%90/" title="aws s3 upload分析">http://cooperxj.github.io/2022/01/07/Ceph/aws/aws s3 upload分析/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/aws/" rel="tag"># aws</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/Ceph/aws/aws%20s3%20download%E5%88%86%E6%9E%90/" rel="prev" title="aws s3 download分析">
+      <i class="fa fa-chevron-left"></i> aws s3 download分析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%89%91%E6%8C%87Offer/%E6%80%BB%E7%BB%93/" rel="next" title="">
+       <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8A%E4%BC%A0%E8%BF%87%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">上传过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8A%E4%BC%A0%E5%8F%AF%E4%BB%A5%E6%9C%89%E5%A4%9A%E7%A7%8D%E6%83%85%E5%86%B5%EF%BC%9A%E5%8D%95%E4%B8%AA%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E3%80%81%E5%A4%9A%E4%B8%AA%E3%80%81%E6%96%87%E4%BB%B6%E5%A4%B9%E4%B8%8A%E4%BC%A0%EF%BC%8C%E5%8F%AF%E4%BB%A5%E5%8F%82%E8%80%83%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">上传可以有多种情况：单个文件上传、多个、文件夹上传，可以参考：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E6%BC%94%E7%A4%BA"><span class="nav-number">2.</span> <span class="nav-text">代码演示</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

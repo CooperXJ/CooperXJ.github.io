@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="索引组织表 定义 表根据主键顺序组织存放  主键的选择与创建    InnoDB逻辑存储结构 表空间  共享表空间 回滚信息、插入缓冲索引页、系统事务信息、二次写缓存等  单独表空间 （如果不开启则所有的数据都会存放到共享表空间中，默认是开启的） 对应的参数为innodb_file_per_table 数据、索引和插入缓冲Bitmap页    组成  段 表空间是由段组成的 数据段为B+树叶子节点">
+<meta property="og:type" content="article">
+<meta property="og:title" content="表">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/MySQL/%E8%A1%A8/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="索引组织表 定义 表根据主键顺序组织存放  主键的选择与创建    InnoDB逻辑存储结构 表空间  共享表空间 回滚信息、插入缓冲索引页、系统事务信息、二次写缓存等  单独表空间 （如果不开启则所有的数据都会存放到共享表空间中，默认是开启的） 对应的参数为innodb_file_per_table 数据、索引和插入缓冲Bitmap页    组成  段 表空间是由段组成的 数据段为B+树叶子节点">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210729105959.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210730110653.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210730112024.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210803142442.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210803142542.png">
+<meta property="article:published_time" content="2022-01-07T00:43:29.575Z">
+<meta property="article:modified_time" content="2021-08-27T14:37:51.000Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="InnoDB技术探究">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210729105959.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/MySQL/%E8%A1%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>表 | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/MySQL/%E8%A1%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          表
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:29" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:29+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-27 22:37:51" itemprop="dateModified" datetime="2021-08-27T22:37:51+08:00">2021-08-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/MySQL/%E8%A1%A8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/MySQL/%E8%A1%A8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="索引组织表"><a href="#索引组织表" class="headerlink" title="索引组织表"></a>索引组织表</h4><ul>
+<li><p>定义</p>
+<p>表根据主键顺序组织存放</p>
+</li>
+<li><p>主键的选择与创建</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210729105959.png" alt="image-20210729105957948"></p>
+</li>
+</ul>
+<h4 id="InnoDB逻辑存储结构"><a href="#InnoDB逻辑存储结构" class="headerlink" title="InnoDB逻辑存储结构"></a>InnoDB逻辑存储结构</h4><ul>
+<li><p>表空间</p>
+<ul>
+<li><p>共享表空间</p>
+<p>回滚信息、插入缓冲索引页、系统事务信息、二次写缓存等</p>
+</li>
+<li><p>单独表空间 （如果不开启则所有的数据都会存放到共享表空间中，默认是开启的）</p>
+<p>对应的参数为innodb_file_per_table</p>
+<p>数据、索引和插入缓冲Bitmap页</p>
+</li>
+</ul>
+</li>
+<li><p>组成</p>
+<ul>
+<li>段<ul>
+<li>表空间是由段组成的</li>
+<li>数据段为B+树叶子节点</li>
+<li>索引段为B+树非叶子节点</li>
+<li>段由区组成</li>
+</ul>
+</li>
+<li>区<ul>
+<li>区是由连续页组成的空间，区的大小为1M</li>
+<li>为了保证连续性，InnoDB一次从磁盘中申请4~5个区</li>
+<li>默认情况下一个区（1M）有64页（16K）</li>
+</ul>
+</li>
+<li>页<ul>
+<li>页的大小默认为16K，可以通过参数innodb_page_size修改</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>单独表空间申请空间流程</p>
+<ul>
+<li>创建的表默认为96K</li>
+<li><font color=red>每个段</font>开始时使用32个页大小的碎片页存放数据，比如数据段使用了32个碎片页了，那么下一次申请就会直接申请一个区，索引段使用了32个碎片页了，那么下一次申请就会是一个区</li>
+<li>碎片页使用完之后才是64个连续页的申请，也就是采用区的方式进行空间申请</li>
+</ul>
+<p>好处:节省空间</p>
+</li>
+<li><p>行</p>
+<p>InnoDB每页最多存放16K/2 - 200行记录</p>
+<p>/2是因为每个记录至少包含2个字节</p>
+<p>200是为系统预留的</p>
+</li>
+</ul>
+<h4 id="InnoDB行记录格式"><a href="#InnoDB行记录格式" class="headerlink" title="InnoDB行记录格式"></a>InnoDB行记录格式</h4><ul>
+<li><p>查看表的格式</p>
+<p><code>show table status like &#39;&#123;表名&#125;&#39;</code></p>
+</li>
+<li><p>行记录采用单链表的方式组成页</p>
+</li>
+</ul>
+<h5 id="Compact"><a href="#Compact" class="headerlink" title="Compact"></a>Compact</h5><ul>
+<li><p>格式</p>
+<table>
+<thead>
+<tr>
+<th>变长字段长度列表</th>
+<th>NULL标志位</th>
+<th>记录头信息</th>
+<th>列1数据</th>
+<th>列2数据</th>
+<th>….</th>
+</tr>
+</thead>
+</table>
+<ul>
+<li><p>变长字段长度列表 （<font color=red>注意是变长字段，像char这种定长字段是不在这里显示的</font>）</p>
+<p>按照列的顺序逆序放置，长度为</p>
+<ul>
+<li>若列长度&lt;255 使用1字节表示</li>
+<li>若长度&gt;255 使用2字节表示 （暗示varchar最长不能超过2^16-1）</li>
+</ul>
+</li>
+<li><p>NULL标志位 （1字节）</p>
+<p>该位表示该行数据中是否含有NULL值，有则使用1表示</p>
+<p>例如该标志位的值是06，转为二进制表示为0000 0110，则代表第三列和第二列为NULL（为1）</p>
+<p>NULL标志位：NULL标志位可以看作是NULL值列表，在表中的某些列中是可能存储NULL值的，如果把这些NULL值放到记录的真实数据中存储是很占用空间的，所以MySQL中Compact行格式会把这些列值为NULL的列统一进行管理并存储到NULL值列表中和变长字段长度列表一样它也是<strong>逆序存储</strong>的NULL值列表的存储不占用真实存储空间只占用NULL值列表，如果<strong>当前列为NULL值则用二进位1表示，当前列不为NULL值则用二进制位0表示，</strong>如果当前行中所有列都为NOT NULL则不会分配NULL列表的存储空间，在实际开发中创建表时都会设置为NOT NULL因为这样可以节省空间、提高整体的效率</p>
+</li>
+<li><p>记录头信息 （5字节）</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210730110653.png" alt="image-20210730110651436"></p>
+</li>
+<li><p><font color=red>对于varchar与char中的NULL值都不会占用空间</font></p>
+</li>
+<li><p>当char字段未能完全占用其长度空间时，会用0x20进行填充</p>
+</li>
+<li><p>每行存在两个隐藏列</p>
+<ul>
+<li>transactionID</li>
+<li>Roll Pointer</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="Redundant"><a href="#Redundant" class="headerlink" title="Redundant"></a>Redundant</h5><ul>
+<li><p>格式</p>
+<table>
+<thead>
+<tr>
+<th>字段长度偏移列表</th>
+<th>记录头信息</th>
+<th>列1数据</th>
+<th>列2数据</th>
+<th>….</th>
+</tr>
+</thead>
+</table>
+</li>
+<li><p>字段长度偏移列表</p>
+<p>按照列的顺序逆序放置的，其中有三个隐藏列</p>
+</li>
+<li><p>记录头信息 （48位）</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210730112024.png" alt="image-20210730112019701"></p>
+<ul>
+<li><p>n_fields</p>
+<p>表示当前列中的数量，一共有10位，也就代表一行最多有1023列</p>
+</li>
+<li><p><font color=red>对于varchar中的NULL值不会占用空间，对于char中的NULL值会占用空间</font></p>
+</li>
+<li><p>每行存在三个隐藏列</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="行溢出数据"><a href="#行溢出数据" class="headerlink" title="行溢出数据"></a>行溢出数据</h4><ul>
+<li><p>定义</p>
+<p>InnoDB存储引擎会将一些记录中的数据存储在真正的页面之外</p>
+<p>这其中包括了BLOB、LOB甚至varchar也有可能</p>
+</li>
+<li><p>varchar的最长存储长度为65535（单位为字节），但是实际建表的时候最多只能达到65532，因为还有一些别的开销</p>
+<p>除此之外65535指的是所有列中varchar类型的长度总和</p>
+</li>
+<li><p>如果一个页面无法存下两条行记录，那么InnoDB引擎会自动将行数据存放到溢出页中，经过测试varchar类型存放到溢出页的阈值为0898，也就是当长度为8098的时候，一个页可以存下两条行记录，但是一旦超过该数值，则会存放到BLOB页上</p>
+</li>
+<li><p>不同行记录格式对于行溢出数据的影响</p>
+<ul>
+<li><p>redundant或compact</p>
+<p><strong>如果blob列值长度</strong> <strong>&lt;= 768 bytes，不会发生行溢出(page overflow)，内容都在数据页(B-tree Node)；如果列值长度** **&gt; 768字节，那么前768字节依然在数据页，而剩余的则放在溢出页(off-page)，如下图：</strong></p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210803142442.png" alt="3629077771-5c244c8393a92_articlex.png"></p>
+</li>
+<li><p>compressed或dynamic</p>
+<p><strong>对blob采用完全行溢出，即聚集索引记录（数据页）只保留20字节的指针，指向真实存放它的溢出段地址：</strong></p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210803142542.png" alt="3507325740-5c244c83a06bf_articlex.png"></p>
+<p>其中compressed行记录格式可以将存储在其中的行数据以zlib算法进行压缩</p>
+</li>
+</ul>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/DataArt/p/10223567.html">参考</a></p>
+</li>
+</ul>
+<h4 id="char的行结构存储"><a href="#char的行结构存储" class="headerlink" title="char的行结构存储"></a>char的行结构存储</h4><ul>
+<li>对于多字节编码（比如GBK、UTF-8）的char数据类型的存储，InnoDB在内部会将其视为变长字符类型，但是对于未能占满长度的字符还是填充0x20</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\BLGC\" rel="bookmark">BLGC</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\CheckPoint\" rel="bookmark">CheckPoint</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB\" rel="bookmark">InnoDB</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB存储引擎文件\" rel="bookmark">InnoDB存储引擎文件</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB数据页结构\" rel="bookmark">InnoDB数据页结构</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/MySQL/%E8%A1%A8/" title="表">http://cooperxj.github.io/2022/01/07/MySQL/表/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+              <a href="/tags/InnoDB%E6%8A%80%E6%9C%AF%E6%8E%A2%E7%A9%B6/" rel="tag"># InnoDB技术探究</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/InnoDB/" rel="prev" title="InnoDB">
+      <i class="fa fa-chevron-left"></i> InnoDB
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/MySQL%E5%AE%89%E8%A3%85/" rel="next" title="MySQL安装">
+      MySQL安装 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E8%A1%A8"><span class="nav-number">1.</span> <span class="nav-text">索引组织表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#InnoDB%E9%80%BB%E8%BE%91%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">InnoDB逻辑存储结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#InnoDB%E8%A1%8C%E8%AE%B0%E5%BD%95%E6%A0%BC%E5%BC%8F"><span class="nav-number">3.</span> <span class="nav-text">InnoDB行记录格式</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Compact"><span class="nav-number">3.1.</span> <span class="nav-text">Compact</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Redundant"><span class="nav-number">3.2.</span> <span class="nav-text">Redundant</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A1%8C%E6%BA%A2%E5%87%BA%E6%95%B0%E6%8D%AE"><span class="nav-number">4.</span> <span class="nav-text">行溢出数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#char%E7%9A%84%E8%A1%8C%E7%BB%93%E6%9E%84%E5%AD%98%E5%82%A8"><span class="nav-number">5.</span> <span class="nav-text">char的行结构存储</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="安装环境 主节点免密登录从节点  安装方式 MiniKube 相当于是一个模拟器，单机环境  二进制安装，将编译好的二进制文件进行安装，需要设置参数，安装难度较大  Kubeadm  自动化安装工具，以镜像的方式进行部署，镜像在谷歌仓库，容易失败   以Kubeadm为例安装Container runtimes该组件是运行容器使用的，除了docker之外有多种选择  设置镜像源 设置docker-">
+<meta property="og:type" content="article">
+<meta property="og:title" content="K8S安装">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/K8S/k8s%E5%AE%89%E8%A3%85/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="安装环境 主节点免密登录从节点  安装方式 MiniKube 相当于是一个模拟器，单机环境  二进制安装，将编译好的二进制文件进行安装，需要设置参数，安装难度较大  Kubeadm  自动化安装工具，以镜像的方式进行部署，镜像在谷歌仓库，容易失败   以Kubeadm为例安装Container runtimes该组件是运行容器使用的，除了docker之外有多种选择  设置镜像源 设置docker-">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122210000.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122204655.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122215157.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122230411.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122230227.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122231040.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122231012.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210707113643.png">
+<meta property="article:published_time" content="2022-01-07T00:43:29.376Z">
+<meta property="article:modified_time" content="2022-01-17T09:42:24.339Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="K8S">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122210000.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/K8S/k8s%E5%AE%89%E8%A3%85/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>K8S安装 | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/K8S/k8s%E5%AE%89%E8%A3%85/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          K8S安装
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:29" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:29+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-01-17 17:42:24" itemprop="dateModified" datetime="2022-01-17T17:42:24+08:00">2022-01-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/K8S/" itemprop="url" rel="index"><span itemprop="name">K8S</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/K8S/k8s%E5%AE%89%E8%A3%85/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/K8S/k8s%E5%AE%89%E8%A3%85/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>10k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>9 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="安装环境"><a href="#安装环境" class="headerlink" title="安装环境"></a>安装环境</h4><ol>
+<li>主节点免密登录从节点</li>
+</ol>
+<h4 id="安装方式"><a href="#安装方式" class="headerlink" title="安装方式"></a>安装方式</h4><ol>
+<li><p>MiniKube</p>
+<p>相当于是一个模拟器，单机环境</p>
+</li>
+<li><p>二进制安装，将编译好的二进制文件进行安装，需要设置参数，安装难度较大</p>
+</li>
+<li><p>Kubeadm </p>
+<p>自动化安装工具，以镜像的方式进行部署，镜像在谷歌仓库，容易失败</p>
+</li>
+</ol>
+<h4 id="以Kubeadm为例"><a href="#以Kubeadm为例" class="headerlink" title="以Kubeadm为例"></a>以Kubeadm为例</h4><h5 id="安装Container-runtimes"><a href="#安装Container-runtimes" class="headerlink" title="安装Container runtimes"></a>安装Container runtimes</h5><p>该组件是运行容器使用的，除了docker之外有多种选择</p>
+<ol>
+<li><p>设置镜像源</p>
+<p>设置docker-ce源 <a target="_blank" rel="noopener" href="https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo">阿里云镜像源</a></p>
+<p>在/etc/yum.repos.d目录下</p>
+<p><code>curl -o docker -ce.repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo</code></p>
+<p>下载下来之后将其拷贝到另外两台节点上面去</p>
+<p>(有必要的话基础的源也需要指向国内，就是使用镜像的源，比如centos的源)</p>
+</li>
+<li><p>安装docker（每个机器上面都要安装）</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo yum update -y &amp;&amp; sudo yum install -y \</span><br><span class="line">  containerd.io-1.2.13 \</span><br><span class="line">  docker-ce-19.03.11 \</span><br><span class="line">  docker-ce-cli-19.03.11</span><br></pre></td></tr></table></figure>
+
+<p>重新docker服务并设置开机生效</p>
+<p><code>systemctl restart docker &amp;&amp; systemctl enable docker</code></p>
+<p>查看docker服务启动状况</p>
+<p><code>systemctl status docker</code></p>
+<p>查看引擎详情(看cgroup driver是否是systemd，不是的需要进行修改)</p>
+<p><code>docker info</code></p>
+<p>生成docker配置文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">cat &lt;&lt;EOF | sudo tee /etc/docker/daemon.json</span><br><span class="line">&#123;</span><br><span class="line">  &quot;exec-opts&quot;: [&quot;native.cgroupdriver=systemd&quot;],</span><br><span class="line">  &quot;log-driver&quot;: &quot;json-file&quot;,</span><br><span class="line">  &quot;log-opts&quot;: &#123;</span><br><span class="line">    &quot;max-size&quot;: &quot;100m&quot;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;storage-driver&quot;: &quot;overlay2&quot;,</span><br><span class="line">  &quot;storage-opts&quot;: [</span><br><span class="line">    &quot;overlay2.override_kernel_check=true&quot;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<p>重启docker服务</p>
+<p><code>systemctl restart docker</code></p>
+<p>将该文件复制到其余节点上,同时重启docker 服务</p>
+<p><code>scp /etc/docker/daemon.json &#123;node&#125;:/etc/docker/</code></p>
+</li>
+</ol>
+<h5 id="安装kubeadm（保证机器配置最起码2G内存和2核心）"><a href="#安装kubeadm（保证机器配置最起码2G内存和2核心）" class="headerlink" title="安装kubeadm（保证机器配置最起码2G内存和2核心）"></a>安装kubeadm（保证机器配置最起码2G内存和2核心）</h5><ol>
+<li><p>将ipatbles和bridged traffic 结合起来 (每台机器都要)</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">cat &lt;&lt;<span class="string">EOF | sudo tee /etc/sysctl.d/k8s.conf</span></span><br><span class="line"><span class="string">net.bridge.bridge-nf-call-ip6tables = 1</span></span><br><span class="line"><span class="string">net.bridge.bridge-nf-call-iptables = 1</span></span><br><span class="line"><span class="string">EOF</span></span><br><span class="line">sudo sysctl --system</span><br></pre></td></tr></table></figure>
+
+<p>查看状态</p>
+<p>sysctl -a|grep net.bridge.bridge-nf</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122210000.png" alt="image-20201122205954540" style="zoom:50%;" /></li>
+<li><p>放开对应的端口</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122204655.png" alt="image-20201122204641520" style="zoom:50%;" />
+
+<p>如果方便的话直接将防火墙关闭掉</p>
+<p><code>systemctl disable firewalld &amp;&amp; systemctl stop firewalld</code></p>
+<p>还有selinux也需要关掉    </p>
+<ol start="3">
+<li><p>安装kubeadm（部署k8s集群）、安装kubelet（管理容器的）、安装kubectl（命令行工具）</p>
+<p>部署源(节点都需要布置)</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">cat &lt;&lt;EOF &gt; /etc/yum.repos.d/kubernetes.repo</span><br><span class="line">[kubernetes]</span><br><span class="line">name=Kubernetes</span><br><span class="line">baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/</span><br><span class="line">enabled=1</span><br><span class="line">gpgcheck=1</span><br><span class="line">repo_gpgcheck=1</span><br><span class="line">gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<p> 安装(每个节点都需要安装)</p>
+<p><code>yum install kubeadm kubelet kubectl -y</code></p>
+<p><font color=red>安装完毕之后强拉kubelet服务的话是不行的，因为环境没有准备好了</font></p>
+<p>将kubelet服务开机启动,否则下次开机的话无法启动k8s服务</p>
+<p><code>systemctl enable kubelet</code></p>
+</li>
+<li><p>初始化</p>
+<p>指定pod网络进行初始化(必须要指定16位)</p>
+<p><code>kubeadm init --pod-network-cidr 192.168.0.0/16</code> （这里千万要注意，不能与主机所在的网段冲突）</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kubernetes/kubernetes/issues/54918#issuecomment-385162637">遇到问题请点击</a></p>
+<p>会遇到错误，因为swap是不支持的</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122215157.png" alt="image-20201122215155883"></p>
+<p>需要禁用swap</p>
+<ol>
+<li><p>安装工具包</p>
+<p> <code>yum install util-linux</code></p>
+</li>
+</ol>
+<pre><code>2.  查看swap空间位置
+
+`cat /etc/fstab`
+
+3. 禁用swap空间(每台机器都需要)
+
+`swapoff /dev/mapper/centos-swap`
+
+将/etc/fstab 文件中的swap注释掉，否则下次开机会自动启用swap空间
+
+![image-20201122215650622](https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122215736.png)
+</code></pre>
+</li>
+</ol>
+<p>​    再次执行<code>kubeadm init --pod-network-cidr 192.168.0.0/16</code></p>
+<p>​    但是还是会失败，<font color=red>因为它会自动拉取google的镜像</font></p>
+<p>​    <font color=red>注意：只需要在master节点上执行该命令即可</font></p>
+<p>​    两种方法解决<a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000038248999">方法</a></p>
+<p>​    查看需要的镜像命令 <code>kubeadm config images list</code></p>
+<p>​    <font color=red>一定要版本对应</font></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">[root@node3 ~]# docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/kube-apiserver:v1.19.4 k8s.gcr.io/kube-apiserver:v1.19.4</span><br><span class="line"></span><br><span class="line">[root@node3 ~]# docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/kube-controller-manager:v1.19.4 k8s.gcr.io/kube-controller-manager:v1.19.4</span><br><span class="line"></span><br><span class="line">[root@node3 ~]# docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/kube-scheduler:v1.19.4 k8s.gcr.io/kube-scheduler:v1.19.4</span><br><span class="line"></span><br><span class="line">[root@node3 ~]# docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/kube-proxy:v1.19.4 k8s.gcr.io/kube-proxy:v1.19.4</span><br><span class="line"></span><br><span class="line">[root@node3 ~]# docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/etcd:3.4.3-0 k8s.gcr.io/etcd:3.4.3-0</span><br><span class="line"></span><br><span class="line">[root@node3 ~]# docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/coredns:1.6.7 k8s.gcr.io/coredns:1.6.7</span><br><span class="line"></span><br><span class="line">[root@node3 ~]# docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2 k8s.gcr.io/pause:3.2</span><br></pre></td></tr></table></figure>
+
+<p>镜像导入成功之后再次执行<code>kubeadm init --pod-network-cidr 192.168.0.0/16</code></p>
+<p>执行成功之后需要记录下信息</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122230411.png" alt="image-20201122230410476"></p>
+<p>可能遇到的问题 </p>
+<p>查看当前节点：<code>kbuectl get nodes</code></p>
+<p>The connection to the server localhost:8080 was refused - did you specify the right host or port?</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122230227.png" alt="image-20201122230225816"></p>
+<p>原因：kubenetes master没有与本机绑定，集群初始化的时候没有设置</p>
+<p>解决办法： <code>export KUBECONFIG=/etc/kubernetes/admin.conf</code></p>
+</li>
+<li><p>其他节点加入集群</p>
+<p>查看ip_forward是否开启，确保其开启</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122231040.png" alt="image-20201122231039260"></p>
+<p>输入之前成功初始化的命令</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201122231012.png" alt="image-20201122231011415"></p>
+<p>查看集群情况</p>
+<p><code>kubectl get nodes</code></p>
+</li>
+<li><p>安装网络插件 （让宿主机之间都联系起来）</p>
+<p>获取yaml文件</p>
+<p><code>curl https://docs.projectcalico.org/manifests/calico-etcd.yaml -o calico.yaml</code></p>
+<p>执行</p>
+<p><code>kubectl apply -f calico.yaml</code></p>
+<p>查看集群健康状态</p>
+<p><code>kubectl get ds n kube-system</code></p>
+<p><code>kubectl get pods -o wide -n kube-system</code></p>
+<p><code>kubectl get cs</code></p>
+</li>
+<li><p>命令补全</p>
+<p>安装包</p>
+<p><code>yum install bash-completion</code></p>
+<p><code>source /usr/share/bash-completion/bash_completion</code></p>
+<p>配置包</p>
+<p><code>kubectl completion bash &gt;/etc/profile.d/kubectl.sh</code></p>
+<p>加载配置文件</p>
+<p><code>source /etc/profile.d/kubectl.sh</code></p>
+<p><code>vim /root/.bashrc</code>  在里面添加上面这句话，这样的话每次开机就可以生效</p>
+<p>完成！</p>
+</li>
+</ol>
+<h3 id="K8S卸载"><a href="#K8S卸载" class="headerlink" title="K8S卸载"></a>K8S卸载</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">sudo kubeadm reset -f</span><br><span class="line">sudo rm -rvf $HOME/.kube</span><br><span class="line">sudo rm -rvf ~/.kube/</span><br><span class="line">sudo rm -rvf /etc/kubernetes/</span><br><span class="line">sudo rm -rvf /etc/systemd/system/kubelet.service.d</span><br><span class="line">sudo rm -rvf /etc/systemd/system/kubelet.service</span><br><span class="line">sudo rm -rvf /usr/bin/kube*</span><br><span class="line">sudo rm -rvf /etc/cni</span><br><span class="line">sudo rm -rvf /opt/cni</span><br><span class="line">sudo rm -rvf /var/lib/etcd</span><br><span class="line">sudo rm -rvf /var/etcd</span><br><span class="line">sudo apt-get remove kube*</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="遇到镜像不可用看这里"><a href="#遇到镜像不可用看这里" class="headerlink" title="遇到镜像不可用看这里"></a>遇到镜像不可用看这里</h3><ol>
+<li><p>先利用自己的网络将镜像下载下来，具体地址看这里<a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000038248999">方法</a></p>
+</li>
+<li><p>将下载并tag好的镜像推送到harbor上</p>
+</li>
+<li><p>将harbor上的镜像下载到机器中并打开k8s开头的tag</p>
+</li>
+<li><p>tag好之后将每一个镜像都save下来</p>
+<p><code>docker save k8s.gcr.io/coredns/coredns:v1.8.0 -o coredns.tar</code></p>
+<p>就像上面这种操作</p>
+</li>
+<li><p>存放到包里面之后将整个包scp到其他的从机上面</p>
+</li>
+<li><p>从机将镜像导入到docker中</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">for i in `ls`;do docker image load -i $&#123;i&#125;;done</span><br></pre></td></tr></table></figure></li>
+<li><p>不要忘记将calico的镜像也下载下来</p>
+</li>
+</ol>
+<h3 id="指定安装k8s版本"><a href="#指定安装k8s版本" class="headerlink" title="指定安装k8s版本"></a>指定安装k8s版本</h3><ul>
+<li><p>kubeadm、kubelet等指定版本</p>
+<p><code>yum install kubeadm-&#123;版本&#125; kubelet-&#123;版本&#125; -y</code></p>
+</li>
+<li><p>指定k8s组件版本</p>
+<p>在kubeadm init ，，，，最后加上<code>--kubernetes-version= &#123;版本&#125;</code></p>
+</li>
+</ul>
+<h2 id="如果calico无法使用看这里"><a href="#如果calico无法使用看这里" class="headerlink" title="如果calico无法使用看这里"></a>如果calico无法使用看这里</h2><p>因为calico需要将配置信息存储到etcd中，因此需要对etcd进行一个客户端的访问，但是etcd默认需要使用https进行访问的，因此必须在calico.yaml文件中对其进行一个配置。</p>
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/5d760511b640">参考</a></p>
+<h3 id="报错1"><a href="#报错1" class="headerlink" title="报错1:"></a>报错1:</h3><h4 id="calico-node-服务-报错信息如下"><a href="#calico-node-服务-报错信息如下" class="headerlink" title="calico-node 服务 报错信息如下:"></a>calico-node 服务 报错信息如下:</h4><ul>
+<li><code>Liveness probe failed: calico/node is not ready: bird/confd is not live: exit status 1</code></li>
+<li><code>Felix is not live: Get &quot;http://localhost:9099/liveness&quot;: dial tcp [::1]:9099: connect: connection refused</code></li>
+<li><code>Readiness probe failed: calico/node is not ready: BIRD is not ready: Failed to stat() nodename file: stat /var/lib/calico/nodename: no such file or directory</code></li>
+</ul>
+<h4 id="calico-kube-controllers-报错信息如下："><a href="#calico-kube-controllers-报错信息如下：" class="headerlink" title="calico-kube-controllers 报错信息如下："></a>calico-kube-controllers 报错信息如下：</h4><ul>
+<li><code>Readiness probe errored: rpc error: code = Unknown desc = container not running</code></li>
+<li><code>Readiness probe failed: Failed to read status file /status/status.json: unexpected end of JSON input</code></li>
+</ul>
+<h4 id="报错1-解决"><a href="#报错1-解决" class="headerlink" title="报错1-解决:"></a>报错1-解决:</h4><p><font color=red>配置ETCD服务地址与SSL证书相关</font></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ETCD 地址</span></span><br><span class="line">ETCD_ENDPOINTS=<span class="string">&quot;https://192.168.10.216:2379&quot;</span> <span class="comment">#这里记得换成宿主机的地址</span></span><br><span class="line">sed -i <span class="string">&quot;s#.*etcd_endpoints:.*#  etcd_endpoints: \&quot;<span class="variable">$&#123;ETCD_ENDPOINTS&#125;</span>\&quot;#g&quot;</span> calico.yaml</span><br><span class="line">sed -i <span class="string">&quot;s#__ETCD_ENDPOINTS__#<span class="variable">$&#123;ETCD_ENDPOINTS&#125;</span>#g&quot;</span> calico.yaml</span><br><span class="line"></span><br><span class="line"><span class="comment"># ETCD 证书信息</span></span><br><span class="line">ETCD_CA=`cat /etc/kubernetes/pki/etcd/ca.crt | base64 | tr -d <span class="string">&#x27;\n&#x27;</span>`</span><br><span class="line">ETCD_CERT=`cat /etc/kubernetes/pki/etcd/server.crt | base64 | tr -d <span class="string">&#x27;\n&#x27;</span>`</span><br><span class="line">ETCD_KEY=`cat /etc/kubernetes/pki/etcd/server.key | base64 | tr -d <span class="string">&#x27;\n&#x27;</span>`</span><br><span class="line"></span><br><span class="line"><span class="comment"># 替换修改</span></span><br><span class="line">sed -i <span class="string">&quot;s#.*etcd-ca:.*#  etcd-ca: <span class="variable">$&#123;ETCD_CA&#125;</span>#g&quot;</span> calico.yaml</span><br><span class="line">sed -i <span class="string">&quot;s#.*etcd-cert:.*#  etcd-cert: <span class="variable">$&#123;ETCD_CERT&#125;</span>#g&quot;</span> calico.yaml</span><br><span class="line">sed -i <span class="string">&quot;s#.*etcd-key:.*#  etcd-key: <span class="variable">$&#123;ETCD_KEY&#125;</span>#g&quot;</span> calico.yaml</span><br><span class="line"></span><br><span class="line">sed -i <span class="string">&#x27;s#.*etcd_ca:.*#  etcd_ca: &quot;/calico-secrets/etcd-ca&quot;#g&#x27;</span> calico.yaml</span><br><span class="line">sed -i <span class="string">&#x27;s#.*etcd_cert:.*#  etcd_cert: &quot;/calico-secrets/etcd-cert&quot;#g&#x27;</span> calico.yaml</span><br><span class="line">sed -i <span class="string">&#x27;s#.*etcd_key:.*#  etcd_key: &quot;/calico-secrets/etcd-key&quot;#g&#x27;</span> calico.yaml</span><br><span class="line"></span><br><span class="line">sed -i <span class="string">&quot;s#__ETCD_CA_CERT_FILE__#/etc/kubernetes/pki/etcd/ca.crt#g&quot;</span> calico.yaml</span><br><span class="line">sed -i <span class="string">&quot;s#__ETCD_CERT_FILE__#/etc/kubernetes/pki/etcd/server.crt#g&quot;</span> calico.yaml</span><br><span class="line">sed -i <span class="string">&quot;s#__ETCD_KEY_FILE__#/etc/kubernetes/pki/etcd/server.key#g&quot;</span> calico.yaml</span><br><span class="line"></span><br><span class="line">sed -i <span class="string">&quot;s#__KUBECONFIG_FILEPATH__#/etc/cni/net.d/calico-kubeconfig#g&quot;</span> calico.yaml</span><br></pre></td></tr></table></figure>
+
+<h3 id="报错2"><a href="#报错2" class="headerlink" title="报错2"></a>报错2</h3><h4 id="calico-kube-controllers-报错信息如下"><a href="#calico-kube-controllers-报错信息如下" class="headerlink" title="calico-kube-controllers 报错信息如下:"></a>calico-kube-controllers 报错信息如下:</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Failed to start error=failed to build Calico client: could not initialize etcdv3 client: open /calico-secrets/etcd-cert: permission denied</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master ~]<span class="comment"># kubectl -n kube-system logs -f  calico-kube-controllers-5b49c7597b-n2wwl</span></span><br><span class="line">2021-01-28 04:52:53.331 [INFO][1] main.go 88: Loaded configuration from environment config=&amp;config.Config&#123;LogLevel:<span class="string">&quot;info&quot;</span>, WorkloadEndpointWorkers:1, ProfileWorkers:1, PolicyWorkers:1, NodeWorkers:1, Kubeconfig:<span class="string">&quot;&quot;</span>, DatastoreType:<span class="string">&quot;etcdv3&quot;</span>&#125;</span><br><span class="line">2021-01-28 04:52:53.331 [FATAL][1] main.go 101: Failed to start error=failed to build Calico client: could not initialize etcdv3 client: open /calico-secrets/etcd-cert: permission denied</span><br></pre></td></tr></table></figure>
+
+<h4 id="报错2解决"><a href="#报错2解决" class="headerlink" title="报错2解决:"></a>报错2解决:</h4><p>参考: <a target="_blank" rel="noopener" href="https://links.jianshu.com/go?to=https://github.com/kubernetes/website/issues/25587">https://github.com/kubernetes/website/issues/25587</a><br> <code>defaultMode: 0400</code> 修改成 <code>defaultMode: 0040</code></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="comment"># Mount in the etcd TLS secrets with mode 400.</span></span><br><span class="line">  <span class="comment"># See https://kubernetes.io/docs/concepts/configuration/secret/</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">etcd-certs</span></span><br><span class="line">    <span class="attr">secret:</span></span><br><span class="line">      <span class="attr">secretName:</span> <span class="string">calico-etcd-secrets</span></span><br><span class="line">      <span class="attr">defaultMode:</span> <span class="number">0040</span></span><br><span class="line">      <span class="comment">#defaultMode: 0400</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="calico网络插件-运行成功"><a href="#calico网络插件-运行成功" class="headerlink" title="calico网络插件-运行成功"></a>calico网络插件-运行成功</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master ~]<span class="comment"># kubectl -n kube-system get pod  | grep calico</span></span><br><span class="line">calico-kube-controllers-6c749f5bb6-8gf6h   1/1     Running             0          2m54s</span><br><span class="line">calico-node-9cxs4                          1/1     Running             0          38m</span><br><span class="line">calico-node-l9vph                          1/1     Running             0          38m</span><br><span class="line">calico-node-swxq9                          1/1     Running             0          38m</span><br></pre></td></tr></table></figure>
+
+<h3 id="报错3-coredns启动报错"><a href="#报错3-coredns启动报错" class="headerlink" title="报错3. coredns启动报错"></a>报错3. coredns启动报错</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master ~]<span class="comment"># kubectl -n kube-system get pod | grep coredns</span></span><br><span class="line">coredns-6d56c8448f-c6x7h                   0/1     ContainerCreating   0          15s</span><br><span class="line">coredns-6d56c8448f-prs5c                   0/1     ContainerCreating   0          15s</span><br></pre></td></tr></table></figure>
+
+<h4 id="coredns报错信息"><a href="#coredns报错信息" class="headerlink" title="coredns报错信息:"></a>coredns报错信息:</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Warning FailedCreatePodSandBox 14s (x4 over 17s) kubelet, k8s-work2 (combined from similar events): Failed to create pod sandbox: rpc error: code = Unknown desc = failed to set up sandbox container &quot;266213ee3ba95ea42c067702990b81f6b5ee1857c6bdee6d247464dfb0a85dc7&quot; network for pod &quot;coredns-6d56c8448f-c6x7h&quot;: networkPlugin cni failed to set up pod &quot;coredns-6d56c8448f-c6x7h_kube-system&quot; network: could not initialize etcdv3 client: open /etc/kubernetes/pki/etcd/server.crt: no such file or directory</span><br></pre></td></tr></table></figure>
+
+<h4 id="报错3-解决"><a href="#报错3-解决" class="headerlink" title="报错3.解决"></a>报错3.解决</h4><p>原因: 找不到ssl证书</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 配置主机密钥对信任,从master节点同步ssl证书到work节点</span></span><br><span class="line">ssh-keygen -t rsa </span><br><span class="line">ssh-copy-id root@k8s-work1</span><br><span class="line">ssh-copy-id root@k8s-work1</span><br><span class="line">scp -r /etc/kubernetes/pki/etcd root@k8s-work1:/etc/kubernetes/pki/etcd</span><br><span class="line">scp -r /etc/kubernetes/pki/etcd root@k8s-work2:/etc/kubernetes/pki/etcd</span><br></pre></td></tr></table></figure>
+
+<h4 id="全部POD运行正常"><a href="#全部POD运行正常" class="headerlink" title="全部POD运行正常"></a>全部POD运行正常</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">[root@k8s-master ~]<span class="comment"># kubectl -n kube-system get pod</span></span><br><span class="line">NAME                                       READY   STATUS    RESTARTS   AGE</span><br><span class="line">calico-kube-controllers-6c749f5bb6-8xsc5   1/1     Running   0          14m</span><br><span class="line">calico-node-5knwk                          1/1     Running   0          17m</span><br><span class="line">calico-node-qrcw4                          1/1     Running   0          17m</span><br><span class="line">calico-node-t9cxh                          1/1     Running   0          17m</span><br><span class="line">coredns-6d56c8448f-c6x7h                   1/1     Running   0          12m</span><br><span class="line">coredns-6d56c8448f-prs5c                   1/1     Running   0          12m</span><br><span class="line">etcd-k8s-master                            1/1     Running   1          24h</span><br><span class="line">kube-apiserver-k8s-master                  1/1     Running   1          24h</span><br><span class="line">kube-controller-manager-k8s-master         1/1     Running   3          24h</span><br><span class="line">kube-proxy-6kf4f                           1/1     Running   1          23h</span><br><span class="line">kube-proxy-gfg2n                           1/1     Running   1          23h</span><br><span class="line">kube-proxy-hxxzn                           1/1     Running   1          24h</span><br><span class="line">kube-scheduler-k8s-master                  1/1     Running   3          24h</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="报错四"><a href="#报错四" class="headerlink" title="报错四"></a>报错四</h3><p>calico/node is not ready: BIRD is not ready: BGP not established withxxx</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/m0_51368852/article/details/114630418?utm_medium=distribute.pc_relevant.none-task-blog-baidujs_title-0&spm=1001.2101.3001.4242">参考1</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/u011327801/article/details/100579803">参考2</a></p>
+<p>注意：calicao中的ALICO_IPV4POOL_CIDR需要和kubeadm init中的地址保持一直，默认是192.168.0.0</p>
+<h4 id="报错五"><a href="#报错五" class="headerlink" title="报错五"></a>报错五</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">kubectl get cs  </span><br><span class="line"></span><br><span class="line">NAME                 STATUS      MESSAGE                    ERROR                               </span><br><span class="line">controller-manager   Unhealthy   Get http://127.0.0.1:10252/healthz: dial tcp 127.0.0.1:10252: connect: connection refused   </span><br><span class="line">scheduler            Unhealthy   Get http://127.0.0.1:10251/healthz: dial tcp 127.0.0.1:10251: connect: connection refused   </span><br><span class="line">etcd-0               Healthy     &#123;&quot;health&quot;:&quot;true&quot;&#125;    </span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/a08a9b9a3457">参考1</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/potato-chip/p/13973760.html">参考2</a></p>
+<h4 id="报错六"><a href="#报错六" class="headerlink" title="报错六"></a>报错六</h4><p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210707113643.png" alt="image-20210707113641443"></p>
+<p>在从节点访问</p>
+<p>解决方法</p>
+<p>找到/etc/kubernetes/ 下面的conf文件</p>
+<p>将其写入到环境变量中</p>
+<p><code>echo &quot;export KUBECONFIG=/etc/kubernetes/xxx.conf&quot; &gt;&gt; /etc/profile</code></p>
+<p><code>source /etc/profile</code></p>
+<h4 id="报错7"><a href="#报错7" class="headerlink" title="报错7"></a>报错7</h4><p>coredns一直处于初始化状态</p>
+<p>查看coredns服务在哪个机器上，有可能所在的机器并不是master，因此需要将master下面的/etc/kubernetes/pki/etcd/复制过去</p>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\K8S\Controller\" rel="bookmark">Controller</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\K8S\DaemonSet\" rel="bookmark">DaemonSet</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\K8S\Ingress\" rel="bookmark">Ingress</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\K8S\K8S安全机制\" rel="bookmark">k8s安全机制</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\K8S\K8S安装metrics\" rel="bookmark">k8s安装metrics</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/K8S/k8s%E5%AE%89%E8%A3%85/" title="K8S安装">http://cooperxj.github.io/2022/01/07/K8S/k8s安装/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/K8S/" rel="tag"># K8S</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/K8S/%E5%AE%89%E8%A3%85%E7%BD%91%E7%BB%9C%E6%8F%92%E4%BB%B6/" rel="prev" title="安装网络插件">
+      <i class="fa fa-chevron-left"></i> 安装网络插件
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/K8S/k8s%E5%91%BD%E4%BB%A4%E8%A1%A5%E5%85%A8/" rel="next" title="k8s命令补全">
+      k8s命令补全 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E7%8E%AF%E5%A2%83"><span class="nav-number">1.</span> <span class="nav-text">安装环境</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E6%96%B9%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">安装方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A5Kubeadm%E4%B8%BA%E4%BE%8B"><span class="nav-number">3.</span> <span class="nav-text">以Kubeadm为例</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Container-runtimes"><span class="nav-number">3.1.</span> <span class="nav-text">安装Container runtimes</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AE%89%E8%A3%85kubeadm%EF%BC%88%E4%BF%9D%E8%AF%81%E6%9C%BA%E5%99%A8%E9%85%8D%E7%BD%AE%E6%9C%80%E8%B5%B7%E7%A0%812G%E5%86%85%E5%AD%98%E5%92%8C2%E6%A0%B8%E5%BF%83%EF%BC%89"><span class="nav-number">3.2.</span> <span class="nav-text">安装kubeadm（保证机器配置最起码2G内存和2核心）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#K8S%E5%8D%B8%E8%BD%BD"><span class="nav-number"></span> <span class="nav-text">K8S卸载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%81%87%E5%88%B0%E9%95%9C%E5%83%8F%E4%B8%8D%E5%8F%AF%E7%94%A8%E7%9C%8B%E8%BF%99%E9%87%8C"><span class="nav-number"></span> <span class="nav-text">遇到镜像不可用看这里</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%87%E5%AE%9A%E5%AE%89%E8%A3%85k8s%E7%89%88%E6%9C%AC"><span class="nav-number"></span> <span class="nav-text">指定安装k8s版本</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E6%9E%9Ccalico%E6%97%A0%E6%B3%95%E4%BD%BF%E7%94%A8%E7%9C%8B%E8%BF%99%E9%87%8C"><span class="nav-number"></span> <span class="nav-text">如果calico无法使用看这里</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%A5%E9%94%991"><span class="nav-number"></span> <span class="nav-text">报错1:</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#calico-node-%E6%9C%8D%E5%8A%A1-%E6%8A%A5%E9%94%99%E4%BF%A1%E6%81%AF%E5%A6%82%E4%B8%8B"><span class="nav-number">1.</span> <span class="nav-text">calico-node 服务 报错信息如下:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#calico-kube-controllers-%E6%8A%A5%E9%94%99%E4%BF%A1%E6%81%AF%E5%A6%82%E4%B8%8B%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">calico-kube-controllers 报错信息如下：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8A%A5%E9%94%991-%E8%A7%A3%E5%86%B3"><span class="nav-number">3.</span> <span class="nav-text">报错1-解决:</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%A5%E9%94%992"><span class="nav-number"></span> <span class="nav-text">报错2</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#calico-kube-controllers-%E6%8A%A5%E9%94%99%E4%BF%A1%E6%81%AF%E5%A6%82%E4%B8%8B"><span class="nav-number">1.</span> <span class="nav-text">calico-kube-controllers 报错信息如下:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8A%A5%E9%94%992%E8%A7%A3%E5%86%B3"><span class="nav-number">2.</span> <span class="nav-text">报错2解决:</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#calico%E7%BD%91%E7%BB%9C%E6%8F%92%E4%BB%B6-%E8%BF%90%E8%A1%8C%E6%88%90%E5%8A%9F"><span class="nav-number"></span> <span class="nav-text">calico网络插件-运行成功</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%A5%E9%94%993-coredns%E5%90%AF%E5%8A%A8%E6%8A%A5%E9%94%99"><span class="nav-number"></span> <span class="nav-text">报错3. coredns启动报错</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#coredns%E6%8A%A5%E9%94%99%E4%BF%A1%E6%81%AF"><span class="nav-number">1.</span> <span class="nav-text">coredns报错信息:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8A%A5%E9%94%993-%E8%A7%A3%E5%86%B3"><span class="nav-number">2.</span> <span class="nav-text">报错3.解决</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%A8%E9%83%A8POD%E8%BF%90%E8%A1%8C%E6%AD%A3%E5%B8%B8"><span class="nav-number">3.</span> <span class="nav-text">全部POD运行正常</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%A5%E9%94%99%E5%9B%9B"><span class="nav-number"></span> <span class="nav-text">报错四</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8A%A5%E9%94%99%E4%BA%94"><span class="nav-number">1.</span> <span class="nav-text">报错五</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8A%A5%E9%94%99%E5%85%AD"><span class="nav-number">2.</span> <span class="nav-text">报错六</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8A%A5%E9%94%997"><span class="nav-number">3.</span> <span class="nav-text">报错7</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

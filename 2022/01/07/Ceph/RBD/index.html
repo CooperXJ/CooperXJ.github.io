@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="创建资源池pool 因为数据是先存放到pool中，然后pool映射到对于的pg上，最终由pg映射到osd上 ceph osd pool create &amp;#123;pool_name&amp;#125; &amp;#123;pg_num&amp;#125; &amp;#123;pgp_num&amp;#125; 初始化pool(不初始化的话，会出现警告错误) rbd pool init &amp;#123;pool_name&amp;#125; 查看当">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RBD">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/Ceph/RBD/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="创建资源池pool 因为数据是先存放到pool中，然后pool映射到对于的pg上，最终由pg映射到osd上 ceph osd pool create &amp;#123;pool_name&amp;#125; &amp;#123;pg_num&amp;#125; &amp;#123;pgp_num&amp;#125; 初始化pool(不初始化的话，会出现警告错误) rbd pool init &amp;#123;pool_name&amp;#125; 查看当">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003130519.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003131929.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003131907.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003132209.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003133036.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003133710.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003140102.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201004135851.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201004151156.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210311164512.png">
+<meta property="article:published_time" content="2022-01-07T00:43:29.333Z">
+<meta property="article:modified_time" content="2022-01-07T00:56:09.285Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="ceph">
+<meta property="article:tag" content="RBD">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003130519.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/Ceph/RBD/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>RBD | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/Ceph/RBD/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RBD
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-01-07 08:43:29 / 修改时间：08:56:09" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:29+08:00">2022-01-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ceph/" itemprop="url" rel="index"><span itemprop="name">ceph</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/Ceph/RBD/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/Ceph/RBD/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <ol>
+<li><p>创建资源池pool</p>
+<p>因为数据是先存放到pool中，然后pool映射到对于的pg上，最终由pg映射到osd上</p>
+<p><code>ceph osd pool create &#123;pool_name&#125; &#123;pg_num&#125; &#123;pgp_num&#125;</code></p>
+<p>初始化pool(不初始化的话，会出现警告错误)</p>
+<p><code>rbd pool init &#123;pool_name&#125;</code></p>
+<p>查看当前集群中的pool</p>
+<p><code>ceph osd lspools</code></p>
+<p>查看指定池中的pg_num、pgp_num、size(副本数)、crush_rule</p>
+<p><code> ceph osd pool get demo size/pg_num/pgp_num/crush_rule</code></p>
+<p>也可以对指定pool中的规则进行调整，比如size</p>
+<p><code> ceph osd pool set demo size 2</code></p>
+</li>
+<li><p>查看当前指定pool中的块文件</p>
+<p><code> rbd -p demo ls</code></p>
+</li>
+<li><p>创建块文件</p>
+<p><code>rbd create -p &#123;pool_name&#125; --image &#123;image名称.img&#125;  --size &#123;大小&#125;</code></p>
+<p>例如</p>
+<p><code>rbd create -p demo --image rbd-demo.img --size 1G</code></p>
+</li>
+<li><p>删除块</p>
+<p><code>rbd rm -p &#123;pool_name&#125; --image &#123;image名称.img&#125;</code></p>
+</li>
+<li><p>查看块文件的信息</p>
+<p><code>rbd info &#123;pool_name&#125;/&#123;image名称.img&#125;</code>        </p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003130519.png" alt="image-20201003130513552" style="zoom:50%;" /></li>
+<li><p>因为在centos7的版本中对于块设备的一些高级特征不兼容，因此挂载的时候需要去除掉这些特性才能够挂载</p>
+<p><code>rbd feature disable &#123;pool_name&#125;/&#123;image名称.img&#125; &#123;特性名称&#125;</code></p>
+</li>
+<li><p>加载到内核下</p>
+<p><code>rbd map &#123;pool_name&#125;/&#123;image名称.img&#125;</code></p>
+<p><font color=red>注意</font>:我们这里的rbd设备是一个瘦策略，也就是虽然分配了1G的空间，但是实际上并没有分配这个多，而是根据实际的使用情况去分配空间，如果存入的文件越来越多，那么分配的空间也就会越来越大，但是最多只能放1G大小的文件</p>
+</li>
+<li><p>查看挂载情况（也就相当于可以将挂载的设备作为一个裸的磁盘来使用）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rbd device list</span><br><span class="line">fdisk -l</span><br></pre></td></tr></table></figure>
+
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003131929.png" alt="image-20201003131657331" style="zoom:50%;" />
+
+<p>我们可以看到挂载成功</p>
+</li>
+<li><p>格式化磁盘</p>
+<p><code>mkfs.ext4 /dev/rbd0</code></p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003131907.png" alt="image-20201003131902265" style="zoom:50%;" /></li>
+<li><p>挂载rbd0</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003132209.png" alt="image-20201003132204331" style="zoom:50%;" /></li>
+<li><p>查看rbd被切割的对象(每个被切割成的对象大小都是4M)</p>
+<p><code>rados  -p &#123;pool_name&#125; ls|grep 指定rbd的前缀</code></p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003133036.png" alt="image-20201003133031927" style="zoom:50%;" /></li>
+<li><p>查看每个小分片映射到的osd的过程</p>
+<p><code>ceph osd map &#123;pool_name&#125; &#123;分片名&#125;</code></p>
+<p>例如</p>
+<p><code>ceph osd map demo rbd_data.38a629d9bc4b.000000000000008</code></p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003133710.png" alt="image-20201003133704794" style="zoom:50%;" /></li>
+<li><p>扩容（不建议分区，如果需要分区，那就多买几块磁盘）</p>
+<p>扩容rbd</p>
+<p><code>rbd resize demo/rbd-demo.img --size 2G</code></p>
+<p>还需要扩容</p>
+<p><code>resize2fs /dev/rbd0</code></p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201003140102.png" alt="image-20201003135920443" style="zoom:50%;" /></li>
+<li><p>删除到垃圾箱中（可以恢复并制定截止日期(只能到精确到天)）</p>
+<p><code>rbd trash mv demo/rbd-trash.img --expires-at 20201005</code></p>
+<p>查看回收站中的元素</p>
+<p><code>rbd trash ls &#123;pool_name&#125;</code></p>
+<p>恢复删除的元素</p>
+<p><code>rbd trash restore -p demo adee33dfb8f4</code></p>
+</li>
+<li><p>快照</p>
+<ul>
+<li><p>创建快照</p>
+<p><code>rbd snap create &#123;pool_name&#125;/&#123;镜像名称.img&#125;@&#123;快照名称&#125;</code></p>
+</li>
+<li><p>找回数据</p>
+<p><code>rbd snap rollback &#123;pool_name&#125;/&#123;镜像名称.img&#125;@&#123;快照名称&#125;</code></p>
+<p>一旦重新找回数据之后，需要先unmount之前挂载的文件，之后重新mount</p>
+</li>
+<li><p>删除快照</p>
+<p><code>rbd snap rm  &#123;pool_name&#125;/&#123;镜像名称.img&#125;@&#123;快照名称&#125;</code></p>
+<p>如果使用pure删除的话，被引用的了的快照是无法进行删除的</p>
+</li>
+<li><p>为快照设置保护的标志位，使得无法被删除</p>
+<p><code>rbd snap protect demo/rbd-demo.img@20201004</code></p>
+</li>
+<li><p>克隆快照(克隆的速度非常快)</p>
+<p><code>rbd clone demo/rbd-demo.img@20201004 demo/clone-demo.img</code></p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201004135851.png" alt="image-20201004135835070" style="zoom:50%;" />
+
+<p>秒级创建虚拟机的方法：COW(Copy on Write) </p>
+<p>使用一个虚拟机作为父虚拟机，并将其快照设置为保护的标志位，然后用户每创建一个虚拟机从该快照复制一份即可。也就是用户的虚拟机引用了父虚拟机的快照。用户自己的产生的内容只会在自己的虚拟机上保存。</p>
+</li>
+<li><p>解除父子快照之间的引用关系,这样子快照就可以成为一个独立的快照</p>
+<p><code>rbd flatten clone-demo.img</code></p>
+</li>
+</ul>
+<ol start="16">
+<li><p>导出块设备或者快照（防止ceph集群损坏,离线备份）</p>
+<p><code>rbd export demo/rbd-demo.img /root/export.img</code></p>
+</li>
+<li><p>导入块设备或者快照</p>
+<p><code>rbd import export.img demo/export-new.img</code></p>
+</li>
+<li><p>增量备份导出和导入</p>
+<p>也就是不完全将快照导出，只导出快照增加的内容，这样可以大大缩小导出的快照大小</p>
+<ul>
+<li><p>导出</p>
+<p><code>rbd export-diff demo/rbd-demo.img@20201004 /root/export.img</code></p>
+</li>
+<li><p>导入</p>
+<p><code>rbd import-diff export.img demo/rbd-demo.img@20201004</code></p>
+<p>导入之后可能不会立刻生效，需要先unmount，再重新mount</p>
+</li>
+</ul>
+</li>
+<li><p>使用场景</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201004151156.png" alt="image-20201004151151662" style="zoom:50%;" /></li>
+<li><p>池无法删除出现下面的问题</p>
+<p><img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20210311164512.png" alt="image-20210311164503820"></p>
+</li>
+</ol>
+<p>切换终端重新尝试，实在不行直接到宿主机上面执行</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\rook\Rook-RBD\" rel="bookmark">RBD</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Ceph\Ceph安装教程\" rel="bookmark">ceph安装教程</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Ceph\Ceph安装第三方Ceph exporter\" rel="bookmark">Ceph安装第三方Ceph exporter</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Ceph\Ceph调优\" rel="bookmark">ceph调优</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Ceph\Ceph运维笔记\" rel="bookmark">ceph运维笔记</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/Ceph/RBD/" title="RBD">http://cooperxj.github.io/2022/01/07/Ceph/RBD/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/ceph/" rel="tag"># ceph</a>
+              <a href="/tags/RBD/" rel="tag"># RBD</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/Ceph/CrushMap/" rel="prev" title="CrushMap">
+      <i class="fa fa-chevron-left"></i> CrushMap
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/ldap/phpldapadmin/" rel="next" title="phpldapadmin">
+      phpldapadmin <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

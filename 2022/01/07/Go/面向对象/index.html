@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="没有类这个概念，对应的是结构体  结构体  结构体是值传递  创建结构体的三种方式  例子 12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go面向对象">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/Go/%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="没有类这个概念，对应的是结构体  结构体  结构体是值传递  创建结构体的三种方式  例子 12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201010111632.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201012093345.png">
+<meta property="og:image" content="http://cooperxj.github.io/Users/cooper/Library/Application%20Support/typora-user-images/image-20201012093055141.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201012093930.png">
+<meta property="article:published_time" content="2022-01-07T00:43:29.051Z">
+<meta property="article:modified_time" content="2021-04-21T14:42:53.000Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="Go">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201010111632.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/Go/%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Go面向对象 | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/Go/%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Go面向对象
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:29" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:29+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-21 22:42:53" itemprop="dateModified" datetime="2021-04-21T22:42:53+08:00">2021-04-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/Go/%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/Go/%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <ol>
+<li><p> 没有类这个概念，对应的是结构体</p>
+</li>
+<li><p>结构体</p>
+<ul>
+<li><p>结构体是值传递</p>
+</li>
+<li><p>创建结构体的三种方式</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201010111632.png" alt="image-20201010111626889" style="zoom:50%;" /></li>
+<li><p>例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">//Cat 是一个例子</span></span><br><span class="line"><span class="keyword">type</span> Cat <span class="keyword">struct</span> &#123;</span><br><span class="line">	name       <span class="keyword">string</span></span><br><span class="line">	age        <span class="keyword">int</span></span><br><span class="line">	mapAddress <span class="keyword">map</span>[<span class="keyword">int</span>]<span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Point 点</span></span><br><span class="line"><span class="keyword">type</span> Point <span class="keyword">struct</span> &#123;</span><br><span class="line">	x <span class="keyword">int</span></span><br><span class="line">	y <span class="keyword">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Rect 矩阵</span></span><br><span class="line"><span class="keyword">type</span> Rect <span class="keyword">struct</span> &#123;</span><br><span class="line">	left, right *Point</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Person 序列化demo</span></span><br><span class="line"><span class="keyword">type</span> Person <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name <span class="keyword">string</span> <span class="string">`json:&quot;name&quot;`</span> <span class="comment">//后面是tag 是为了方便json字符串将首字母大写改成小写 这里属性值不得不首字母大写  因为不首字母大写其他包就访问不了这个属性</span></span><br><span class="line">	Age  <span class="keyword">int</span>    <span class="string">`json:&quot;age&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p Person)</span> <span class="title">test</span><span class="params">()</span></span> &#123;</span><br><span class="line">	p.Name = <span class="string">&quot;jack&quot;</span></span><br><span class="line">	fmt.Println(<span class="string">&quot;名字是: &quot;</span>, p.Name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p *Person)</span> <span class="title">testPoint</span><span class="params">()</span></span> &#123;</span><br><span class="line">	p.Name = <span class="string">&quot;Harry&quot;</span></span><br><span class="line">	fmt.Println(<span class="string">&quot;hello,this is a point test &quot;</span>, (*p).Name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p *Person)</span> <span class="title">String</span><span class="params">()</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	str := fmt.Sprintf(<span class="string">&quot;name = [%v],age = [%v]&quot;</span>, p.Name, p.Age)</span><br><span class="line">	<span class="keyword">return</span> str</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> integer <span class="keyword">int</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(i *integer)</span> <span class="title">printInt</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(*i)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> cat Cat</span><br><span class="line">	cat.name = <span class="string">&quot;Tom&quot;</span></span><br><span class="line">	cat.age = <span class="number">1</span></span><br><span class="line">	cat.mapAddress = <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">int</span>]<span class="keyword">string</span>)</span><br><span class="line">	cat.mapAddress[<span class="number">0</span>] = <span class="string">&quot;Home&quot;</span></span><br><span class="line">	cat.mapAddress[<span class="number">1</span>] = <span class="string">&quot;Wild&quot;</span></span><br><span class="line"></span><br><span class="line">	fmt.Println(cat)</span><br><span class="line"></span><br><span class="line">	<span class="comment">//复制过来的catCopy与本身cat没有联系</span></span><br><span class="line">	catCopy := cat</span><br><span class="line">	catCopy.age = <span class="number">2</span></span><br><span class="line">	fmt.Println(cat)</span><br><span class="line">	fmt.Println(catCopy)</span><br><span class="line"></span><br><span class="line">	<span class="comment">//结构体初始化的几种方式</span></span><br><span class="line">	<span class="comment">//new方法产生的对象其实返回的是一个指针类型，按道理来说应该写成 （*cat1.name = &quot;T&quot;但是go底层做了优化，可以直接写成下面的方式</span></span><br><span class="line">	<span class="keyword">var</span> cat1 *Cat = <span class="built_in">new</span>(Cat)</span><br><span class="line">	cat1.name = <span class="string">&quot;T&quot;</span></span><br><span class="line">	cat1.age = <span class="number">20</span></span><br><span class="line">	fmt.Println(cat1)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> cat2 *Cat = &amp;Cat&#123;&#125;</span><br><span class="line">	cat2.name = <span class="string">&quot;OO&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//在结构体中所有的元素在内存中都是连续存在的，即使是这里的指针作为结构体内的元素指向他们的指针也是连续的，但是指针本身有可能并不是连续的，因为这是操作系统随机分配的</span></span><br><span class="line">	<span class="keyword">var</span> rect01 = Rect&#123;&amp;Point&#123;<span class="number">1</span>, <span class="number">2</span>&#125;, &amp;Point&#123;<span class="number">3</span>, <span class="number">4</span>&#125;&#125;</span><br><span class="line">	fmt.Println(rect01)</span><br><span class="line"></span><br><span class="line">	fmt.Println(*rect01.left, <span class="string">&quot; &quot;</span>, *rect01.right)</span><br><span class="line">	fmt.Println(&amp;rect01.left, <span class="string">&quot; &quot;</span>, &amp;rect01.right) <span class="comment">//结构体中的元素，也就是指向指针的指针的元素</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//结构体之间如果想要相互转换，必须结构体中的所有字段都相同（包括名字、类型、个数）</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//结构体序列化</span></span><br><span class="line">	perosn := Person&#123;<span class="string">&quot;Cooper&quot;</span>, <span class="number">23</span>&#125;</span><br><span class="line">	josnstr, _ := json.Marshal(perosn)</span><br><span class="line">	fmt.Println(<span class="keyword">string</span>(josnstr))</span><br><span class="line"></span><br><span class="line">	<span class="comment">//调用方法</span></span><br><span class="line">	perosn.test()</span><br><span class="line">	perosn.testPoint()</span><br><span class="line">	(&amp;perosn).testPoint()</span><br><span class="line"></span><br><span class="line">	<span class="comment">//不一定非要是结构体才可以绑定方法，普通的变量类型也可以绑定方法(但是必须要给变量取一个别名，这样的话go会认为这是一个用户自定义的类型)，例如</span></span><br><span class="line">	<span class="keyword">var</span> testInt integer = <span class="number">10</span></span><br><span class="line">	testInt.printInt()</span><br><span class="line"></span><br><span class="line">	<span class="comment">//结构体的toString方法</span></span><br><span class="line">	<span class="comment">//只要对结构体的String方法进行重写在fmt.Println(person)的时候就会默认调用编写的String方法</span></span><br><span class="line">	perosn1 := Person&#123;<span class="string">&quot;Cooper&quot;</span>, <span class="number">22</span>&#125;</span><br><span class="line">	fmt.Println(perosn1)</span><br><span class="line">	fmt.Println(&amp;perosn1) <span class="comment">//此处一定要添加&amp;，否则会和原来输出的一样</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">//通过变量指针调用方法，依然是值传递</span></span><br><span class="line">	(&amp;perosn).test() <span class="comment">//虽然这里使用指针调用的方法，但是原来的person依旧没有改变，不信看下面p.Name还是原来的  此处可以得出一个结论就是无论外面调用者的身份是什么（指针调用还是变量调用），始终唯一的结果都和方法的参数有关，参数为值那么就是值引用，参数为指针，那么就是地址引用</span></span><br><span class="line">	fmt.Println(perosn)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>工厂模式 （相当于对象中的构造函数）</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//model包中</span></span><br><span class="line"><span class="comment">//Car this is factory method demo</span></span><br><span class="line"><span class="keyword">type</span> car <span class="keyword">struct</span>&#123;</span><br><span class="line">	Name <span class="keyword">string</span></span><br><span class="line">	Age <span class="keyword">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//GetNewCar 获取一个Car对象</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetNewCar</span><span class="params">(name <span class="keyword">string</span>,age <span class="keyword">int</span>)</span> *<span class="title">car</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;car&#123;</span><br><span class="line">		Name:name,</span><br><span class="line">		Age:age,</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//main包中</span></span><br><span class="line"><span class="comment">//工厂模式  不直接在包里面对struct首字母进行大写，而是选择调用方法返回指针</span></span><br><span class="line">mycar:=model.GetNewCar(<span class="string">&quot;Audio&quot;</span>,<span class="number">1</span>)</span><br><span class="line">fmt.Println(*mycar)</span><br></pre></td></tr></table></figure></li>
+<li><p>继承</p>
+<p>将需要继承的直接写到对应的结构体里面，然后被继承的对象里有的方法对应的继承对象里面也有</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Student is a test</span></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name <span class="keyword">string</span></span><br><span class="line">	score <span class="keyword">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(stu *Student)</span> <span class="title">ShowInfo</span><span class="params">()</span></span>&#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;name = %v,score = %v\n&quot;</span>,stu.Name,stu.score)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(stu *Student)</span> <span class="title">SetScore</span><span class="params">(score <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	stu.score = score</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(stu *Student)</span> <span class="title">SetName</span><span class="params">(name <span class="keyword">string</span>)</span></span>&#123;</span><br><span class="line">	stu.Name = name</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Pupil is a test</span></span><br><span class="line"><span class="keyword">type</span> Pupil <span class="keyword">struct</span>&#123;</span><br><span class="line">	Student</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Graduate is a test</span></span><br><span class="line"><span class="keyword">type</span> Graduate <span class="keyword">struct</span>&#123;</span><br><span class="line">	Student</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>结构体可以使用嵌套匿名字段的所有字段和方法，不管首字母是大写还是小写</p>
+</li>
+<li><p>结构体可以多重继承</p>
+<p>如果一个结构体中嵌套了&gt;1的匿名结构体并且有匿名字段中有相同的属性，那么被继承的结构体调用该属性时需要具体点到是哪个匿名结构体的属性</p>
+</li>
+</ul>
+</li>
+<li><p>接口</p>
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201012093345.png" alt="image-20201011145614978" style="zoom:50%;" /></li>
+</ol>
+<img src="/Users/cooper/Library/Application Support/typora-user-images/image-20201012093055141.png" alt="image-20201012093055141" style="zoom:50%;" />
+
+<img src="https://raw.githubusercontent.com/CooperXJ/ImageBed/master/img/20201012093930.png" alt="image-20201012093831671" style="zoom:50%;" />
+
+<ul>
+<li>接口当中不能定义函数名相同的方法</li>
+</ul>
+<ol start="6">
+<li><p>channel</p>
+<ul>
+<li><p>特点：</p>
+<ul>
+<li><p>是一个队列</p>
+</li>
+<li><p>线程安全，多个goroutine访问时不需要加锁</p>
+</li>
+<li><p>channel是有类型的</p>
+</li>
+<li><p>channel是引用类型  这就说明了只要将channel传递给多个函数，那么调用的始终都是同一个channel</p>
+</li>
+<li><p>channel必须初始化才能写入数据，即make后才能使用  make(chan int,3)</p>
+</li>
+</ul>
+</li>
+<li><p>定义</p>
+<p>var 变量名 chan 类型</p>
+<p>比如 var intChan chan int 即该管道只能写入整数</p>
+</li>
+<li><p>操作</p>
+<ul>
+<li><p>写入数据</p>
+<p>intChan&lt;- 10</p>
+</li>
+<li><p><font color=red>加入的数据不能超过其长度的，如果加入的超过本身的长度会导致死锁</font></p>
+</li>
+<li><p>取数据</p>
+<p>Var  num int</p>
+<p>num=&lt;-intChan</p>
+</li>
+<li><p><font color=red>在没有使用协程的情况下，如果我们的管道数据已经全部取出，再取就会报告死锁</font></p>
+<p>因为此时后面的代码永远无法执行</p>
+</li>
+<li><p>管道内的数据可以不接受，取出来之后直接扔掉，也就是&lt;-intChan</p>
+</li>
+<li><p>如果想在管道内放不同的类型的变量，那么定义到时候需要使用 var allChan chan interface{}，取出来的时候记得使用类型断言</p>
+</li>
+<li><p>管道关闭</p>
+<p>使用内置的函数close</p>
+<p><font color=red>当channel关闭后，就不能再向channel写数据了，但是仍然可以从该channel读数据</font></p>
+<p>close(intChan)</p>
+</li>
+<li><p>管道遍历</p>
+<p>不要用for循环，因为管道的长度会发生变化</p>
+<p><font color=red>使用for-range进行遍历,但是需要记得将管道关闭，否则最后会出现死锁</font></p>
+<p>for v:=range 管道名{</p>
+<p>​    fmt.Println(“v=”,v)</p>
+<p>}</p>
+</li>
+<li><p>如果想要存放任意类型数据到管道中，那么可以将管道的类型声明为空接口，最终取出来的时候要对其使用类型断言，但是不能直接取出来用，会报错的</p>
+</li>
+</ul>
+</li>
+<li><p>注意事项</p>
+<p>当管道的读写速度不匹配的时候，不会发生死锁，但是<font color=red>只有写没有读便会死锁</font></p>
+</li>
+</ul>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Go\Go环境安装\" rel="bookmark">Go环境安装</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Go\go包管理\" rel="bookmark">Go包管理</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Go\语法\" rel="bookmark">Go基础语法</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Go\geeWeb\http\" rel="bookmark">http</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\Go\geeWeb\动态路由\" rel="bookmark">动态路由</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/Go/%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/" title="Go面向对象">http://cooperxj.github.io/2022/01/07/Go/面向对象/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Go/" rel="tag"># Go</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/Go/go%E5%8C%85%E7%AE%A1%E7%90%86/" rel="prev" title="Go包管理">
+      <i class="fa fa-chevron-left"></i> Go包管理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/Go/Go%E7%8E%AF%E5%A2%83%E5%AE%89%E8%A3%85/" rel="next" title="Go环境安装">
+      Go环境安装 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

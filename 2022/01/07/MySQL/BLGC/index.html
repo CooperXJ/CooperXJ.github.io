@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"cooperxj.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="事务是如何提交的？事务提交先写binlog还是redo log？如何保证这两部分的日志做到顺序一致性？MySQL没有开启Binary log的情况下？Innodb通过Redo Log和Undo Log可以保证以上两点。为了保证严格的CrashSafe，必须要在每个事务提交的时候，将Redo Log写入硬件存储。这样做会牺牲一些性能，但是可靠性最好。为了平衡两者，InnoDB提供了一个innodb_">
+<meta property="og:type" content="article">
+<meta property="og:title" content="BLGC">
+<meta property="og:url" content="http://cooperxj.github.io/2022/01/07/MySQL/BLGC/index.html">
+<meta property="og:site_name" content="Cooper Notes">
+<meta property="og:description" content="事务是如何提交的？事务提交先写binlog还是redo log？如何保证这两部分的日志做到顺序一致性？MySQL没有开启Binary log的情况下？Innodb通过Redo Log和Undo Log可以保证以上两点。为了保证严格的CrashSafe，必须要在每个事务提交的时候，将Redo Log写入硬件存储。这样做会牺牲一些性能，但是可靠性最好。为了平衡两者，InnoDB提供了一个innodb_">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-service.csdnimg.cn/img_convert/2e8f31646e4e70ce2fb70e071d4c4171.png">
+<meta property="og:image" content="https://img-service.csdnimg.cn/img_convert/af22285b3cdd1b247a426105c59ff5d2.png">
+<meta property="article:published_time" content="2022-01-07T00:43:29.601Z">
+<meta property="article:modified_time" content="2021-08-27T14:38:45.000Z">
+<meta property="article:author" content="Cooper">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="InnoDB技术探究">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-service.csdnimg.cn/img_convert/2e8f31646e4e70ce2fb70e071d4c4171.png">
+
+<link rel="canonical" href="http://cooperxj.github.io/2022/01/07/MySQL/BLGC/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>BLGC | Cooper Notes</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Cooper Notes</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">obey rules</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://cooperxj.github.io/2022/01/07/MySQL/BLGC/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cooper">
+      <meta itemprop="description" content="记录一些学习笔记、小说、随笔">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cooper Notes">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          BLGC
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-07 08:43:29" itemprop="dateCreated datePublished" datetime="2022-01-07T08:43:29+08:00">2022-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-27 22:38:45" itemprop="dateModified" datetime="2021-08-27T22:38:45+08:00">2021-08-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/01/07/MySQL/BLGC/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/01/07/MySQL/BLGC/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="事务是如何提交的？事务提交先写binlog还是redo-log？如何保证这两部分的日志做到顺序一致性？"><a href="#事务是如何提交的？事务提交先写binlog还是redo-log？如何保证这两部分的日志做到顺序一致性？" class="headerlink" title="事务是如何提交的？事务提交先写binlog还是redo log？如何保证这两部分的日志做到顺序一致性？"></a>事务是如何提交的？事务提交先写binlog还是redo log？如何保证这两部分的日志做到顺序一致性？</h3><h4 id="MySQL没有开启Binary-log的情况下？"><a href="#MySQL没有开启Binary-log的情况下？" class="headerlink" title="MySQL没有开启Binary log的情况下？"></a>MySQL没有开启Binary log的情况下？</h4><p>Innodb通过Redo Log和Undo Log可以保证以上两点。为了保证严格的CrashSafe，必须要在每个事务提交的时候，将Redo Log写入硬件存储。这样做会牺牲一些性能，但是可靠性最好。为了平衡两者，InnoDB提供了一个innodb_flush_log_at_trx_commit系统变量，用户可以根据应用的需求自行调整。</p>
+<p>通过redo日志将所有已经在存储引擎内部提交的事务应用redo log恢复，所有已经prepare但是没有commit的transactions将会应用undo log做rollback。然后客户端连接时就能看到已经提交的数据存在数据库内，未提交被回滚地数据需要重新执行。</p>
+<h4 id="MySQL开启Binary-log的情况下？"><a href="#MySQL开启Binary-log的情况下？" class="headerlink" title="MySQL开启Binary log的情况下？"></a>MySQL开启Binary log的情况下？</h4><p>MySQL为了保证master和slave的数据一致性，就必须保证binlog和InnoDB redo日志的一致性（因为备库通过二进制日志重放主库提交的事务，而主库binlog写入在commit之前，如果写完binlog主库crash，再次启动时会回滚事务。但此时从库已经执行，则会造成主备数据不一致）。所以在开启Binlog后，如何保证binlog和InnoDB redo日志的一致性呢？为此，MySQL引入二阶段提交（two phase commit or 2pc），MySQL内部会自动将普通事务当做一个XA事务（内部分布式事物）来处理：</p>
+<ol>
+<li><p>准备阶段（Storage Engine（InnoDB） Transaction Prepare Phase）</p>
+<p>此时SQL已经成功执行，并生成xid信息及redo和undo的内存日志。然后调用prepare方法完成第一阶段，papare方法实际上什么也没做，将事务状态设为TRX_PREPARED，并将redo log刷磁盘。</p>
+</li>
+<li><p>提交阶段(Storage Engine（InnoDB）Commit Phase)</p>
+<ol>
+<li><p>记录协调者日志，即Binlog日志。</p>
+<p>如果事务涉及的所有存储引擎的prepare都执行成功，则调用TC_LOG_BINLOG::log_xid方法将SQL语句写到binlog（<font color=red>write()将binary log内存日志数据写入文件系统缓存，fsync()将binary log文件系统缓存日志数据永久写入磁盘</font>）。此时，事务已经铁定要提交了。否则，调用ha_rollback_trans方法回滚事务，而SQL语句实际上也不会写到binlog。</p>
+</li>
+<li><p>告诉引擎做commit。</p>
+<p>最后，调用引擎的commit完成事务的提交。会清除undo信息，刷redo日志，将事务设为TRX_NOT_STARTED状态。</p>
+<p><font color=red>记录Binlog是在InnoDB引擎Prepare（即Redo Log写入磁盘）之后，这点至关重要。</font></p>
+</li>
+</ol>
+<p>由上面的二阶段提交流程可以看出，一旦步骤2中的操作完成，就确保了事务的提交，即使在执行步骤3时数据库发送了宕机。此外需要注意的是，每个步骤都需要进行一次fsync操作才能保证上下两层数据的一致性。步骤2的fsync参数由sync_binlog=1控制，步骤3的fsync由参数innodb_flush_log_at_trx_commit=1控制，俗称“双1”，是保证CrashSafe的根本。</p>
+</li>
+</ol>
+<p><strong>原理</strong>：</p>
+<p>事务的两阶段提交协议保证了无论在任何情况下，事务要么同时存在于存储引擎和binlog中，要么两个里面都不存在，这就保证了主库与从库之间数据的一致性。如果数据库系统发生崩溃，当数据库系统重新启动时会进行崩溃恢复操作，存储引擎中处于prepare状态的事务会去查询该事务是否也同时存在于binlog中，如果存在就在存储引擎内部提交该事务（因为此时从库可能已经获取了对应的binlog内容），如果binlog中没有该事务，就回滚该事务。例如：当崩溃发生在第一步和第二步之间时，明显处于prepare状态的事务还没来得及写入到binlog中，所以该事务会在存储引擎内部进行回滚，这样该事务在存储引擎和binlog中都不会存在；当崩溃发生在第二步和第三步之间时，处于prepare状态的事务存在于binlog中，那么该事务会在存储引擎内部进行提交，这样该事务就同时存在于存储引擎和binlog中。</p>
+<h4 id="为了保障主从复制安全，故障恢复是如何做的？"><a href="#为了保障主从复制安全，故障恢复是如何做的？" class="headerlink" title="为了保障主从复制安全，故障恢复是如何做的？"></a>为了保障主从复制安全，故障恢复是如何做的？</h4><p>开启Binary log的MySQL在crash recovery时：MySQL在prepare阶段会生成xid，然后会在commit阶段写入到binlog中。在进行恢复时事务要提交还是回滚，是由Binlog来决定的。</p>
+<p><font color=red>一个事务在prepare阶段中落盘成功，并在MySQL Server层中的binlog也写入成功，那这个事务必定commit成功</font></p>
+<h4 id="为什么需要保证二进制日志的写入顺序和InnoDB层事务提交顺序一致性呢？"><a href="#为什么需要保证二进制日志的写入顺序和InnoDB层事务提交顺序一致性呢？" class="headerlink" title="为什么需要保证二进制日志的写入顺序和InnoDB层事务提交顺序一致性呢？"></a>为什么需要保证二进制日志的写入顺序和InnoDB层事务提交顺序一致性呢？</h4><img src="https://img-service.csdnimg.cn/img_convert/2e8f31646e4e70ce2fb70e071d4c4171.png" alt="img" style="zoom:50%;" />
+
+<p>如上图，事务按照T1、T2、T3顺序开始执行，将二进制日志（按照T1、T2、T3顺序）写入日志文件系统缓冲，调用fsync()进行一次group commit将日志文件永久写入磁盘，但是存储引擎提交的顺序为T2、T3、T1(也就是顺序不一致)。当T2、T3提交事务之后，若通过在线物理备份进行数据库恢复来建立复制时，因为在InnoDB存储引擎层会检测事务T3在上下两层都完成了事务提交（他不会去检查T1是否已经提交了），不需要在进行恢复了，此时主备数据不一致（搭建Slave时，change master to的日志偏移量记录T3在事务位置之后）。</p>
+<h3 id="BLGC（Binary-Log-Group-Commit）"><a href="#BLGC（Binary-Log-Group-Commit）" class="headerlink" title="BLGC（Binary Log Group Commit）"></a>BLGC（Binary Log Group Commit）</h3><h3 id="组提交后如何保证事务记录到binlog的顺序和-事务提交到存储引擎的一致性呢？"><a href="#组提交后如何保证事务记录到binlog的顺序和-事务提交到存储引擎的一致性呢？" class="headerlink" title="组提交后如何保证事务记录到binlog的顺序和 事务提交到存储引擎的一致性呢？"></a>组提交后如何保证事务记录到binlog的顺序和 事务提交到存储引擎的一致性呢？</h3><p>MySQL 5.6 BLGC技术出现后，在这种情况下，不但MySQL数据库上层二进制日志写入是group commit的，InnoDB存储引擎层也是group commit的。此外还移除了原先的锁prepare_commit_mutex，从而大大提高了数据库的整体性。其事务的提交（commit）过程分成三个阶段，Flush stage、Sync stage、Commit stage。</p>
+<p><strong>Binlog组提交的基本思想是，引入队列机制保证Innodb commit顺序与binlog落盘顺序一致</strong>，并将事务分组，组内的binlog刷盘动作交给一个事务进行，实现组提交目的。在MySQL数据库上层进行提交时首先按顺序将其放入一个队列中，队列中的第一个事务称为leader，其他事务称为follow，leader控制着follow的行为。</p>
+<p>当一个事务来到一个stage是一个空队列，那么他就是leader，后面来的事务就是follower，leader控制队列中follower的行为。如果<font color=red>leader带着自己的follower去下一个stage</font>，是非空队列，那么leader变成follower。但是follower不会变成leader。</p>
+<img src="https://img-service.csdnimg.cn/img_convert/af22285b3cdd1b247a426105c59ff5d2.png" alt="img" style="zoom:50%;" />
+
+<p>从上图可以看出，每个阶段都有一个队列，每个队列有一个mutex保护，约定进入队列第一个线程为leader，其他线程为follower，所有事情交由leader去做，leader做完所有动作后，通知follower刷盘结束。BLGC就是将事务提交分为了3个阶段，FLUSH阶段，SYNC阶段和COMMIT阶段。</p>
+<ul>
+<li>Flush Stage</li>
+</ul>
+<p>将每个事务的二进制日志写入内存中。</p>
+<ol>
+<li><p>持有Lock_log mutex [leader持有，follower等待]。</p>
+</li>
+<li><p>获取队列中的一组binlog(队列中的所有事务)。</p>
+</li>
+<li><p>将binlog buffer到I/O cache。</p>
+</li>
+<li><p>通知dump线程dump binlog。</p>
+</li>
+</ol>
+<ul>
+<li>Sync Stage</li>
+</ul>
+<p>将内存中的二进制日志刷新到磁盘，若队列中有多个事务，那么仅一次fsync操作就完成了二进制日志的写入，这就是BLGC。</p>
+<ol>
+<li><p>释放Lock_log mutex，持有Lock_sync mutex[leader持有，follower等待]。</p>
+</li>
+<li><p>将一组binlog 落盘(sync动作，最耗时，假设sync_binlog为1)。</p>
+</li>
+</ol>
+<ul>
+<li>Commit Stage</li>
+</ul>
+<p><strong>leader根据顺序调用存储引擎层事务的提交</strong>，Innodb本身就支持group commit，因此修复了原先由于锁prepare_commit_mutex导致group commit失效的问题。</p>
+<ol>
+<li><p>释放Lock_sync mutex，持有Lock_commit mutex[leader持有，follower等待]。</p>
+</li>
+<li><p>遍历队列中的事务，逐一进行innodb commit。</p>
+</li>
+<li><p>释放Lock_commit mutex。</p>
+</li>
+<li><p>唤醒队列中等待的线程。</p>
+</li>
+</ol>
+<p>说明：由于有多个队列，每个队列各自有mutex保护，队列之间是顺序的，约定进入队列的一个线程为leader，因此FLUSH阶段的leader可能是SYNC阶段的follower，但是follower永远是follower。</p>
+<p>当有一组事务在进行commit阶段时，其他新事物可以进行Flush阶段，从而使group commit不断生效。当然group commit的效果由队列中事务的数量决定，若每次队列中仅有一个事务，那么可能效果和之前差不多，甚至会更差。但当提交的事务越多时，group commit的效果越明显，数据库性能的提升也就越大。</p>
+<p>MySQL提供了一个参数binlog_max_flush_queue_time（MySQL 5.7.9版本失效），默认值为0，用来控制MySQL 5.6新增的BLGC（binary log group commit），就是二进制日志组提交中Flush阶段中等待的时间，即使之前的一组事务完成提交，当前一组的事务也不马上进入Sync阶段，而是至少需要等待一段时间，这样做的好处是group commit的事务数量更多，然而这也可能会导致事务的响应时间变慢。该参数默认为0表示不等待，且推荐设置依然为0。除非用户的MySQL数据库系统中有大量的连接（如100个连接），并且不断地在进行事务的写入或更新操作。</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/xibuhaohao/p/10899586.html">参考</a></p>
+
+    </div>
+
+    
+    
+    
+      
+  <div class="popular-posts-header">相关文章</div>
+  <ul class="popular-posts">
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\CheckPoint\" rel="bookmark">CheckPoint</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB\" rel="bookmark">InnoDB</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB存储引擎文件\" rel="bookmark">InnoDB存储引擎文件</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB数据页结构\" rel="bookmark">InnoDB数据页结构</a></div>
+    </li>
+    <li class="popular-posts-item">
+      <div class="popular-posts-title"><a href="\2022\01\07\MySQL\InnoDB特性\" rel="bookmark">InnoDB特性</a></div>
+    </li>
+  </ul>
+
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Cooper 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Cooper
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://cooperxj.github.io/2022/01/07/MySQL/BLGC/" title="BLGC">http://cooperxj.github.io/2022/01/07/MySQL/BLGC/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+              <a href="/tags/InnoDB%E6%8A%80%E6%9C%AF%E6%8E%A2%E7%A9%B6/" rel="tag"># InnoDB技术探究</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/MySQL%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6/" rel="prev" title="MySQL主要配置文件">
+      <i class="fa fa-chevron-left"></i> MySQL主要配置文件
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/07/MySQL/%E7%BB%8F%E5%85%B8SQL%E6%9F%A5%E8%AF%A2%E8%AF%AD%E5%8F%A5/" rel="next" title="经典SQL查询语句">
+      经典SQL查询语句 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E6%98%AF%E5%A6%82%E4%BD%95%E6%8F%90%E4%BA%A4%E7%9A%84%EF%BC%9F%E4%BA%8B%E5%8A%A1%E6%8F%90%E4%BA%A4%E5%85%88%E5%86%99binlog%E8%BF%98%E6%98%AFredo-log%EF%BC%9F%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E8%BF%99%E4%B8%A4%E9%83%A8%E5%88%86%E7%9A%84%E6%97%A5%E5%BF%97%E5%81%9A%E5%88%B0%E9%A1%BA%E5%BA%8F%E4%B8%80%E8%87%B4%E6%80%A7%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">事务是如何提交的？事务提交先写binlog还是redo log？如何保证这两部分的日志做到顺序一致性？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#MySQL%E6%B2%A1%E6%9C%89%E5%BC%80%E5%90%AFBinary-log%E7%9A%84%E6%83%85%E5%86%B5%E4%B8%8B%EF%BC%9F"><span class="nav-number">1.1.</span> <span class="nav-text">MySQL没有开启Binary log的情况下？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MySQL%E5%BC%80%E5%90%AFBinary-log%E7%9A%84%E6%83%85%E5%86%B5%E4%B8%8B%EF%BC%9F"><span class="nav-number">1.2.</span> <span class="nav-text">MySQL开启Binary log的情况下？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BA%86%E4%BF%9D%E9%9A%9C%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%E5%AE%89%E5%85%A8%EF%BC%8C%E6%95%85%E9%9A%9C%E6%81%A2%E5%A4%8D%E6%98%AF%E5%A6%82%E4%BD%95%E5%81%9A%E7%9A%84%EF%BC%9F"><span class="nav-number">1.3.</span> <span class="nav-text">为了保障主从复制安全，故障恢复是如何做的？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E4%BF%9D%E8%AF%81%E4%BA%8C%E8%BF%9B%E5%88%B6%E6%97%A5%E5%BF%97%E7%9A%84%E5%86%99%E5%85%A5%E9%A1%BA%E5%BA%8F%E5%92%8CInnoDB%E5%B1%82%E4%BA%8B%E5%8A%A1%E6%8F%90%E4%BA%A4%E9%A1%BA%E5%BA%8F%E4%B8%80%E8%87%B4%E6%80%A7%E5%91%A2%EF%BC%9F"><span class="nav-number">1.4.</span> <span class="nav-text">为什么需要保证二进制日志的写入顺序和InnoDB层事务提交顺序一致性呢？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BLGC%EF%BC%88Binary-Log-Group-Commit%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">BLGC（Binary Log Group Commit）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%84%E6%8F%90%E4%BA%A4%E5%90%8E%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E4%BA%8B%E5%8A%A1%E8%AE%B0%E5%BD%95%E5%88%B0binlog%E7%9A%84%E9%A1%BA%E5%BA%8F%E5%92%8C-%E4%BA%8B%E5%8A%A1%E6%8F%90%E4%BA%A4%E5%88%B0%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7%E5%91%A2%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">组提交后如何保证事务记录到binlog的顺序和 事务提交到存储引擎的一致性呢？</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cooper</p>
+  <div class="site-description" itemprop="description">记录一些学习笔记、小说、随笔</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">341</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">75</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CooperXJ" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CooperXJ" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1789023580@qq.com" title="E-Mail → mailto:1789023580@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Cooper</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">648k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:49</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : true,
+      appId      : 'rOzi1T6uncSYNdx0tp1owOzV-gzGzoHsz',
+      appKey     : 'Fk3s6CQBK042e1QltClHnTBP',
+      placeholder: "留下邮箱，有回复时你将收到提醒，邮箱不会被公开",
+      avatar     : 'wavatar',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
